@@ -17,7 +17,7 @@
 />
 
 <script lang="ts">
-  import Badge from '$lib/Badge/Badge.svelte';
+  import Badge from '#lib/Badge/Badge.svelte';
   let { badgeAriaLabel, badgeHidden, ...props } = $props();
 </script>
 

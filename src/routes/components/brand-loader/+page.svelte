@@ -1,6 +1,6 @@
 <script lang="ts">
   import { asset } from '$app/paths';
-  import BrandLoader from '$lib/BrandLoader/BrandLoader.svelte';
+  import BrandLoader from '#lib/BrandLoader/BrandLoader.svelte';
 </script>
 
 <div class="page-header">

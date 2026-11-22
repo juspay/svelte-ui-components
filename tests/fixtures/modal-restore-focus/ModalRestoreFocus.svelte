@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { Modal } from '$lib';
+  import { Modal } from '#lib';
   import { onMount } from 'svelte';
-  import type { ModalProperties } from '$lib/Modal/properties';
+  import type { ModalProperties } from '#lib/Modal/properties.js';
   let opener: HTMLButtonElement;
   let target: HTMLButtonElement;
   let replacement: HTMLButtonElement;

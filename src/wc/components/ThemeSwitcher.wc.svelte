@@ -15,7 +15,7 @@
 />
 
 <script lang="ts">
-  import ThemeSwitcher from '$lib/ThemeSwitcher/ThemeSwitcher.svelte';
+  import ThemeSwitcher from '#lib/ThemeSwitcher/ThemeSwitcher.svelte';
   import { dispatchEvents } from '../dispatch';
 
   let props = $props();

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import KeyboardInput from '$lib/KeyboardInput/KeyboardInput.svelte';
+  import KeyboardInput from '#lib/KeyboardInput/KeyboardInput.svelte';
 </script>
 
 <div class="page-header">

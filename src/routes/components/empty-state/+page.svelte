@@ -1,6 +1,6 @@
 <script lang="ts">
-  import EmptyState from '$lib/EmptyState/EmptyState.svelte';
-  import Button from '$lib/Button/Button.svelte';
+  import EmptyState from '#lib/EmptyState/EmptyState.svelte';
+  import Button from '#lib/Button/Button.svelte';
 </script>
 
 <div class="page-header">

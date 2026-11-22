@@ -1,4 +1,4 @@
-import type { OptionalInputProperties } from '$lib/Input/properties';
+import type { OptionalInputProperties } from '#lib/Input/properties.js';
 
 export type FieldConfig = Pick<
   OptionalInputProperties,

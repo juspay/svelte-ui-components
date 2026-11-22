@@ -36,7 +36,7 @@
 />
 
 <script lang="ts">
-  import StatCard from '$lib/StatCard/StatCard.svelte';
+  import StatCard from '#lib/StatCard/StatCard.svelte';
   import { dispatchEvents } from '../dispatch';
   let { statCardTitle, ...props } = $props();
 

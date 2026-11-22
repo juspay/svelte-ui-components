@@ -13,8 +13,9 @@ import type { TransformOptions, TransformWarning } from '../codemod/transform.ts
  * warned about `Toggle.onclick` on every page with a boolean cell — and the
  * 4.0.0 removal would have broken those same call sites. This walks `src/`
  * and applies the identical rename table, resolving the import forms this
- * repository uses: a default import of `$lib/X/X.svelte` or `../X/X.svelte`
- * is component `X`, and named imports from `$lib` are the exported names.
+ * repository uses: a default import of `#lib/X/X.svelte` or `../X/X.svelte`
+ * is component `X`, and named imports from `#lib` are the exported names.
+ * `$lib`, the spelling before SvelteKit 3, is still accepted.
  *
  *   node --experimental-strip-types scripts/migrate/rename-internal-usages.ts [--apply] [--root <repo>]
  *
@@ -25,7 +26,7 @@ import type { TransformOptions, TransformWarning } from '../codemod/transform.ts
 const INTERNAL_ROOTS: readonly string[] = ['src'];
 
 function isInternalComponentImport(specifier: string): boolean {
-  if (specifier === '$lib' || specifier.startsWith('$lib/')) {
+  if (/^[$#]lib(\/|$)/.test(specifier)) {
     return true;
   }
   return specifier.startsWith('.') && specifier.endsWith('.svelte');

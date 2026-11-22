@@ -1,7 +1,7 @@
 <script lang="ts">
-  import KeyValue from '$lib/KeyValue/KeyValue.svelte';
-  import Pill from '$lib/Pill/Pill.svelte';
-  import type { KeyValueItem } from '$lib/KeyValue/properties';
+  import KeyValue from '#lib/KeyValue/KeyValue.svelte';
+  import Pill from '#lib/Pill/Pill.svelte';
+  import type { KeyValueItem } from '#lib/KeyValue/properties.js';
 
   const offerFields: KeyValueItem[] = [
     { label: 'Offer name', value: 'Summer Sale 2026' },

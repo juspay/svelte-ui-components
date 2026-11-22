@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { RatingGroupProperties, RatingGroupStarState } from './properties';
-  import starSvg from '$lib/assets/star.svg?raw';
+  import starSvg from '#lib/assets/star.svg?raw';
 
   let {
     value = $bindable(0),

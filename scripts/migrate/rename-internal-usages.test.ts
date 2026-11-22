@@ -18,6 +18,20 @@ describe('internal import resolution', () => {
     expect(result.warnings).toHaveLength(0);
   });
 
+  it('treats a default import of #lib/X/X.svelte as component X', () => {
+    const source = [
+      '<script>',
+      `  import Toggle from '#lib/Toggle/Toggle.svelte';`,
+      '</script>',
+      '',
+      '<Toggle onClick={() => {}} />',
+      ''
+    ].join('\n');
+    const result = transformSvelte(source, 'Demo.svelte', INTERNAL_OPTIONS);
+    expect(result.code).toContain('<Toggle onclick={() => {}} />');
+    expect(result.warnings).toHaveLength(0);
+  });
+
   it('treats a relative default import of ../X/X.svelte as component X', () => {
     const source = [
       '<script>',

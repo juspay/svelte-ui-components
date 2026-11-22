@@ -7,7 +7,7 @@
   import type { BannerProperties } from './properties';
   import { slide } from 'svelte/transition';
   import Button from '../Button/Button.svelte';
-  import closeSvg from '$lib/assets/close.svg?raw';
+  import closeSvg from '#lib/assets/close.svg?raw';
 
   let {
     text = '',

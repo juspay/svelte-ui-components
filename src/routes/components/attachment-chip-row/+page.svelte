@@ -1,8 +1,8 @@
 <script lang="ts">
   import '../_capability-demo-controls.css';
   import { asset } from '$app/paths';
-  import { AttachmentChipRow } from '$lib';
-  import type { AttachmentChipImage, AttachmentChipFile, AttachmentChipVideo } from '$lib';
+  import { AttachmentChipRow } from '#lib';
+  import type { AttachmentChipImage, AttachmentChipFile, AttachmentChipVideo } from '#lib';
 
   const initialImages: AttachmentChipImage[] = [
     {

@@ -34,8 +34,8 @@
 />
 
 <script lang="ts">
-  import DualAxisBarChart from '$lib/DualAxisBarChart/DualAxisBarChart.svelte';
-  import type { DualAxisBarChartProperties } from '$lib/DualAxisBarChart/properties';
+  import DualAxisBarChart from '#lib/DualAxisBarChart/DualAxisBarChart.svelte';
+  import type { DualAxisBarChartProperties } from '#lib/DualAxisBarChart/properties.js';
   import { dispatchEvents } from '../dispatch';
 
   let {

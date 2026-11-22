@@ -1,6 +1,6 @@
 <script lang="ts">
   import { asset } from '$app/paths';
-  import IconStack from '$lib/IconStack/IconStack.svelte';
+  import IconStack from '#lib/IconStack/IconStack.svelte';
 </script>
 
 <div class="page-header">

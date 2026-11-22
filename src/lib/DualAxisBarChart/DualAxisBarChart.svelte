@@ -4,22 +4,22 @@
     DualAxisSeries,
     DualAxisTooltipContext
   } from './properties';
-  import ChartContainer from '$lib/_chart/ChartContainer.svelte';
-  import { defaultChartName, resolveChartName } from '$lib/_chart/a11y';
-  import Axis from '$lib/_chart/Axis.svelte';
-  import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
-  import Legend from '$lib/_chart/Legend.svelte';
+  import ChartContainer from '#lib/_chart/ChartContainer.svelte';
+  import { defaultChartName, resolveChartName } from '#lib/_chart/a11y.js';
+  import Axis from '#lib/_chart/Axis.svelte';
+  import ChartTooltip from '#lib/_chart/ChartTooltip.svelte';
+  import Legend from '#lib/_chart/Legend.svelte';
   import {
     createBandScale,
     createLinearScale,
     niceLinearDomain,
     computeLinearTicks
-  } from '$lib/_chart/scales';
-  import { computeChartDimensions, computeAutoLayout } from '$lib/_chart/geometry';
-  import { getColor } from '$lib/_chart/colors';
-  import { formatNumber } from '$lib/_chart/format';
-  import { roundedRectPath, linePath } from '$lib/_chart/paths';
-  import { formatSeriesAggregate } from '$lib/_chart/aggregate';
+  } from '#lib/_chart/scales.js';
+  import { computeChartDimensions, computeAutoLayout } from '#lib/_chart/geometry.js';
+  import { getColor } from '#lib/_chart/colors.js';
+  import { formatNumber } from '#lib/_chart/format.js';
+  import { roundedRectPath, linePath } from '#lib/_chart/paths.js';
+  import { formatSeriesAggregate } from '#lib/_chart/aggregate.js';
   import type {
     LegendItem,
     TooltipData,
@@ -27,9 +27,9 @@
     BandScale,
     Point,
     TooltipAnchor
-  } from '$lib/_chart/types';
-  import { DEFAULT_CHART_CORNER_RADIUS, DEFAULT_CHART_MAX_HEIGHT } from '$lib/_chart/types';
-  import { pointerPositionIn, dismissOnOutsidePointerDown } from '$lib/_chart/interactions';
+  } from '#lib/_chart/types.js';
+  import { DEFAULT_CHART_CORNER_RADIUS, DEFAULT_CHART_MAX_HEIGHT } from '#lib/_chart/types.js';
+  import { pointerPositionIn, dismissOnOutsidePointerDown } from '#lib/_chart/interactions.js';
   import { SvelteSet } from 'svelte/reactivity';
 
   // ── Per-instance uid for SVG <defs> ids ────────────────────────

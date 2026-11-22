@@ -1,10 +1,10 @@
 <script lang="ts">
   import { tick } from 'svelte';
-  import Button from '$lib/Button/Button.svelte';
-  import ChatComposer from '$lib/ChatComposer/ChatComposer.svelte';
-  import ChatHeader from '$lib/ChatHeader/ChatHeader.svelte';
-  import DockPanel from '$lib/DockPanel/DockPanel.svelte';
-  import type { DockPanelState } from '$lib/DockPanel/properties';
+  import Button from '#lib/Button/Button.svelte';
+  import ChatComposer from '#lib/ChatComposer/ChatComposer.svelte';
+  import ChatHeader from '#lib/ChatHeader/ChatHeader.svelte';
+  import DockPanel from '#lib/DockPanel/DockPanel.svelte';
+  import type { DockPanelState } from '#lib/DockPanel/properties.js';
 
   let assistantState: DockPanelState = $state('closed');
   let width = $state(380);

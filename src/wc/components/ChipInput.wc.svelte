@@ -22,7 +22,7 @@
 />
 
 <script lang="ts">
-  import ChipInput from '$lib/ChipInput/ChipInput.svelte';
+  import ChipInput from '#lib/ChipInput/ChipInput.svelte';
   import { dispatchEvents } from '../dispatch';
 
   // `values` is $bindable on ChipInput and is reassigned when a chip is added or dismissed.

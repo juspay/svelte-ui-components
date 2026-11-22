@@ -1,6 +1,6 @@
 <script lang="ts">
   import { asset } from '$app/paths';
-  import GridItem from '$lib/GridItem/GridItem.svelte';
+  import GridItem from '#lib/GridItem/GridItem.svelte';
 </script>
 
 <div class="page-header">

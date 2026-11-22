@@ -1,7 +1,7 @@
 import { fireEvent, render } from '@testing-library/svelte';
 import { describe, expect, it, vi } from 'vitest';
 import Input from './Input.svelte';
-import type { ValidationState } from '$lib/types';
+import type { ValidationState } from '#lib/types.js';
 
 /*
  * `validationState` is a `$derived.by`, and `_onFocusOut` assigns to it. In

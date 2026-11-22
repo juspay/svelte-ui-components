@@ -255,7 +255,7 @@ export function readForwardedProps(source: string, declared: ReadonlySet<string>
   return forwarded;
 }
 
-/** Resolves the `$lib/...` import a wrapper renders back to a file on disk. */
+/** Resolves the `#lib/...` (or older `$lib/...`) import a wrapper renders back to a file on disk. */
 export function wrappedComponentPath(source: string): string | null {
   const root = asRecord(parse(source, { modern: true }));
   const program = asRecord(asRecord(root.instance).content);
@@ -265,8 +265,8 @@ export function wrappedComponentPath(source: string): string | null {
       continue;
     }
     const specifier = asRecord(node.source).value;
-    if (typeof specifier === 'string' && specifier.startsWith('$lib/')) {
-      return join(LIB_ROOT, specifier.replace('$lib/', 'lib/'));
+    if (typeof specifier === 'string' && /^[$#]lib\//.test(specifier)) {
+      return join(LIB_ROOT, specifier.replace(/^[$#]lib\//, 'lib/'));
     }
   }
   return null;
@@ -607,7 +607,7 @@ function readDispatchHelperCall(source: string): DispatchHelperCall {
   return { importedFrom, dispatcherVarName: null, callArgNames: [], reactive: false };
 }
 
-/** The local binding name of the wrapped `$lib/...` component, e.g. `BarChart`. */
+/** The local binding name of the wrapped `#lib/...` component, e.g. `BarChart`. */
 function wrappedComponentLocalName(source: string): string | null {
   const root = asRecord(parse(source, { modern: true }));
   const program = asRecord(asRecord(root.instance).content);
@@ -617,7 +617,7 @@ function wrappedComponentLocalName(source: string): string | null {
       continue;
     }
     const sourceValue = asRecord(node.source).value;
-    if (typeof sourceValue !== 'string' || !sourceValue.startsWith('$lib/')) {
+    if (typeof sourceValue !== 'string' || !/^[$#]lib\//.test(sourceValue)) {
       continue;
     }
     for (const specifier of asList(node.specifiers)) {

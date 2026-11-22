@@ -1,5 +1,5 @@
 <script lang="ts">
-  import SplitInput from '$lib/SplitInput/SplitInput.svelte';
+  import SplitInput from '#lib/SplitInput/SplitInput.svelte';
 
   let otpValues = $state(['', '', '', '']);
   let smsOtpValues = $state(['', '', '', '']);

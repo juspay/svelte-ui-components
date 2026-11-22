@@ -51,7 +51,7 @@
 />
 
 <script lang="ts">
-  import Button from '$lib/Button/Button.svelte';
+  import Button from '#lib/Button/Button.svelte';
   import { dispatchEvents } from '../dispatch';
   import { ariaBoolean } from '../aria-boolean';
   let {

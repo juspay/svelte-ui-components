@@ -1,11 +1,11 @@
 <script lang="ts">
-  import ChatSuggestions from '$lib/ChatSuggestions/ChatSuggestions.svelte';
-  import ChatMessage from '$lib/ChatMessage/ChatMessage.svelte';
-  import ChatComposer from '$lib/ChatComposer/ChatComposer.svelte';
-  import Button from '$lib/Button/Button.svelte';
+  import ChatSuggestions from '#lib/ChatSuggestions/ChatSuggestions.svelte';
+  import ChatMessage from '#lib/ChatMessage/ChatMessage.svelte';
+  import ChatComposer from '#lib/ChatComposer/ChatComposer.svelte';
+  import Button from '#lib/Button/Button.svelte';
   // `icon` is a URL — Img fetches it. Raw SVG markup in this slot becomes a
   // bogus relative link that the prerenderer reports as a 404.
-  import sparkIcon from '$lib/assets/chat.svg?url';
+  import sparkIcon from '#lib/assets/chat.svg?url';
 
   let picked = $state('');
   let events = $state<string[]>([]);

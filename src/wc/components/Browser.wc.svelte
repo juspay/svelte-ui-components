@@ -18,9 +18,9 @@
 />
 
 <script lang="ts">
-  import Browser from '$lib/Browser/Browser.svelte';
+  import Browser from '#lib/Browser/Browser.svelte';
   // Mirrors Browser.svelte's own lockIcon default, wrapper span included.
-  import lockSvg from '$lib/assets/lock.svg?raw';
+  import lockSvg from '#lib/assets/lock.svg?raw';
   let { browserTitle, ...props } = $props();
 </script>
 

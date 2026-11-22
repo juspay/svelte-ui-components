@@ -1,23 +1,23 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { DEFAULT_CHART_MAX_HEIGHT } from '$lib/_chart/types';
+  import { DEFAULT_CHART_MAX_HEIGHT } from '#lib/_chart/types.js';
   import type { PieChartProperties } from './properties';
-  import ChartContainer from '$lib/_chart/ChartContainer.svelte';
-  import LabelPlate from '$lib/_chart/LabelPlate.svelte';
-  import { defaultChartName, resolveChartName } from '$lib/_chart/a11y';
-  import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
-  import Legend from '$lib/_chart/Legend.svelte';
+  import ChartContainer from '#lib/_chart/ChartContainer.svelte';
+  import LabelPlate from '#lib/_chart/LabelPlate.svelte';
+  import { defaultChartName, resolveChartName } from '#lib/_chart/a11y.js';
+  import ChartTooltip from '#lib/_chart/ChartTooltip.svelte';
+  import Legend from '#lib/_chart/Legend.svelte';
   import DeltaIndicator from '../DeltaIndicator/DeltaIndicator.svelte';
   import AnimatedNumber from '../AnimatedNumber/AnimatedNumber.svelte';
-  import { arcPath } from '$lib/_chart/paths';
-  import { computePieLayout, pieSliceValue } from '$lib/_chart/geometry';
-  import { getColor } from '$lib/_chart/colors';
-  import { formatNumber } from '$lib/_chart/format';
-  import { measureText, readCssVarPx } from '$lib/_chart/measure';
-  import { pointerPositionIn, dismissOnOutsidePointerDown } from '$lib/_chart/interactions';
-  import { truncateToWidth, placedLabelRect, dropOverlapping } from '$lib/_chart/labels';
-  import type { LabelRect } from '$lib/_chart/labels';
-  import type { LegendItem, TooltipAnchor } from '$lib/_chart/types';
+  import { arcPath } from '#lib/_chart/paths.js';
+  import { computePieLayout, pieSliceValue } from '#lib/_chart/geometry.js';
+  import { getColor } from '#lib/_chart/colors.js';
+  import { formatNumber } from '#lib/_chart/format.js';
+  import { measureText, readCssVarPx } from '#lib/_chart/measure.js';
+  import { pointerPositionIn, dismissOnOutsidePointerDown } from '#lib/_chart/interactions.js';
+  import { truncateToWidth, placedLabelRect, dropOverlapping } from '#lib/_chart/labels.js';
+  import type { LabelRect } from '#lib/_chart/labels.js';
+  import type { LegendItem, TooltipAnchor } from '#lib/_chart/types.js';
   import { SvelteMap } from 'svelte/reactivity';
 
   // ── Props ──────────────────────────────────────────────────────

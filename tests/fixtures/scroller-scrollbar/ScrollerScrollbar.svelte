@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import Scroller from '$lib/Scroller/Scroller.svelte';
+  import Scroller from '#lib/Scroller/Scroller.svelte';
 
   type Scenario = {
     name: string;

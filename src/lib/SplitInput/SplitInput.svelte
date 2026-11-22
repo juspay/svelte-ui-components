@@ -1,7 +1,7 @@
 <script lang="ts">
   import { tick } from 'svelte';
   import { describeField } from '../_field/description';
-  import Input from '$lib/Input/Input.svelte';
+  import Input from '#lib/Input/Input.svelte';
   import { resolveFieldName } from './field-name';
   import type { FieldConfig, SplitInputProperties } from './properties';
 

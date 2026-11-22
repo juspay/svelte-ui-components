@@ -1,7 +1,7 @@
 import type { Snippet } from 'svelte';
-import type { CurveType } from '$lib/_chart/types';
-import type { ChartHighlightAPI } from '$lib/_chart/highlight';
-import type { SeriesAggregate } from '$lib/_chart/aggregate';
+import type { CurveType } from '#lib/_chart/types.js';
+import type { ChartHighlightAPI } from '#lib/_chart/highlight.js';
+import type { SeriesAggregate } from '#lib/_chart/aggregate.js';
 
 export type LineChartDataPoint = {
   x: number;

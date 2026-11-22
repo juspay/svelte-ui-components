@@ -1,8 +1,8 @@
 <script lang="ts">
   import '../_capability-demo-controls.css';
   import { onMount } from 'svelte';
-  import { SpeechSynthesisController } from '$lib';
-  import type { SpeechSynthesisEngineLike, SpeechUtteranceCallbacks } from '$lib';
+  import { SpeechSynthesisController } from '#lib';
+  import type { SpeechSynthesisEngineLike, SpeechUtteranceCallbacks } from '#lib';
 
   let nativePending = $state(false);
   const native = new SpeechSynthesisController({

@@ -1,11 +1,11 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
-  import ChatComposer from '$lib/ChatComposer/ChatComposer.svelte';
-  import { SpeechToTextController } from '$lib/SpeechToText/controller.svelte';
+  import ChatComposer from '#lib/ChatComposer/ChatComposer.svelte';
+  import { SpeechToTextController } from '#lib/SpeechToText/controller.svelte.js';
   import type {
     SpeechRecognitionErrorEvent,
     SpeechRecognitionResultEvent
-  } from '$lib/SpeechToText/types';
+  } from '#lib/SpeechToText/types.js';
 
   // A deterministic stand-in for the browser API so the demo (and any headless
   // environment) exercises the full lifecycle without a microphone or network.

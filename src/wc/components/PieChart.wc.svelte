@@ -45,8 +45,8 @@
 />
 
 <script lang="ts">
-  import PieChart from '$lib/PieChart/PieChart.svelte';
-  import type { PieChartProperties } from '$lib/PieChart/properties';
+  import PieChart from '#lib/PieChart/PieChart.svelte';
+  import type { PieChartProperties } from '#lib/PieChart/properties.js';
   import { dispatchEvents } from '../dispatch';
 
   let {

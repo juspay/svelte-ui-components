@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Calendar from '$lib/Calendar/Calendar.svelte';
+  import Calendar from '#lib/Calendar/Calendar.svelte';
 
   let calendarDate = $state<Date | null>(null);
   let rangeStart = $state<Date | null>(null);

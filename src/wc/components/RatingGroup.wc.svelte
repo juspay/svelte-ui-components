@@ -28,8 +28,8 @@
 
 <script lang="ts">
   import { formAssociated } from '../form-associated';
-  import RatingGroup from '$lib/RatingGroup/RatingGroup.svelte';
-  import type { RatingGroupProperties } from '$lib/RatingGroup/properties';
+  import RatingGroup from '#lib/RatingGroup/RatingGroup.svelte';
+  import type { RatingGroupProperties } from '#lib/RatingGroup/properties.js';
   import { dispatchEvents } from '../dispatch';
   // Renamed the same way Checkbox.wc.svelte and Slider.wc.svelte rename `ariaLabel`:
   // ARIAMixin already defines `ariaLabel` on every HTMLElement, so declaring the

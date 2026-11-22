@@ -1,5 +1,5 @@
 import type { JSONValue } from 'type-decoder';
-import type { InputDataType } from '$lib/types';
+import type { InputDataType } from '#lib/types.js';
 import type { IconStackItem } from '../IconStack/properties';
 import type {
   TableActionGroupCellData,

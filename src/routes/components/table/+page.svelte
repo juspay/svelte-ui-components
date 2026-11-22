@@ -1,10 +1,10 @@
 <script lang="ts">
-  import Table from '$lib/Table/Table.svelte';
-  import Pill from '$lib/Pill/Pill.svelte';
-  import Button from '$lib/Button/Button.svelte';
-  import Menu from '$lib/Menu/Menu.svelte';
+  import Table from '#lib/Table/Table.svelte';
+  import Pill from '#lib/Pill/Pill.svelte';
+  import Button from '#lib/Button/Button.svelte';
+  import Menu from '#lib/Menu/Menu.svelte';
   import type { JSONValue } from 'type-decoder';
-  import type { TableColumn, TableRow, TableSortState } from '$lib/Table/properties';
+  import type { TableColumn, TableRow, TableSortState } from '#lib/Table/properties.js';
 
   let clickedRow = $state<string | null>(null);
   let currentPage = $state(1);

@@ -20,8 +20,8 @@
 />
 
 <script lang="ts">
-  import Pagination from '$lib/Pagination/Pagination.svelte';
-  import type { PaginationProperties } from '$lib/Pagination/properties';
+  import Pagination from '#lib/Pagination/Pagination.svelte';
+  import type { PaginationProperties } from '#lib/Pagination/properties.js';
   import { dispatchEvents } from '../dispatch';
 
   let {

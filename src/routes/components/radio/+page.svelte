@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Radio from '$lib/Radio/Radio.svelte';
+  import Radio from '#lib/Radio/Radio.svelte';
 
   let selectedRadio = $state('upi');
 

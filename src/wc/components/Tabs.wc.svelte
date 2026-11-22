@@ -25,16 +25,16 @@
 />
 
 <script lang="ts">
-  import Tabs from '$lib/Tabs/Tabs.svelte';
-  import type { TabsProperties } from '$lib/Tabs/properties';
-  import Img from '$lib/Img/Img.svelte';
+  import Tabs from '#lib/Tabs/Tabs.svelte';
+  import type { TabsProperties } from '#lib/Tabs/properties.js';
+  import Img from '#lib/Img/Img.svelte';
   import { dispatchEvents } from '../dispatch';
   // Mirrors Tabs.svelte's own scrollLeftIcon/scrollRightIcon defaults, which pick
   // their glyph from `orientation` the same way.
-  import chevronLeftSvg from '$lib/assets/chevron-left.svg?raw';
-  import chevronRightSvg from '$lib/assets/chevron-right.svg?raw';
-  import chevronUpSvg from '$lib/assets/chevron-up.svg?raw';
-  import chevronDownSvg from '$lib/assets/chevron-down.svg?raw';
+  import chevronLeftSvg from '#lib/assets/chevron-left.svg?raw';
+  import chevronRightSvg from '#lib/assets/chevron-right.svg?raw';
+  import chevronUpSvg from '#lib/assets/chevron-up.svg?raw';
+  import chevronDownSvg from '#lib/assets/chevron-down.svg?raw';
 
   // `dir` is an accessor on every HTMLElement, so declaring it as a prop would
   // replace the host's own. The ATTRIBUTE keeps its name, which is what a consumer

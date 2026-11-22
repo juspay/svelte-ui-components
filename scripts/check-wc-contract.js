@@ -205,7 +205,7 @@ for (const file of wrappers) {
     continue;
   }
   // Which component does this wrapper wrap? Its own import says so.
-  const source = /from\s+'\$lib\/([A-Za-z0-9]+)\//.exec(text);
+  const source = /from\s+'[$#]lib\/([A-Za-z0-9]+)\//.exec(text);
   if (source === null) {
     continue;
   }
@@ -237,7 +237,7 @@ for (const file of wrappers) {
 // ---- Rule 3: a wrapper snippet must not silently drop a component default --
 for (const file of wrappers) {
   const text = read(join(WC_DIR, file));
-  const source = /from\s+'\$lib\/([A-Za-z0-9]+)\//.exec(text);
+  const source = /from\s+'[$#]lib\/([A-Za-z0-9]+)\//.exec(text);
   if (source === null) {
     continue;
   }

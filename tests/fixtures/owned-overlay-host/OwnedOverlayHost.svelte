@@ -1,9 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import Modal from '$lib/Modal/Modal.svelte';
-  import Sheet from '$lib/Sheet/Sheet.svelte';
-  import CommandMenu from '$lib/CommandMenu/CommandMenu.svelte';
-  import type { ScrollContainer } from '$lib/types';
+  import Modal from '#lib/Modal/Modal.svelte';
+  import Sheet from '#lib/Sheet/Sheet.svelte';
+  import CommandMenu from '#lib/CommandMenu/CommandMenu.svelte';
+  import type { ScrollContainer } from '#lib/types.js';
 
   let firstRoot: HTMLElement | null = $state(null);
   let secondRoot: HTMLElement | null = $state(null);

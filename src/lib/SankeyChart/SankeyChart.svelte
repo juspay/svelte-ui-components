@@ -1,27 +1,27 @@
 <script lang="ts">
   import type { SankeyChartProperties, SankeyTooltipContext } from './properties';
-  import ChartContainer from '$lib/_chart/ChartContainer.svelte';
-  import LabelPlate from '$lib/_chart/LabelPlate.svelte';
+  import ChartContainer from '#lib/_chart/ChartContainer.svelte';
+  import LabelPlate from '#lib/_chart/LabelPlate.svelte';
   import { onMount } from 'svelte';
-  import { defaultChartName, resolveChartName } from '$lib/_chart/a11y';
-  import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
-  import { computeSankeyLayout } from '$lib/_chart/geometry';
-  import { getColor } from '$lib/_chart/colors';
-  import { formatNumber } from '$lib/_chart/format';
+  import { defaultChartName, resolveChartName } from '#lib/_chart/a11y.js';
+  import ChartTooltip from '#lib/_chart/ChartTooltip.svelte';
+  import { computeSankeyLayout } from '#lib/_chart/geometry.js';
+  import { getColor } from '#lib/_chart/colors.js';
+  import { formatNumber } from '#lib/_chart/format.js';
   import {
     measureText,
     readCssVarPx,
     invalidateTextMeasurements,
     type FontSpec
-  } from '$lib/_chart/measure';
-  import { pointerPositionIn, dismissOnOutsidePointerDown } from '$lib/_chart/interactions';
-  import { truncateToWidth } from '$lib/_chart/labels';
+  } from '#lib/_chart/measure.js';
+  import { pointerPositionIn, dismissOnOutsidePointerDown } from '#lib/_chart/interactions.js';
+  import { truncateToWidth } from '#lib/_chart/labels.js';
   import {
     DEFAULT_CHART_CORNER_RADIUS,
     CHART_LABEL_PLATE_PADDING,
     DEFAULT_CHART_MAX_HEIGHT,
     type TooltipAnchor
-  } from '$lib/_chart/types';
+  } from '#lib/_chart/types.js';
   import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 
   // ── Props ──────────────────────────────────────────────────────

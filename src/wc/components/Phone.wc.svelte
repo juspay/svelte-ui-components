@@ -13,7 +13,7 @@
 />
 
 <script lang="ts">
-  import Phone from '$lib/Phone/Phone.svelte';
+  import Phone from '#lib/Phone/Phone.svelte';
   let props = $props();
 </script>
 

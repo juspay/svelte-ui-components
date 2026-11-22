@@ -1,7 +1,7 @@
 <script lang="ts">
   import { describeField } from '../_field/description';
-  import Input from '$lib/Input/Input.svelte';
-  import Pill from '$lib/Pill/Pill.svelte';
+  import Input from '#lib/Input/Input.svelte';
+  import Pill from '#lib/Pill/Pill.svelte';
   import type { ChipInputProperties } from './properties';
 
   let {

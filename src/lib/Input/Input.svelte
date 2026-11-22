@@ -3,9 +3,9 @@
   import { getActiveElement } from '../_interaction/focus';
   import { describeField } from '../_field/description';
   import { watchFormReset } from '../_field/form-reset';
-  import { validateInput } from '$lib/utils';
+  import { validateInput } from '#lib/utils.js';
   import type { InputProperties } from './properties';
-  import type { ValidationState } from '$lib/types';
+  import type { ValidationState } from '#lib/types.js';
 
   let {
     native = false,

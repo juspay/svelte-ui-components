@@ -17,8 +17,8 @@
 />
 
 <script lang="ts">
-  import Link from '$lib/Link/Link.svelte';
-  import type { LinkProperties } from '$lib/Link/properties';
+  import Link from '#lib/Link/Link.svelte';
+  import type { LinkProperties } from '#lib/Link/properties.js';
   import { dispatchEvents } from '../dispatch';
   let {
     element = $bindable<HTMLAnchorElement | null>(null),

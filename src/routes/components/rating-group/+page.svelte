@@ -1,5 +1,5 @@
 <script lang="ts">
-  import RatingGroup from '$lib/RatingGroup/RatingGroup.svelte';
+  import RatingGroup from '#lib/RatingGroup/RatingGroup.svelte';
 
   let basicValue = $state(3);
   let halfValue = $state(2.5);

@@ -11,7 +11,7 @@
 />
 
 <script lang="ts">
-  import IconStack from '$lib/IconStack/IconStack.svelte';
+  import IconStack from '#lib/IconStack/IconStack.svelte';
   let props = $props();
 </script>
 

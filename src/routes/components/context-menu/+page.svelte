@@ -1,5 +1,5 @@
 <script lang="ts">
-  import ContextMenu from '$lib/ContextMenu/ContextMenu.svelte';
+  import ContextMenu from '#lib/ContextMenu/ContextMenu.svelte';
 </script>
 
 <div class="page-header">

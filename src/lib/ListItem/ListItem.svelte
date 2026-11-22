@@ -1,7 +1,7 @@
 <script lang="ts">
-  import Accordion from '$lib/Accordion/Accordion.svelte';
-  import Loader from '$lib/Loader/Loader.svelte';
-  import Img from '$lib/Img/Img.svelte';
+  import Accordion from '#lib/Accordion/Accordion.svelte';
+  import Loader from '#lib/Loader/Loader.svelte';
+  import Img from '#lib/Img/Img.svelte';
   import type { ListItemProperties } from './properties';
   import { resolveLabelHtml } from './label';
 

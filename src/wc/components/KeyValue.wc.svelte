@@ -18,7 +18,7 @@
 />
 
 <script lang="ts">
-  import KeyValue from '$lib/KeyValue/KeyValue.svelte';
+  import KeyValue from '#lib/KeyValue/KeyValue.svelte';
   let props = $props();
 </script>
 

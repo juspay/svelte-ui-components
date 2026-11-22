@@ -2,14 +2,14 @@
   import { untrack } from 'svelte';
   import Button from '../Button/Button.svelte';
   import Img from '../Img/Img.svelte';
-  import playSvg from '$lib/assets/play.svg?raw';
-  import pauseSvg from '$lib/assets/pause.svg?raw';
-  import volumeSvg from '$lib/assets/volume.svg?raw';
-  import muteSvg from '$lib/assets/mute.svg?raw';
-  import fullscreenSvg from '$lib/assets/fullscreen.svg?raw';
-  import exitFullscreenSvg from '$lib/assets/exit-fullscreen.svg?raw';
-  import captionsSvg from '$lib/assets/captions.svg?raw';
-  import captionsOnSvg from '$lib/assets/captions-on.svg?raw';
+  import playSvg from '#lib/assets/play.svg?raw';
+  import pauseSvg from '#lib/assets/pause.svg?raw';
+  import volumeSvg from '#lib/assets/volume.svg?raw';
+  import muteSvg from '#lib/assets/mute.svg?raw';
+  import fullscreenSvg from '#lib/assets/fullscreen.svg?raw';
+  import exitFullscreenSvg from '#lib/assets/exit-fullscreen.svg?raw';
+  import captionsSvg from '#lib/assets/captions.svg?raw';
+  import captionsOnSvg from '#lib/assets/captions-on.svg?raw';
   import Slider from '../Slider/Slider.svelte';
   import type { MediaPlayerProperties } from './properties';
 

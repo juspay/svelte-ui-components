@@ -1,7 +1,7 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
-  import Card from '$lib/Card/Card.svelte';
-  import Button from '$lib/Button/Button.svelte';
+  import Card from '#lib/Card/Card.svelte';
+  import Button from '#lib/Button/Button.svelte';
 
   let lastClicked = $state('');
 

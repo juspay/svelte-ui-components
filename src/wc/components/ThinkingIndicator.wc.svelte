@@ -31,7 +31,7 @@
 />
 
 <script lang="ts">
-  import ThinkingIndicator from '$lib/ThinkingIndicator/ThinkingIndicator.svelte';
+  import ThinkingIndicator from '#lib/ThinkingIndicator/ThinkingIndicator.svelte';
   import { dispatchEvents } from '../dispatch';
 
   let props = $props();

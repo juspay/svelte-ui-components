@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import Img from '$lib/Img/Img.svelte';
+  import Img from '#lib/Img/Img.svelte';
   import HostKinds from './HostKinds.svelte';
 
   // 400x200 grey PNG: a raster with an intrinsic size and a 2:1 ratio.

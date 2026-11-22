@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Pagination from '$lib/Pagination/Pagination.svelte';
+  import Pagination from '#lib/Pagination/Pagination.svelte';
 
   let currentPage = $state(1);
   let cursorPage = $state(1);

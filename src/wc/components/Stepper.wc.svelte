@@ -16,7 +16,7 @@
 />
 
 <script lang="ts">
-  import Stepper from '$lib/Stepper/Stepper.svelte';
+  import Stepper from '#lib/Stepper/Stepper.svelte';
   import { dispatchEvents } from '../dispatch';
 
   let props = $props();

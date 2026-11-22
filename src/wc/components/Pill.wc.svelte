@@ -26,9 +26,9 @@
 />
 
 <script lang="ts">
-  import Pill from '$lib/Pill/Pill.svelte';
-  import type { PillProperties } from '$lib/Pill/properties';
-  import closeSvg from '$lib/assets/close.svg?raw';
+  import Pill from '#lib/Pill/Pill.svelte';
+  import type { PillProperties } from '#lib/Pill/properties.js';
+  import closeSvg from '#lib/assets/close.svg?raw';
   import { dispatchEvents } from '../dispatch';
   import { ariaBoolean } from '../aria-boolean';
   // The element renames `title` to `pillTitle` because the platform already defines `title` on every

@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { SvelteDate } from 'svelte/reactivity';
-  import DateRangePicker from '$lib/DateRangePicker/DateRangePicker.svelte';
-  import type { DateRangePreset } from '$lib/DateRangePicker/properties';
+  import DateRangePicker from '#lib/DateRangePicker/DateRangePicker.svelte';
+  import type { DateRangePreset } from '#lib/DateRangePicker/properties.js';
 
   let inertAncestorStart = $state<Date | null>(null);
   let inertAncestorEnd = $state<Date | null>(null);

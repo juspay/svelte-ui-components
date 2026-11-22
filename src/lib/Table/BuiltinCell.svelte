@@ -26,10 +26,10 @@
   import Input from '../Input/Input.svelte';
   import Menu from '../Menu/Menu.svelte';
   import AnimatedNumber from '../AnimatedNumber/AnimatedNumber.svelte';
-  import trendUpSvg from '$lib/assets/trend-up.svg?raw';
-  import trendDownSvg from '$lib/assets/trend-down.svg?raw';
-  import copySvg from '$lib/assets/copy.svg?raw';
-  import dotsSvg from '$lib/assets/dots-vertical.svg?raw';
+  import trendUpSvg from '#lib/assets/trend-up.svg?raw';
+  import trendDownSvg from '#lib/assets/trend-down.svg?raw';
+  import copySvg from '#lib/assets/copy.svg?raw';
+  import dotsSvg from '#lib/assets/dots-vertical.svg?raw';
 
   let {
     column,

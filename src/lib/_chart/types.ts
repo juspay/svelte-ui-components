@@ -1,5 +1,5 @@
 import type { Snippet } from 'svelte';
-import type { BarChartDataPoint } from '$lib/BarChart/properties';
+import type { BarChartDataPoint } from '#lib/BarChart/properties.js';
 
 // ── Shared constants ──────────────────────────────────────────
 

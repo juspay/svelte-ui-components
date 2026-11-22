@@ -22,7 +22,7 @@
 />
 
 <script lang="ts">
-  import Accordion from '$lib/Accordion/Accordion.svelte';
+  import Accordion from '#lib/Accordion/Accordion.svelte';
   import { dispatchEvents } from '../dispatch';
   let { element = $bindable<HTMLDetailsElement | null>(null), ...props } = $props();
 

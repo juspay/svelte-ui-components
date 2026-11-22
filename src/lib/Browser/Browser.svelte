@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { BrowserProperties } from './properties';
-  import lockSvg from '$lib/assets/lock.svg?raw';
+  import lockSvg from '#lib/assets/lock.svg?raw';
 
   let {
     url = '',

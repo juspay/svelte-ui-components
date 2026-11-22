@@ -15,7 +15,7 @@
 />
 
 <script lang="ts">
-  import Avatar from '$lib/Avatar/Avatar.svelte';
+  import Avatar from '#lib/Avatar/Avatar.svelte';
   import { dispatchEvents } from '../dispatch';
   let props = $props();
 

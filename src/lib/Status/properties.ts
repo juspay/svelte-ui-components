@@ -1,5 +1,5 @@
 import type { Snippet } from 'svelte';
-import type { ButtonProperties } from '$lib/Button/properties';
+import type { ButtonProperties } from '#lib/Button/properties.js';
 
 export type StatusProperties = StatusEventProperties & {
   /**

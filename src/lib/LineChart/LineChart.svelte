@@ -4,25 +4,25 @@
     LineChartProperties,
     LineChartTooltipContext
   } from './properties';
-  import { DEFAULT_CHART_MAX_HEIGHT } from '$lib/_chart/types';
-  import type { ChartHighlightAPI } from '$lib/_chart/highlight';
+  import { DEFAULT_CHART_MAX_HEIGHT } from '#lib/_chart/types.js';
+  import type { ChartHighlightAPI } from '#lib/_chart/highlight.js';
   import { onMount } from 'svelte';
-  import ChartContainer from '$lib/_chart/ChartContainer.svelte';
-  import LabelPlate from '$lib/_chart/LabelPlate.svelte';
-  import Axis from '$lib/_chart/Axis.svelte';
-  import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
-  import Legend from '$lib/_chart/Legend.svelte';
-  import { createLinearScale, niceLinearDomain, computeLinearTicks } from '$lib/_chart/scales';
-  import { computeAutoLayout, joinByX } from '$lib/_chart/geometry';
-  import { linePath, areaPath } from '$lib/_chart/paths';
-  import { getColor } from '$lib/_chart/colors';
-  import { formatNumber, defaultTickFormat } from '$lib/_chart/format';
-  import { measureText } from '$lib/_chart/measure';
-  import { resolvePointLabels } from '$lib/_chart/labels';
-  import { formatSeriesAggregate } from '$lib/_chart/aggregate';
-  import { defaultChartName, resolveChartName } from '$lib/_chart/a11y';
-  import type { LegendItem, Point, TooltipAnchor } from '$lib/_chart/types';
-  import { pointerPositionIn, dismissOnOutsidePointerDown } from '$lib/_chart/interactions';
+  import ChartContainer from '#lib/_chart/ChartContainer.svelte';
+  import LabelPlate from '#lib/_chart/LabelPlate.svelte';
+  import Axis from '#lib/_chart/Axis.svelte';
+  import ChartTooltip from '#lib/_chart/ChartTooltip.svelte';
+  import Legend from '#lib/_chart/Legend.svelte';
+  import { createLinearScale, niceLinearDomain, computeLinearTicks } from '#lib/_chart/scales.js';
+  import { computeAutoLayout, joinByX } from '#lib/_chart/geometry.js';
+  import { linePath, areaPath } from '#lib/_chart/paths.js';
+  import { getColor } from '#lib/_chart/colors.js';
+  import { formatNumber, defaultTickFormat } from '#lib/_chart/format.js';
+  import { measureText } from '#lib/_chart/measure.js';
+  import { resolvePointLabels } from '#lib/_chart/labels.js';
+  import { formatSeriesAggregate } from '#lib/_chart/aggregate.js';
+  import { defaultChartName, resolveChartName } from '#lib/_chart/a11y.js';
+  import type { LegendItem, Point, TooltipAnchor } from '#lib/_chart/types.js';
+  import { pointerPositionIn, dismissOnOutsidePointerDown } from '#lib/_chart/interactions.js';
   import { SvelteSet } from 'svelte/reactivity';
 
   // ── Props ──────────────────────────────────────────────────────

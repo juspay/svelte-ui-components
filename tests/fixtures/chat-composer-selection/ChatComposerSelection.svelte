@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import ChatComposer from '$lib/ChatComposer/ChatComposer.svelte';
+  import ChatComposer from '#lib/ChatComposer/ChatComposer.svelte';
 
   const mentions = [{ name: '@refunds', description: 'Refund questions' }];
 

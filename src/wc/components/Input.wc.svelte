@@ -75,8 +75,8 @@
 
 <script lang="ts">
   import { formAssociated } from '../form-associated';
-  import Input from '$lib/Input/Input.svelte';
-  import type { InputProperties } from '$lib/Input/properties';
+  import Input from '#lib/Input/Input.svelte';
+  import type { InputProperties } from '#lib/Input/properties.js';
   import { dispatchEvents } from '../dispatch';
   // The element renames `ariaLabel` to `inputAriaLabel` and `id` to `inputId` because the platform already defines `ariaLabel` and `id` on every
   // HTMLElement. `autofocus` is renamed the same way, and for the same reason: declaring it

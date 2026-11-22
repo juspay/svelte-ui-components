@@ -1,7 +1,7 @@
 <script lang="ts">
   import { asset } from '$app/paths';
-  import MediaPlayer from '$lib/MediaPlayer/MediaPlayer.svelte';
-  import Button from '$lib/Button/Button.svelte';
+  import MediaPlayer from '#lib/MediaPlayer/MediaPlayer.svelte';
+  import Button from '#lib/Button/Button.svelte';
 
   // Two separate players/toggles, each exercising one direction of the bindable contract
   // from a clean initial state -- easier to reason about (and to test) than one player

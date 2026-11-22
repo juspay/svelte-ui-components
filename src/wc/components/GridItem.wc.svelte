@@ -16,7 +16,7 @@
 />
 
 <script lang="ts">
-  import GridItem from '$lib/GridItem/GridItem.svelte';
+  import GridItem from '#lib/GridItem/GridItem.svelte';
   import { dispatchEvents } from '../dispatch';
   let props = $props();
 

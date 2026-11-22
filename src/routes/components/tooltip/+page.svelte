@@ -1,7 +1,7 @@
 <script lang="ts">
-  import Button from '$lib/Button/Button.svelte';
-  import Tooltip from '$lib/Tooltip/Tooltip.svelte';
-  import { tooltip } from '$lib/Tooltip/tooltip-action';
+  import Button from '#lib/Button/Button.svelte';
+  import Tooltip from '#lib/Tooltip/Tooltip.svelte';
+  import { tooltip } from '#lib/Tooltip/tooltip-action.js';
 </script>
 
 <div class="page-header">

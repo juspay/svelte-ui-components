@@ -6,14 +6,14 @@
   import { componentNav } from './components/_nav';
   import { routeName, routeTitle } from './components/_titles';
   import { scrollRegions } from './components/_scroll-regions';
-  import ThemeSwitcher from '$lib/ThemeSwitcher/ThemeSwitcher.svelte';
+  import ThemeSwitcher from '#lib/ThemeSwitcher/ThemeSwitcher.svelte';
   import { onMount, tick, type Snippet } from 'svelte';
   // The library's own dark theme. These used to live in demo.css, which made
   // the docs app the only place that knew how to render this library on a dark
   // page -- every other consumer of ThemeSwitcher got light components on a
   // dark ground. It is library knowledge, so it now ships with the library and
   // this app imports it like anyone else would.
-  import '$lib/styles/theme-dark.css';
+  import '#lib/styles/theme-dark.css';
   import './components/demo.css';
 
   let { children }: { children: Snippet } = $props();

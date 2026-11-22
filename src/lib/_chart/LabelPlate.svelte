@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, type Snippet } from 'svelte';
-  import { CHART_LABEL_PLATE_PADDING } from '$lib/_chart/types';
+  import { CHART_LABEL_PLATE_PADDING } from '#lib/_chart/types.js';
 
   let { children }: { children: Snippet } = $props();
   let group: SVGGElement | null = $state(null);

@@ -16,7 +16,7 @@
 />
 
 <script lang="ts">
-  import DeltaIndicator from '$lib/DeltaIndicator/DeltaIndicator.svelte';
+  import DeltaIndicator from '#lib/DeltaIndicator/DeltaIndicator.svelte';
   let props = $props();
 </script>
 

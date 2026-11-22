@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Sheet, Modal } from '$lib';
+  import { Sheet, Modal } from '#lib';
   import { flushSync } from 'svelte';
   let open = $state(false);
   let mounted = $state(true);

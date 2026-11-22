@@ -13,7 +13,7 @@
 />
 
 <script lang="ts">
-  import ToolCallLog from '$lib/ToolCallLog/ToolCallLog.svelte';
+  import ToolCallLog from '#lib/ToolCallLog/ToolCallLog.svelte';
   import { dispatchEvents } from '../dispatch';
 
   let props = $props();

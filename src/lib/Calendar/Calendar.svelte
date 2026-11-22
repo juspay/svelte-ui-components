@@ -2,8 +2,8 @@
   import type { CalendarProperties } from './properties';
   import { SvelteDate } from 'svelte/reactivity';
   import { tick, untrack } from 'svelte';
-  import chevronLeftSvg from '$lib/assets/chevron-left.svg?raw';
-  import chevronRightSvg from '$lib/assets/chevron-right.svg?raw';
+  import chevronLeftSvg from '#lib/assets/chevron-left.svg?raw';
+  import chevronRightSvg from '#lib/assets/chevron-right.svg?raw';
   import Button from '../Button/Button.svelte';
 
   let {

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { resolve } from '$app/paths';
-  import Breadcrumb from '$lib/Breadcrumb/Breadcrumb.svelte';
-  import type { BreadcrumbItemData, BreadcrumbItemContext } from '$lib/Breadcrumb/properties';
+  import Breadcrumb from '#lib/Breadcrumb/Breadcrumb.svelte';
+  import type { BreadcrumbItemData, BreadcrumbItemContext } from '#lib/Breadcrumb/properties.js';
 
   const basicItems: BreadcrumbItemData[] = [
     { href: resolve('components/breadcrumb'), label: 'Home' },

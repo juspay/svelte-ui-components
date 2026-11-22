@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Gauge from '$lib/Gauge/Gauge.svelte';
+  import Gauge from '#lib/Gauge/Gauge.svelte';
 </script>
 
 <div class="page-header">

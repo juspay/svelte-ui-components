@@ -20,11 +20,11 @@
 />
 
 <script lang="ts">
-  import Book from '$lib/Book/Book.svelte';
-  import type { BookProperties } from '$lib/Book/properties';
+  import Book from '#lib/Book/Book.svelte';
+  import type { BookProperties } from '#lib/Book/properties.js';
   // Mirrors Book.svelte's own previousIcon/nextIcon defaults.
-  import chevronLeftLgSvg from '$lib/assets/chevron-left-lg.svg?raw';
-  import chevronRightLgSvg from '$lib/assets/chevron-right-lg.svg?raw';
+  import chevronLeftLgSvg from '#lib/assets/chevron-left-lg.svg?raw';
+  import chevronRightLgSvg from '#lib/assets/chevron-right-lg.svg?raw';
   import { dispatchEvents } from '../dispatch';
   // Avoid replacing HTMLElement.ariaLabel; the public attribute stays aria-label.
   let {

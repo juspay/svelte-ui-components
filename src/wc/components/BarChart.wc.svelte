@@ -57,8 +57,8 @@
 />
 
 <script lang="ts">
-  import BarChart from '$lib/BarChart/BarChart.svelte';
-  import type { BarChartProperties } from '$lib/BarChart/properties';
+  import BarChart from '#lib/BarChart/BarChart.svelte';
+  import type { BarChartProperties } from '#lib/BarChart/properties.js';
   import { dispatchEvents } from '../dispatch';
 
   // The rest still carries every other prop of the component; the two chart-prefixed

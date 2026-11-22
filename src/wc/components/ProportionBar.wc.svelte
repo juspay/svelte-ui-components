@@ -18,7 +18,7 @@
 />
 
 <script lang="ts">
-  import ProportionBar from '$lib/ProportionBar/ProportionBar.svelte';
+  import ProportionBar from '#lib/ProportionBar/ProportionBar.svelte';
   let props = $props();
 </script>
 

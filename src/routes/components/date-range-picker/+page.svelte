@@ -1,8 +1,8 @@
 <script lang="ts">
   import { SvelteDate } from 'svelte/reactivity';
-  import DateRangePicker from '$lib/DateRangePicker/DateRangePicker.svelte';
-  import Calendar from '$lib/Calendar/Calendar.svelte';
-  import type { DateRangePreset } from '$lib/DateRangePicker/properties';
+  import DateRangePicker from '#lib/DateRangePicker/DateRangePicker.svelte';
+  import Calendar from '#lib/Calendar/Calendar.svelte';
+  import type { DateRangePreset } from '#lib/DateRangePicker/properties.js';
 
   // --- Range mode state ---
   let rangeStart = $state<Date | null>(null);

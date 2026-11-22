@@ -1,8 +1,8 @@
 <script lang="ts">
-  import Button from '$lib/Button/Button.svelte';
-  import Modal from '$lib/Modal/Modal.svelte';
-  import Menu from '$lib/Menu/Menu.svelte';
-  import Select from '$lib/Select/Select.svelte';
+  import Button from '#lib/Button/Button.svelte';
+  import Modal from '#lib/Modal/Modal.svelte';
+  import Menu from '#lib/Menu/Menu.svelte';
+  import Select from '#lib/Select/Select.svelte';
 
   // One string for the heading and the dialog's accessible name, so the name a screen reader
   // announces can never drift from the title on screen.

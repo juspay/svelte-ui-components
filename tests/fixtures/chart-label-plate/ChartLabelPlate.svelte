@@ -1,5 +1,5 @@
 <script lang="ts">
-  import LabelPlate from '$lib/_chart/LabelPlate.svelte';
+  import LabelPlate from '#lib/_chart/LabelPlate.svelte';
 </script>
 
 <main>

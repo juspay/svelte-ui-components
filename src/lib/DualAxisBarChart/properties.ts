@@ -1,5 +1,5 @@
 import type { Snippet } from 'svelte';
-import type { SeriesAggregate } from '$lib/_chart/aggregate';
+import type { SeriesAggregate } from '#lib/_chart/aggregate.js';
 
 // ── Axis config ───────────────────────────────────────────────
 

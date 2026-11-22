@@ -1,5 +1,5 @@
 <script lang="ts">
-  import RelativeTime from '$lib/RelativeTime/RelativeTime.svelte';
+  import RelativeTime from '#lib/RelativeTime/RelativeTime.svelte';
 </script>
 
 <div class="page-header">

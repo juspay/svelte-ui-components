@@ -2,7 +2,7 @@
   import type { PillProperties } from './properties';
   import { PILL_MANAGED_ATTRS, discardedAttrWarnings } from '../attrs-discard';
   import Button from '../Button/Button.svelte';
-  import closeSvg from '$lib/assets/close.svg?raw';
+  import closeSvg from '#lib/assets/close.svg?raw';
   import { pillToneClass } from './pillTone';
 
   let {

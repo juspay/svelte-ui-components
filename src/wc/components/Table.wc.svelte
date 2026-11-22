@@ -47,11 +47,11 @@
 />
 
 <script lang="ts">
-  import Table from '$lib/Table/Table.svelte';
+  import Table from '#lib/Table/Table.svelte';
   import { dispatchEvents } from '../dispatch';
   // Mirrors Table.svelte's own sortAscIcon/sortDescIcon defaults so the fallback
   // below is the same artwork, not a retyped copy.
-  import sortDefaultSvg from '$lib/assets/sort-default.svg?raw';
+  import sortDefaultSvg from '#lib/assets/sort-default.svg?raw';
   let props = $props();
 
   // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's

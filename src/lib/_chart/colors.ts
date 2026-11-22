@@ -1,4 +1,4 @@
-import { hexToRgb, hexToHsv, hsvToHex } from '$lib/utils';
+import { hexToRgb, hexToHsv, hsvToHex } from '#lib/utils.js';
 
 export const DEFAULT_PALETTE = [
   '#4e79a7',

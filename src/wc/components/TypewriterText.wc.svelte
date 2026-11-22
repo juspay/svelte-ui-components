@@ -20,7 +20,7 @@
 />
 
 <script lang="ts">
-  import TypewriterText from '$lib/TypewriterText/TypewriterText.svelte';
+  import TypewriterText from '#lib/TypewriterText/TypewriterText.svelte';
   import { dispatchEvents } from '../dispatch';
 
   let props = $props();

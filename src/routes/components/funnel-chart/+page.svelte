@@ -1,6 +1,6 @@
 <script lang="ts">
-  import FunnelChart from '$lib/FunnelChart/FunnelChart.svelte';
-  import { formatNumber } from '$lib/_chart/format';
+  import FunnelChart from '#lib/FunnelChart/FunnelChart.svelte';
+  import { formatNumber } from '#lib/_chart/format.js';
 
   const checkoutFunnel = [
     { category: 'Visit', value: 12000 },

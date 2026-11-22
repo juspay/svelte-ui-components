@@ -25,9 +25,9 @@
 />
 
 <script lang="ts">
-  import ChatHeader from '$lib/ChatHeader/ChatHeader.svelte';
+  import ChatHeader from '#lib/ChatHeader/ChatHeader.svelte';
   import { dispatchEvents } from '../dispatch';
-  import closeSvg from '$lib/assets/close.svg?raw';
+  import closeSvg from '#lib/assets/close.svg?raw';
   let { chatHeaderTitle, expanded = $bindable(false), showExpand, ...props } = $props();
 
   const resolveShowExpand = (value: unknown): boolean | undefined => {

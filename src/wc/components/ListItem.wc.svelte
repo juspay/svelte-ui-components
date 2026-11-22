@@ -37,7 +37,7 @@
 />
 
 <script lang="ts">
-  import ListItem from '$lib/ListItem/ListItem.svelte';
+  import ListItem from '#lib/ListItem/ListItem.svelte';
   import { dispatchEvents } from '../dispatch';
   let props = $props();
 

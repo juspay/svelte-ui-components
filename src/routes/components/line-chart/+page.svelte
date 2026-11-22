@@ -1,9 +1,9 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
-  import LineChart from '$lib/LineChart/LineChart.svelte';
-  import type { ChartHighlightAPI } from '$lib/_chart/highlight';
-  import { createNarrationHighlighter } from '$lib/_chart/narrationHighlighter';
-  import type { NarrationHighlighter } from '$lib/_chart/narrationHighlighter';
+  import LineChart from '#lib/LineChart/LineChart.svelte';
+  import type { ChartHighlightAPI } from '#lib/_chart/highlight.js';
+  import { createNarrationHighlighter } from '#lib/_chart/narrationHighlighter.js';
+  import type { NarrationHighlighter } from '#lib/_chart/narrationHighlighter.js';
 
   const monthLabels = [
     'Jan',

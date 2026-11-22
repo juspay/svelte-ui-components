@@ -1,12 +1,12 @@
 <script lang="ts">
-  import ChatMessageList from '$lib/ChatMessageList/ChatMessageList.svelte';
-  import ChatMessage from '$lib/ChatMessage/ChatMessage.svelte';
-  import ThinkingIndicator from '$lib/ThinkingIndicator/ThinkingIndicator.svelte';
-  import Card from '$lib/Card/Card.svelte';
-  import Gauge from '$lib/Gauge/Gauge.svelte';
-  import Button from '$lib/Button/Button.svelte';
-  import type { ChatMessageData } from '$lib/Chat/types';
-  import type { ThinkingIndicatorTraceRow } from '$lib/ThinkingIndicator/properties';
+  import ChatMessageList from '#lib/ChatMessageList/ChatMessageList.svelte';
+  import ChatMessage from '#lib/ChatMessage/ChatMessage.svelte';
+  import ThinkingIndicator from '#lib/ThinkingIndicator/ThinkingIndicator.svelte';
+  import Card from '#lib/Card/Card.svelte';
+  import Gauge from '#lib/Gauge/Gauge.svelte';
+  import Button from '#lib/Button/Button.svelte';
+  import type { ChatMessageData } from '#lib/Chat/types.js';
+  import type { ThinkingIndicatorTraceRow } from '#lib/ThinkingIndicator/properties.js';
 
   const assistantMessageId = 'assistant-1';
 

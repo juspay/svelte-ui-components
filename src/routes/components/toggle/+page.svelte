@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Toggle from '$lib/Toggle/Toggle.svelte';
+  import Toggle from '#lib/Toggle/Toggle.svelte';
 
   let toggleChecked = $state(false);
   // Event-casing phase 1: the same event under its corrected spelling.

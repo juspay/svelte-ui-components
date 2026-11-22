@@ -18,11 +18,7 @@ export default defineConfig({
       preprocess: vitePreprocess(),
       compilerOptions,
       adapter: adapter(),
-      paths: { base },
-      // SvelteKit 3 replaced `$lib` with the `#lib` subpath import. About 700 imports and
-      // several scripts that read import specifiers still use `$lib`, so the old alias is
-      // kept until they move over in their own change.
-      alias: { $lib: 'src/lib' }
+      paths: { base }
     })
   ],
   // Vitest always resolves through Vite's SSR pipeline, which by default

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { asset } from '$app/paths';
-  import Status from '$lib/Status/Status.svelte';
-  import LottiePlayer from '$lib/LottiePlayer/LottiePlayer.svelte';
+  import Status from '#lib/Status/Status.svelte';
+  import LottiePlayer from '#lib/LottiePlayer/LottiePlayer.svelte';
 
   // Minimal valid Lottie document (zero layers) — enough to exercise the player
   // without depending on a real animation asset.

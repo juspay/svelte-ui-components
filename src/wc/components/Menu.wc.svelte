@@ -23,9 +23,9 @@
 />
 
 <script lang="ts">
-  import Menu from '$lib/Menu/Menu.svelte';
-  import type { MenuProperties } from '$lib/Menu/properties';
-  import { findInteractive } from '$lib/_interaction/focusable';
+  import Menu from '#lib/Menu/Menu.svelte';
+  import type { MenuProperties } from '#lib/Menu/properties.js';
+  import { findInteractive } from '#lib/_interaction/focusable.js';
   import { dispatchEvents } from '../dispatch';
   // The element renames `ariaLabel` to `menuAriaLabel` because the platform already defines `ariaLabel` on every
   // HTMLElement. The rest still carries the component's own props -- saying so is what

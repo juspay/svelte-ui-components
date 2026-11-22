@@ -16,7 +16,7 @@
 />
 
 <script lang="ts">
-  import ContextMenu from '$lib/ContextMenu/ContextMenu.svelte';
+  import ContextMenu from '#lib/ContextMenu/ContextMenu.svelte';
   import { dispatchEvents } from '../dispatch';
 
   let props = $props();

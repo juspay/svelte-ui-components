@@ -23,8 +23,8 @@
 
 <script lang="ts">
   import { createRawSnippet, onMount } from 'svelte';
-  import DockPanel from '$lib/DockPanel/DockPanel.svelte';
-  import type { DockPanelControls, DockPanelProperties } from '$lib/DockPanel/properties';
+  import DockPanel from '#lib/DockPanel/DockPanel.svelte';
+  import type { DockPanelControls, DockPanelProperties } from '#lib/DockPanel/properties.js';
   import { dispatchEvents } from '../dispatch';
 
   let {

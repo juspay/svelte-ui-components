@@ -1,10 +1,10 @@
 <script lang="ts">
-  import ChatMessage from '$lib/ChatMessage/ChatMessage.svelte';
-  import { renderMarkdown } from '$lib/MarkdownText/markdown';
-  import ThinkingIndicator from '$lib/ThinkingIndicator/ThinkingIndicator.svelte';
-  import ToolCallLog from '$lib/ToolCallLog/ToolCallLog.svelte';
-  import type { ThinkingIndicatorTraceRow } from '$lib/ThinkingIndicator/properties';
-  import type { ToolCallChip } from '$lib/ToolCallLog/properties';
+  import ChatMessage from '#lib/ChatMessage/ChatMessage.svelte';
+  import { renderMarkdown } from '#lib/MarkdownText/markdown.js';
+  import ThinkingIndicator from '#lib/ThinkingIndicator/ThinkingIndicator.svelte';
+  import ToolCallLog from '#lib/ToolCallLog/ToolCallLog.svelte';
+  import type { ThinkingIndicatorTraceRow } from '#lib/ThinkingIndicator/properties.js';
+  import type { ToolCallChip } from '#lib/ToolCallLog/properties.js';
 
   // A settled turn, exactly as it sits in chat history: the trace already
   // finished (busy=false) so it renders as a collapsed, permanent row rather

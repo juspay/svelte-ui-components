@@ -1,5 +1,5 @@
 <script lang="ts">
-  import InputButton from '$lib/InputButton/InputButton.svelte';
+  import InputButton from '#lib/InputButton/InputButton.svelte';
 
   let inputButtonValue = $state('');
   let messagesValue = $state('');

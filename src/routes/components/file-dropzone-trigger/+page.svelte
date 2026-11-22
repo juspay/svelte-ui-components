@@ -1,6 +1,6 @@
 <script lang="ts">
-  import FileInput from '$lib/FileInput/FileInput.svelte';
-  import FileDropzoneTrigger from '$lib/FileDropzoneTrigger/FileDropzoneTrigger.svelte';
+  import FileInput from '#lib/FileInput/FileInput.svelte';
+  import FileDropzoneTrigger from '#lib/FileDropzoneTrigger/FileDropzoneTrigger.svelte';
   import { createUploadFeedback } from '../_upload-feedback.svelte';
 
   const uploadIcon =

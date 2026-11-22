@@ -24,7 +24,7 @@
 />
 
 <script lang="ts">
-  import SplitInput from '$lib/SplitInput/SplitInput.svelte';
+  import SplitInput from '#lib/SplitInput/SplitInput.svelte';
   import { dispatchEvents } from '../dispatch';
 
   // `values` is $bindable on SplitInput; see ChipInput.wc.svelte for the rationale.

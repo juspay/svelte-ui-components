@@ -35,10 +35,10 @@
 />
 
 <script lang="ts">
-  import ChatBubble from '$lib/ChatBubble/ChatBubble.svelte';
+  import ChatBubble from '#lib/ChatBubble/ChatBubble.svelte';
   import { dispatchEvents } from '../dispatch';
-  import chatSvg from '$lib/assets/chat.svg?raw';
-  import closeSvg from '$lib/assets/close.svg?raw';
+  import chatSvg from '#lib/assets/chat.svg?raw';
+  import closeSvg from '#lib/assets/close.svg?raw';
   let props = $props();
 
   // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's

@@ -29,7 +29,7 @@
 />
 
 <script lang="ts">
-  import Card from '$lib/Card/Card.svelte';
+  import Card from '#lib/Card/Card.svelte';
   import { dispatchEvents } from '../dispatch';
   let { cardTitle, ...props } = $props();
 

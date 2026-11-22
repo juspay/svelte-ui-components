@@ -1,7 +1,7 @@
 <script lang="ts">
-  import Modal from '$lib/Modal/Modal.svelte';
-  import Sheet from '$lib/Sheet/Sheet.svelte';
-  import CommandMenu from '$lib/CommandMenu/CommandMenu.svelte';
+  import Modal from '#lib/Modal/Modal.svelte';
+  import Sheet from '#lib/Sheet/Sheet.svelte';
+  import CommandMenu from '#lib/CommandMenu/CommandMenu.svelte';
   let root: HTMLDivElement | null = $state(null);
   let modal = $state(false);
   let sheet = $state(false);

@@ -36,7 +36,7 @@
 />
 
 <script lang="ts">
-  import ChatMessage from '$lib/ChatMessage/ChatMessage.svelte';
+  import ChatMessage from '#lib/ChatMessage/ChatMessage.svelte';
   import { dispatchEvents } from '../dispatch';
   let { chatMessageRole, ...props } = $props();
 

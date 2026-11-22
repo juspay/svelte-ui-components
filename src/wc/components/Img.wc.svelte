@@ -21,8 +21,8 @@
 />
 
 <script lang="ts">
-  import Img from '$lib/Img/Img.svelte';
-  import type { ImgProperties } from '$lib/Img/properties';
+  import Img from '#lib/Img/Img.svelte';
+  import type { ImgProperties } from '#lib/Img/properties.js';
   import { dispatchEvents } from '../dispatch';
   let {
     element = $bindable<HTMLImageElement | SVGSVGElement | null>(null),

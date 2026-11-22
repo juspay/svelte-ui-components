@@ -49,8 +49,8 @@
 />
 
 <script lang="ts">
-  import HITL from '$lib/HITL/HITL.svelte';
-  import type { HITLProperties } from '$lib/HITL/properties';
+  import HITL from '#lib/HITL/HITL.svelte';
+  import type { HITLProperties } from '#lib/HITL/properties.js';
   import { dispatchEvents } from '../dispatch';
   // `title` is mandatory on HITL, so the renamed element property is too -- the same
   // claim `Omit<HITLProperties, 'title'>` already makes about `confirmationId`.

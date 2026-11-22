@@ -12,7 +12,7 @@
 />
 
 <script lang="ts">
-  import LoadingDots from '$lib/LoadingDots/LoadingDots.svelte';
+  import LoadingDots from '#lib/LoadingDots/LoadingDots.svelte';
   let props = $props();
 </script>
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Choicebox from '$lib/Choicebox/Choicebox.svelte';
+  import Choicebox from '#lib/Choicebox/Choicebox.svelte';
 
   let radioSelection = $state(0);
   let checkA = $state(false);

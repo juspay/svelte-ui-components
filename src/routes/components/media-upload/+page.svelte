@@ -1,5 +1,5 @@
 <script lang="ts">
-  import MediaUpload from '$lib/MediaUpload/MediaUpload.svelte';
+  import MediaUpload from '#lib/MediaUpload/MediaUpload.svelte';
 
   let files: File[] = $state([]);
 </script>

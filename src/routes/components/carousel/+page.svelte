@@ -1,7 +1,7 @@
 <script lang="ts">
-  import Carousel from '$lib/Carousel/Carousel.svelte';
-  import Card from '$lib/Card/Card.svelte';
-  import type { CarouselView } from '$lib/Carousel/properties';
+  import Carousel from '#lib/Carousel/Carousel.svelte';
+  import Card from '#lib/Card/Card.svelte';
+  import type { CarouselView } from '#lib/Carousel/properties.js';
   import LegacyPropertiesSlide from './LegacyPropertiesSlide.svelte';
 
   const promoViews: CarouselView[] = [

@@ -1,9 +1,9 @@
 <script lang="ts">
   import { describeField } from '../_field/description';
-  import Button from '$lib/Button/Button.svelte';
-  import Input from '$lib/Input/Input.svelte';
+  import Button from '#lib/Button/Button.svelte';
+  import Input from '#lib/Input/Input.svelte';
   import type { InputButtonProperties } from './properties';
-  import type { ValidationState } from '$lib/types';
+  import type { ValidationState } from '#lib/types.js';
 
   let {
     value = $bindable(''),

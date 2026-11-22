@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import Table from '$lib/Table/Table.svelte';
+  import Table from '#lib/Table/Table.svelte';
 
   // A plain element of a known width around a Table, so the width the paginator
   // has to live inside is the test's input rather than the docs layout's.

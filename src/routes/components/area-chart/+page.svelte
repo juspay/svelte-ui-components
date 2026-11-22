@@ -1,5 +1,5 @@
 <script lang="ts">
-  import AreaChart from '$lib/AreaChart/AreaChart.svelte';
+  import AreaChart from '#lib/AreaChart/AreaChart.svelte';
 
   const singleSeries = [
     {

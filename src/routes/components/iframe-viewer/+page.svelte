@@ -1,5 +1,5 @@
 <script lang="ts">
-  import IframeViewer from '$lib/IframeViewer/IframeViewer.svelte';
+  import IframeViewer from '#lib/IframeViewer/IframeViewer.svelte';
 
   const demoDoc = `data:text/html;charset=utf-8,${encodeURIComponent(
     '<div style="font-family: sans-serif; padding: 24px; color: #1a1a1a;">' +

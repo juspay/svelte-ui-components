@@ -8,33 +8,33 @@
     BarFillPattern
   } from './properties';
   import type { ChartHighlightAPI } from '../_chart/highlight';
-  import ChartContainer from '$lib/_chart/ChartContainer.svelte';
-  import Axis from '$lib/_chart/Axis.svelte';
-  import ChartTooltip from '$lib/_chart/ChartTooltip.svelte';
-  import Legend from '$lib/_chart/Legend.svelte';
+  import ChartContainer from '#lib/_chart/ChartContainer.svelte';
+  import Axis from '#lib/_chart/Axis.svelte';
+  import ChartTooltip from '#lib/_chart/ChartTooltip.svelte';
+  import Legend from '#lib/_chart/Legend.svelte';
   import {
     createBandScale,
     createLinearScale,
     niceLinearDomain,
     computeLinearTicks
-  } from '$lib/_chart/scales';
-  import { computeAutoLayout } from '$lib/_chart/geometry';
-  import { getColor, getContrastColor } from '$lib/_chart/colors';
-  import { formatNumber } from '$lib/_chart/format';
-  import { roundedRectPath } from '$lib/_chart/paths';
-  import { measureText, readCssVarPx } from '$lib/_chart/measure';
+  } from '#lib/_chart/scales.js';
+  import { computeAutoLayout } from '#lib/_chart/geometry.js';
+  import { getColor, getContrastColor } from '#lib/_chart/colors.js';
+  import { formatNumber } from '#lib/_chart/format.js';
+  import { roundedRectPath } from '#lib/_chart/paths.js';
+  import { measureText, readCssVarPx } from '#lib/_chart/measure.js';
   import {
     resolveEndLabel,
     resolveInsideLabel,
     placedLabelRect,
     dropOverlapping
-  } from '$lib/_chart/labels';
-  import { formatSeriesAggregate } from '$lib/_chart/aggregate';
-  import { defaultChartName, resolveChartName } from '$lib/_chart/a11y';
-  import type { LegendItem, BarRect } from '$lib/_chart/types';
-  import { DEFAULT_CHART_CORNER_RADIUS, DEFAULT_CHART_MAX_HEIGHT } from '$lib/_chart/types';
-  import type { TooltipAnchor } from '$lib/_chart/types';
-  import { pointerPositionIn, dismissOnOutsidePointerDown } from '$lib/_chart/interactions';
+  } from '#lib/_chart/labels.js';
+  import { formatSeriesAggregate } from '#lib/_chart/aggregate.js';
+  import { defaultChartName, resolveChartName } from '#lib/_chart/a11y.js';
+  import type { LegendItem, BarRect } from '#lib/_chart/types.js';
+  import { DEFAULT_CHART_CORNER_RADIUS, DEFAULT_CHART_MAX_HEIGHT } from '#lib/_chart/types.js';
+  import type { TooltipAnchor } from '#lib/_chart/types.js';
+  import { pointerPositionIn, dismissOnOutsidePointerDown } from '#lib/_chart/interactions.js';
   import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 
   // ── Per-instance uid prefix for <defs> ids (A1-3) ─────────────

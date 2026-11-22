@@ -19,7 +19,7 @@
 />
 
 <script lang="ts">
-  import ChatSuggestions from '$lib/ChatSuggestions/ChatSuggestions.svelte';
+  import ChatSuggestions from '#lib/ChatSuggestions/ChatSuggestions.svelte';
   import { dispatchEvents } from '../dispatch';
   let props = $props();
 

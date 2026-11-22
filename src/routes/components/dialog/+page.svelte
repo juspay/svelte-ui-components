@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { asset } from '$app/paths';
-  import maskIconUrl from '$lib/assets/close.svg?url';
+  import maskIconUrl from '#lib/assets/close.svg?url';
   import {
     Accordion,
     Button,
@@ -13,7 +13,7 @@
     Input,
     MediaPlayer,
     Select
-  } from '$lib';
+  } from '#lib';
 
   let open = $state(false);
   let phone = $state('');

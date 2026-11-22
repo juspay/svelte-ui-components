@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Label from '$lib/Label/Label.svelte';
+  import Label from '#lib/Label/Label.svelte';
 </script>
 
 <div class="page-header">

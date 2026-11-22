@@ -19,7 +19,7 @@
 />
 
 <script lang="ts">
-  import Status from '$lib/Status/Status.svelte';
+  import Status from '#lib/Status/Status.svelte';
   import { dispatchEvents } from '../dispatch';
   let props = $props();
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Link from '$lib/Link/Link.svelte';
+  import Link from '#lib/Link/Link.svelte';
   import { resolve } from '$app/paths';
 </script>
 

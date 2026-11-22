@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Pill from '$lib/Pill/Pill.svelte';
-  import Button from '$lib/Button/Button.svelte';
+  import Pill from '#lib/Pill/Pill.svelte';
+  import Button from '#lib/Button/Button.svelte';
 
   let pillItems = $state(['Svelte', 'React', 'Vue', 'Angular']);
   let dismissCount = $state(0);

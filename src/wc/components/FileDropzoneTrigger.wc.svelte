@@ -15,7 +15,7 @@
 />
 
 <script lang="ts">
-  import FileDropzoneTrigger from '$lib/FileDropzoneTrigger/FileDropzoneTrigger.svelte';
+  import FileDropzoneTrigger from '#lib/FileDropzoneTrigger/FileDropzoneTrigger.svelte';
   import { dispatchEvents } from '../dispatch';
 
   let props = $props();

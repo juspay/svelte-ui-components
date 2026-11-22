@@ -1,12 +1,12 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { asset } from '$app/paths';
-  import ThinkingIndicator from '$lib/ThinkingIndicator/ThinkingIndicator.svelte';
-  import Button from '$lib/Button/Button.svelte';
+  import ThinkingIndicator from '#lib/ThinkingIndicator/ThinkingIndicator.svelte';
+  import Button from '#lib/Button/Button.svelte';
   import type {
     ThinkingIndicatorKind,
     ThinkingIndicatorTraceRow
-  } from '$lib/ThinkingIndicator/properties';
+  } from '#lib/ThinkingIndicator/properties.js';
 
   let expanded = $state(false);
 

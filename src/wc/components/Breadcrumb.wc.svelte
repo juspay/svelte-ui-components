@@ -14,9 +14,9 @@
 />
 
 <script lang="ts">
-  import Breadcrumb from '$lib/Breadcrumb/Breadcrumb.svelte';
+  import Breadcrumb from '#lib/Breadcrumb/Breadcrumb.svelte';
   import type { Snippet } from 'svelte';
-  import type { BreadcrumbItemData, BreadcrumbItemContext } from '$lib/Breadcrumb/properties';
+  import type { BreadcrumbItemData, BreadcrumbItemContext } from '#lib/Breadcrumb/properties.js';
 
   // `ariaLabel` is an ARIAMixin accessor on every Element, so declaring it as a
   // custom-element prop displaced the one assistive tech reads. The element now

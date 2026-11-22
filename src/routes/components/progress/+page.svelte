@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Button from '$lib/Button/Button.svelte';
-  import Progress from '$lib/Progress/Progress.svelte';
+  import Button from '#lib/Button/Button.svelte';
+  import Progress from '#lib/Progress/Progress.svelte';
 
   let progressValue = $state(65);
 </script>

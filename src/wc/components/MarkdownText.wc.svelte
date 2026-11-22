@@ -16,7 +16,7 @@
 />
 
 <script lang="ts">
-  import MarkdownText from '$lib/MarkdownText/MarkdownText.svelte';
+  import MarkdownText from '#lib/MarkdownText/MarkdownText.svelte';
   let props = $props();
 </script>
 

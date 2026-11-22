@@ -27,10 +27,10 @@
 />
 
 <script lang="ts">
-  import ChatMessageList from '$lib/ChatMessageList/ChatMessageList.svelte';
-  import type { ChatMessageListProperties } from '$lib/ChatMessageList/properties';
+  import ChatMessageList from '#lib/ChatMessageList/ChatMessageList.svelte';
+  import type { ChatMessageListProperties } from '#lib/ChatMessageList/properties.js';
   import { dispatchEvents } from '../dispatch';
-  import chevronDownSvg from '$lib/assets/chevron-down.svg?raw';
+  import chevronDownSvg from '#lib/assets/chevron-down.svg?raw';
 
   // `message`, `messageBody` and `messageAttachments` stay JS-property-only: each is
   // called with a ChatMessageData argument (see properties.ts), and a <slot> cannot

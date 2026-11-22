@@ -32,10 +32,10 @@
 />
 
 <script lang="ts">
-  import CommandMenu from '$lib/CommandMenu/CommandMenu.svelte';
-  import searchSvg from '$lib/assets/search.svg?raw';
+  import CommandMenu from '#lib/CommandMenu/CommandMenu.svelte';
+  import searchSvg from '#lib/assets/search.svg?raw';
   import { dispatchEvents } from '../dispatch';
-  import type { CommandMenuProperties } from '$lib/CommandMenu/properties';
+  import type { CommandMenuProperties } from '#lib/CommandMenu/properties.js';
 
   let {
     menuAriaLabel,

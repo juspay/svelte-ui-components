@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Resizable from '$lib/Resizable/Resizable.svelte';
-  import Button from '$lib/Button/Button.svelte';
+  import Resizable from '#lib/Resizable/Resizable.svelte';
+  import Button from '#lib/Button/Button.svelte';
 
   let width = $state(280);
   let height = $state(180);

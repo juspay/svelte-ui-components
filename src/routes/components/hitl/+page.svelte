@@ -1,6 +1,6 @@
 <script lang="ts">
-  import HITL from '$lib/HITL/HITL.svelte';
-  import type { HITLEvent } from '$lib/HITL/properties';
+  import HITL from '#lib/HITL/HITL.svelte';
+  import type { HITLEvent } from '#lib/HITL/properties.js';
 
   let lastEvent = $state<HITLEvent | null>(null);
   let liveKey = $state(0);

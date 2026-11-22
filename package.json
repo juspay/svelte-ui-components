@@ -221,5 +221,9 @@
   },
   "dependencies": {
     "parse5": "^8.0.1"
+  },
+  "imports": {
+    "#lib": "./src/lib/index.js",
+    "#lib/*": "./src/lib/*"
   }
 }

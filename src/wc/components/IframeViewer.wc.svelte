@@ -24,8 +24,8 @@
 />
 
 <script lang="ts">
-  import IframeViewer from '$lib/IframeViewer/IframeViewer.svelte';
-  import type { IframeViewerProperties } from '$lib/IframeViewer/properties';
+  import IframeViewer from '#lib/IframeViewer/IframeViewer.svelte';
+  import type { IframeViewerProperties } from '#lib/IframeViewer/properties.js';
   import { dispatchEvents } from '../dispatch';
   // The element renames `title` to `iframeViewerTitle` because the platform already defines `title` on every
   // HTMLElement. The rest still carries the component's own props -- saying so is what

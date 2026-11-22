@@ -1,4 +1,9 @@
-import type { CustomValidator, InputDataType, TextTransformer, ValidationState } from '$lib/types';
+import type {
+  CustomValidator,
+  InputDataType,
+  TextTransformer,
+  ValidationState
+} from '#lib/types.js';
 import type { HTMLInputAttributes } from 'svelte/elements';
 import type { Snippet } from 'svelte';
 

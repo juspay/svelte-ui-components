@@ -32,8 +32,8 @@
 />
 
 <script lang="ts">
-  import MediaUpload from '$lib/MediaUpload/MediaUpload.svelte';
-  import addSvg from '$lib/assets/add.svg?raw';
+  import MediaUpload from '#lib/MediaUpload/MediaUpload.svelte';
+  import addSvg from '#lib/assets/add.svg?raw';
   import { dispatchEvents } from '../dispatch';
 
   let props = $props();

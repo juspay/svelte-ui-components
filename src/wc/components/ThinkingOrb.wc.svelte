@@ -20,8 +20,8 @@
 />
 
 <script lang="ts">
-  import ThinkingOrb from '$lib/ThinkingOrb/ThinkingOrb.svelte';
-  import type { ThinkingOrbProperties } from '$lib/ThinkingOrb/properties';
+  import ThinkingOrb from '#lib/ThinkingOrb/ThinkingOrb.svelte';
+  import type { ThinkingOrbProperties } from '#lib/ThinkingOrb/properties.js';
   import { dispatchEvents } from '../dispatch';
   // Renamed from `ariaLabel`, which every HTMLElement already defines: a prop of
   // that name would shadow the platform's own aria reflection. The host's

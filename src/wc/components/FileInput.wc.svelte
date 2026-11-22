@@ -26,7 +26,7 @@
 />
 
 <script lang="ts">
-  import FileInput from '$lib/FileInput/FileInput.svelte';
+  import FileInput from '#lib/FileInput/FileInput.svelte';
   import { dispatchEvents } from '../dispatch';
 
   let { element = $bindable<HTMLInputElement | null>(null), ...props } = $props();

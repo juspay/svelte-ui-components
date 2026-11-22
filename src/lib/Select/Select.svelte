@@ -4,11 +4,11 @@
   import { describeField } from '../_field/description';
   import { onMount, tick } from 'svelte';
   import type { SelectItem, SelectPlacement, SelectProperties } from './properties';
-  import Pill from '$lib/Pill/Pill.svelte';
-  import Img from '$lib/Img/Img.svelte';
+  import Pill from '#lib/Pill/Pill.svelte';
+  import Img from '#lib/Img/Img.svelte';
   import { computeSelectDropdownPosition } from './dropdownPosition';
-  import chevronDownSvg from '$lib/assets/chevron-down.svg?raw';
-  import checkmarkSvg from '$lib/assets/checkmark.svg?raw';
+  import chevronDownSvg from '#lib/assets/chevron-down.svg?raw';
+  import checkmarkSvg from '#lib/assets/checkmark.svg?raw';
 
   let {
     native = false,

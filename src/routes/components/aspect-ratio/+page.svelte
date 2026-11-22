@@ -1,5 +1,5 @@
 <script lang="ts">
-  import AspectRatio from '$lib/AspectRatio/AspectRatio.svelte';
+  import AspectRatio from '#lib/AspectRatio/AspectRatio.svelte';
 </script>
 
 <div class="page-header">

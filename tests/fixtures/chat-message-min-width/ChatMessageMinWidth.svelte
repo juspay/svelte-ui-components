@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import ChatMessage from '$lib/ChatMessage/ChatMessage.svelte';
+  import ChatMessage from '#lib/ChatMessage/ChatMessage.svelte';
 
   const contexts = ['row', 'column', 'grid', 'block'] as const;
 

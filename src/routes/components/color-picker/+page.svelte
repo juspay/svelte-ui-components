@@ -1,5 +1,5 @@
 <script lang="ts">
-  import ColorPicker from '$lib/ColorPicker/ColorPicker.svelte';
+  import ColorPicker from '#lib/ColorPicker/ColorPicker.svelte';
 
   let color = $state('#2196f3');
   let describedColor = $state('#2196f3');

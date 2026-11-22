@@ -42,8 +42,8 @@
 />
 
 <script lang="ts">
-  import SankeyChart from '$lib/SankeyChart/SankeyChart.svelte';
-  import type { SankeyChartProperties } from '$lib/SankeyChart/properties';
+  import SankeyChart from '#lib/SankeyChart/SankeyChart.svelte';
+  import type { SankeyChartProperties } from '#lib/SankeyChart/properties.js';
   import { dispatchEvents } from '../dispatch';
 
   let {

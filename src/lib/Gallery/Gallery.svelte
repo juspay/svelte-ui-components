@@ -8,11 +8,11 @@
   import Img from '../Img/Img.svelte';
   import Button from '../Button/Button.svelte';
   import Icon from '../Icon/Icon.svelte';
-  import closeSvg from '$lib/assets/close.svg?raw';
-  import chevronLeftSvg from '$lib/assets/chevron-left-lg.svg?raw';
-  import chevronRightSvg from '$lib/assets/chevron-right-lg.svg?raw';
-  import editSvg from '$lib/assets/edit.svg?raw';
-  import deleteSvg from '$lib/assets/delete.svg?raw';
+  import closeSvg from '#lib/assets/close.svg?raw';
+  import chevronLeftSvg from '#lib/assets/chevron-left-lg.svg?raw';
+  import chevronRightSvg from '#lib/assets/chevron-right-lg.svg?raw';
+  import editSvg from '#lib/assets/edit.svg?raw';
+  import deleteSvg from '#lib/assets/delete.svg?raw';
 
   let {
     images,

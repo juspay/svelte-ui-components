@@ -1,6 +1,6 @@
 <script lang="ts">
-  import Button from '$lib/Button/Button.svelte';
-  import FileInput from '$lib/FileInput/FileInput.svelte';
+  import Button from '#lib/Button/Button.svelte';
+  import FileInput from '#lib/FileInput/FileInput.svelte';
   import { createUploadFeedback } from '../_upload-feedback.svelte';
 
   const basic = createUploadFeedback();

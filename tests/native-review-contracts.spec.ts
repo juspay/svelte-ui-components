@@ -213,6 +213,13 @@ test('review: WC source/track nodes belong to the native player across rendering
     track.srclang = 'en';
     track.label = 'Review captions';
     player.append(source, track);
+    // A rejected play() is caught by the player and reported only here, so it is
+    // recorded for the playback assertion's failure message.
+    const playErrors: string[] = [];
+    Reflect.set(window, 'reviewPlayErrors', playErrors);
+    Reflect.set(player, 'onplayerror', (error: unknown) => {
+      playErrors.push(error instanceof Error ? `${error.name}: ${error.message}` : String(error));
+    });
     document.body.append(player);
     const button = document.createElement('button');
     button.textContent = 'Play projected media';
@@ -256,8 +263,27 @@ test('review: WC source/track nodes belong to the native player across rendering
       )
     ).toBe(true);
     await expect(media).toHaveJSProperty('paused', true);
+    await media.evaluate((node: HTMLMediaElement) => {
+      const events: string[] = [];
+      Reflect.set(window, 'reviewMediaEvents', events);
+      Reflect.set(window, 'reviewPlayErrors', []);
+      for (const type of ['play', 'playing', 'pause', 'ended', 'error']) {
+        node.addEventListener(type, () => events.push(type));
+      }
+    });
     await page.getByRole('button', { name: 'Play projected media', exact: true }).click();
-    await expect(media).toHaveJSProperty('paused', false);
+    // The `play` event, not a later read of `paused`: the audio fixture is one second
+    // long, and a media element that reaches its end is paused again, so polling
+    // `paused` races the clip on a slow runner. A failure prints the events and any
+    // play() rejection, which is the evidence a CI-only failure needs.
+    await expect
+      .poll(() =>
+        page.evaluate(() => ({
+          events: Reflect.get(window, 'reviewMediaEvents'),
+          playErrors: Reflect.get(window, 'reviewPlayErrors')
+        }))
+      )
+      .toEqual({ events: expect.arrayContaining(['play']), playErrors: [] });
   }
 });
 

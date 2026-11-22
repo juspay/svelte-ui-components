@@ -3,14 +3,14 @@
   "version": "4.0.7",
   "repository": {
     "type": "git",
-    "url": "https://github.com/juspay/svelte-ui-components",
+    "url": "git+https://github.com/juspay/svelte-ui-components.git",
     "directory": "mcp"
   },
   "description": "MCP server for @juspay/svelte-ui-components - provides structured access to component props, CSS variables, and usage patterns",
   "type": "module",
   "main": "build/index.js",
   "bin": {
-    "svelte-ui-components-mcp": "./build/index.js"
+    "svelte-ui-components-mcp": "build/index.js"
   },
   "scripts": {
     "prebuild": "rm -rf build/docs && mkdir -p build && cp -r ../docs build/docs 2>/dev/null || true",

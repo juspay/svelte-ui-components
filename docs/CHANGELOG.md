@@ -2,7 +2,14 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.5)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.6)
+
+pnpm audit on the root reported 29 advisories. In-range bumps clear 24 of them: vite 8.0.16 -&gt; 8.3.8, vitest 5.0.0 -&gt; 5.1.1 (@vitest/mocker), @sveltejs/kit 2.70.3 -&gt; 2.70.4, @sveltejs/adapter-static 3.0.10 -&gt; 3.0.11, eslint 10.4.1 -&gt; 10.15.0 and typescript-eslint 8.60.1 -&gt; 8.73.0 (minimatch 11), plus transitive undici and fast-uri. The 5 that remain are fixed only in SvelteKit 3, a major upgrade left for its own change.
+
+-
+build(deps): bump root dev dependencies with open security advisories ([f455bb4](https://github.com/juspay/svelte-ui-components/commit/f455bb4c5e2b8191f9666199fcbb7dcf4ad10155))
+
+## [4.57.6](https://github.com/juspay/svelte-ui-components/compare/4.57.6..4.57.5) - 20 November 2026
 
 Root pnpm-lock.yaml: brace-expansion 5.0.9 -&gt; 5.0.13, devalue 5.8.1 -&gt; 5.9.4, source-map-js 1.2.1 -&gt; 1.2.4. mcp/package-lock.json: @modelcontextprotocol/sdk 1.29.0 -&gt; 1.32.2 plus the in-range fixes npm audit offered, taking the mcp package from 7 advisories to 0. Replaces the Dependabot PR, which carried the same bumps but also wrote an mcp importer into the root pnpm-lock.yaml although the repo has no pnpm workspace.
 

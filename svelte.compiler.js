@@ -1,5 +1,10 @@
-import adapter from '@sveltejs/adapter-static';
-import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+/**
+ * The repo's Svelte compiler options, in one place. SvelteKit 3 no longer reads
+ * `svelte.config.js`, so these are passed to `sveltekit()` in vite.config.ts and imported
+ * directly by everything else that needs the same options: both ESLint configs and
+ * src/lib/compiler-warning-dispositions.test.ts, which compiles sources with exactly
+ * these options to prove which warnings the repo really reports.
+ */
 
 /**
  * `src/wc/components/*.wc.svelte` declare `<svelte:options customElement={{ tag, ... }} />`
@@ -26,22 +31,8 @@ const keepWarning = (warning) =>
     /\.wc\.svelte$/.test(warning.filename)
   );
 
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-  preprocess: vitePreprocess(),
-  compilerOptions: {
-    runes: true,
-    warningFilter: keepWarning
-  },
-  kit: {
-    adapter: adapter(),
-    paths: {
-      // SvelteKit types `base` as '' or a leading-slash path; the environment variable is a plain
-      // string. This file is type-checked only because compiler-warning-dispositions.test.ts
-      // imports it.
-      base: /** @type {'' | `/${string}`} */ (process.env.BASE_PATH ?? '')
-    }
-  }
+/** @satisfies {import('svelte/compiler').CompileOptions} */
+export const compilerOptions = {
+  runes: true,
+  warningFilter: keepWarning
 };
-
-export default config;

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { base } from '$app/paths';
+  import { asset } from '$app/paths';
   import Badge from '$lib/Badge/Badge.svelte';
 </script>
 
@@ -9,6 +9,6 @@
 </div>
 
 <div class="demo-row" style="align-items: center;">
-  <Badge image="{base}/demo-media/placeholder-square.svg" value="5" />
-  <Badge image="{base}/demo-media/placeholder-square.svg" value="12" />
+  <Badge image={asset('demo-media/placeholder-square.svg')} value="5" />
+  <Badge image={asset('demo-media/placeholder-square.svg')} value="12" />
 </div>

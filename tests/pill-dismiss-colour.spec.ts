@@ -183,5 +183,9 @@ test('sui-pill supplies a visible default dismiss glyph and honours a slotted gl
       .locator('[slot="dismiss-icon"]')
       .evaluate((element) => element.assignedSlot !== null)
   ).toBe(true);
-  await expect(customPill.getByRole('button', { name: 'Dismiss' }).locator('svg')).toHaveCount(0);
+  // The built-in glyph stays in the shadow tree as the native slot's fallback content, which the
+  // browser does not draw while the slot has an assigned node. Only a drawn glyph counts.
+  await expect(
+    customPill.getByRole('button', { name: 'Dismiss' }).locator('svg').filter({ visible: true })
+  ).toHaveCount(0);
 });

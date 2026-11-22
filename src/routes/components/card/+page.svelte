@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { base } from '$app/paths';
+  import { resolve } from '$app/paths';
   import Card from '$lib/Card/Card.svelte';
   import Button from '$lib/Button/Button.svelte';
 
@@ -25,7 +25,7 @@
         {/snippet}
         {#snippet descriptionSnippet()}
           <p style="margin: 0; font: inherit;" data-pw="snippet-card-description">
-            Counts from order creation. <a href="{base}/components/button">Learn more</a>
+            Counts from order creation. <a href={resolve('components/button')}>Learn more</a>
           </p>
         {/snippet}
         <p style="margin: 0;">
@@ -143,7 +143,7 @@
   </p>
   <div class="demo-row" style="gap: 16px; flex-wrap: wrap;">
     <div class="card-clickable">
-      <Card href="{base}/components/button" testId="internal-link-card">
+      <Card href={resolve('components/button')} testId="internal-link-card">
         <div class="platform-tile">
           <span class="platform-icon">🔗</span>
           <span class="platform-name">Internal link</span>
@@ -185,7 +185,7 @@
 
     <div class="card-parity-theme">
       <Card
-        href="{base}/components/card"
+        href={resolve('components/card')}
         title="Layout Parity"
         description="Fixed-size layout for a bounding-box comparison test."
         testId="parity-anchor-card"
@@ -224,7 +224,7 @@
       <Card
         testId="as-figure-with-href-card"
         as="figure"
-        href="{base}/components/button"
+        href={resolve('components/button')}
         title="Figure ignores href"
       >
         <p style="margin: 0;">

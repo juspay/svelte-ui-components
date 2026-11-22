@@ -1,6 +1,13 @@
+import type { RouteId } from '$app/types';
+
+type SlugOf<Route> = Route extends `/components/${infer Slug}` ? Slug : never;
+
+/** Every page under `/components`, read from the generated routes: a nav entry without a page is a type error. */
+export type ComponentSlug = SlugOf<RouteId>;
+
 export type NavItem = {
   name: string;
-  slug: string;
+  slug: ComponentSlug;
 };
 
 export type NavGroup = {
@@ -173,3 +180,12 @@ export const componentNav: NavGroup[] = [
 ];
 
 export const firstSlug = componentNav[0].items[0].slug;
+
+const navSlugs: ReadonlyMap<string, ComponentSlug> = new Map(
+  componentNav.flatMap((group) => group.items.map((item) => [item.slug, item.slug] as const))
+);
+
+/** The nav's slug for text read from a URL or a doc link, or null when no page has it. */
+export function componentSlugFor(text: string): ComponentSlug | null {
+  return navSlugs.get(text) ?? null;
+}

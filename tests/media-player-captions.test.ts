@@ -495,9 +495,10 @@ test.describe('<sui-media-player> captions (ISSUE-031)', () => {
         slot
       );
 
-    // Captions hidden: the off glyph is the slotted one, the built-in is not drawn.
+    // Captions hidden: the off glyph is the slotted one, the built-in is not drawn. The built-in
+    // stays in the shadow tree as the native slot's fallback content, so only drawn glyphs count.
     await expect.poll(() => assigned('captions-icon')).toEqual(['OFF']);
-    await expect(toggle.locator('svg')).toHaveCount(0);
+    await expect(toggle.locator('svg').filter({ visible: true })).toHaveCount(0);
 
     await toggle.click();
     await expect.poll(() => assigned('captions-on-icon')).toEqual(['ON']);

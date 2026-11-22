@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { base } from '$app/paths';
+  import { asset } from '$app/paths';
   import Img from '$lib/Img/Img.svelte';
 
   const markTransformed = (svg: string): string =>
@@ -14,14 +14,14 @@
 <h2 class="demo-examples-heading">Examples</h2>
 
 <div class="demo-row">
-  <Img src="{base}/demo-media/sunset-beach-thumb.jpg" alt="Sample landscape" />
-  <Img src="{base}/demo-media/sunset-beach-thumb.jpg" alt="Sample architecture" />
-  <Img src="{base}/demo-media/sunset-beach-thumb.jpg" alt="Sample nature" />
+  <Img src={asset('demo-media/sunset-beach-thumb.jpg')} alt="Sample landscape" />
+  <Img src={asset('demo-media/sunset-beach-thumb.jpg')} alt="Sample architecture" />
+  <Img src={asset('demo-media/sunset-beach-thumb.jpg')} alt="Sample nature" />
 </div>
 
 <div class="demo-row">
   <Img
-    src="{base}/demo-media/sunset-beach-thumb.jpg"
+    src={asset('demo-media/sunset-beach-thumb.jpg')}
     alt="Test-targeted image"
     testId="sample-img"
   />
@@ -31,7 +31,7 @@
 <h3>SVG inlining</h3>
 <div class="demo-row" data-pw="img-inline-svg-row">
   <Img
-    src="{base}/demo-media/status-success.svg"
+    src={asset('demo-media/status-success.svg')}
     alt="Success icon"
     inlineSvg
     testId="img-inline-svg"
@@ -42,7 +42,7 @@
 <h3>SVG inlining with transformSvg</h3>
 <div class="demo-row" data-pw="img-inline-svg-transform-row">
   <Img
-    src="{base}/demo-media/placeholder-square.svg"
+    src={asset('demo-media/placeholder-square.svg')}
     alt="Transformed placeholder"
     transformSvg={markTransformed}
     testId="img-inline-svg-transform"

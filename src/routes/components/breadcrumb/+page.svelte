@@ -1,25 +1,25 @@
 <script lang="ts">
-  import { base } from '$app/paths';
+  import { resolve } from '$app/paths';
   import Breadcrumb from '$lib/Breadcrumb/Breadcrumb.svelte';
   import type { BreadcrumbItemData, BreadcrumbItemContext } from '$lib/Breadcrumb/properties';
 
   const basicItems: BreadcrumbItemData[] = [
-    { href: `${base}/components/breadcrumb`, label: 'Home' },
-    { href: `${base}/components/breadcrumb`, label: 'Products' },
+    { href: resolve('components/breadcrumb'), label: 'Home' },
+    { href: resolve('components/breadcrumb'), label: 'Products' },
     { href: '', label: 'Laptops' }
   ];
 
   const deepItems: BreadcrumbItemData[] = [
-    { href: `${base}/components/breadcrumb`, label: 'Home' },
-    { href: `${base}/components/breadcrumb`, label: 'Settings' },
-    { href: `${base}/components/breadcrumb`, label: 'Account' },
-    { href: `${base}/components/breadcrumb`, label: 'Security' },
+    { href: resolve('components/breadcrumb'), label: 'Home' },
+    { href: resolve('components/breadcrumb'), label: 'Settings' },
+    { href: resolve('components/breadcrumb'), label: 'Account' },
+    { href: resolve('components/breadcrumb'), label: 'Security' },
     { href: '', label: 'Two-Factor Auth' }
   ];
 
   const iconItems: BreadcrumbItemData[] = [
-    { href: `${base}/components/breadcrumb`, label: 'Home' },
-    { href: `${base}/components/breadcrumb`, label: 'Orders' },
+    { href: resolve('components/breadcrumb'), label: 'Home' },
+    { href: resolve('components/breadcrumb'), label: 'Orders' },
     { href: '', label: 'Order #1234' }
   ];
 </script>

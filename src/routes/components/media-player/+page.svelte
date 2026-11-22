@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { base } from '$app/paths';
+  import { asset } from '$app/paths';
   import MediaPlayer from '$lib/MediaPlayer/MediaPlayer.svelte';
   import Button from '$lib/Button/Button.svelte';
 
@@ -42,13 +42,13 @@
   <MediaPlayer
     ariaLabel="Custom controls video"
     type="video"
-    src="{base}/demo-media/promo-clip.mp4"
+    src={asset('demo-media/promo-clip.mp4')}
     testId="media-player-video-demo"
   />
 
   <MediaPlayer
     type="image"
-    src="{base}/demo-media/sunset-beach.jpg"
+    src={asset('demo-media/sunset-beach.jpg')}
     alt="Sunset over the ocean"
     testId="media-player-image-demo"
   />
@@ -56,9 +56,9 @@
   <MediaPlayer
     ariaLabel="Native controls video"
     type="video"
-    src="{base}/demo-media/promo-clip.mp4"
+    src={asset('demo-media/promo-clip.mp4')}
     controls
-    captionsSrc="{base}/demo-media/promo-clip.vtt"
+    captionsSrc={asset('demo-media/promo-clip.vtt')}
     captionsLabel="English"
     captionsSrcLang="en"
     bind:captionsVisible={nativeCaptionsOn}
@@ -69,8 +69,8 @@
   <MediaPlayer
     ariaLabel="Captioned video"
     type="video"
-    src="{base}/demo-media/promo-clip.mp4"
-    captionsSrc="{base}/demo-media/promo-clip.vtt"
+    src={asset('demo-media/promo-clip.mp4')}
+    captionsSrc={asset('demo-media/promo-clip.vtt')}
     captionsLabel="English"
     captionsSrcLang="en"
     captionsButton
@@ -86,7 +86,7 @@
   <MediaPlayer
     ariaLabel="Externally paused video"
     type="video"
-    src="{base}/demo-media/promo-clip.mp4"
+    src={asset('demo-media/promo-clip.mp4')}
     bind:playing={playingA}
     testId="media-player-external-pause-demo"
   />
@@ -94,7 +94,7 @@
   <MediaPlayer
     ariaLabel="Externally played video"
     type="video"
-    src="{base}/demo-media/promo-clip.mp4"
+    src={asset('demo-media/promo-clip.mp4')}
     autoplay={false}
     bind:playing={playingB}
     testId="media-player-external-play-demo"
@@ -103,7 +103,7 @@
   <MediaPlayer
     ariaLabel="Transport controls video"
     type="video"
-    src="{base}/demo-media/promo-clip.mp4"
+    src={asset('demo-media/promo-clip.mp4')}
     autoplay={false}
     muted
     bind:playing={transportPlaying}

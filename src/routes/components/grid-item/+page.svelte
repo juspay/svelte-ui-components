@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { base } from '$app/paths';
+  import { asset } from '$app/paths';
   import GridItem from '$lib/GridItem/GridItem.svelte';
 </script>
 
@@ -10,12 +10,12 @@
 
 <div class="demo-row">
   <GridItem
-    icon="{base}/demo-media/placeholder-square.svg"
+    icon={asset('demo-media/placeholder-square.svg')}
     text="Photos"
     testId="grid-item-photos"
   />
-  <GridItem icon="{base}/demo-media/placeholder-square.svg" text="Videos" />
-  <GridItem icon="{base}/demo-media/placeholder-square.svg" text="Music" />
+  <GridItem icon={asset('demo-media/placeholder-square.svg')} text="Videos" />
+  <GridItem icon={asset('demo-media/placeholder-square.svg')} text="Music" />
 </div>
 
 <h2>Loading</h2>
@@ -26,7 +26,7 @@
 </p>
 <div class="demo-row">
   <GridItem
-    icon="{base}/demo-media/placeholder-square.svg"
+    icon={asset('demo-media/placeholder-square.svg')}
     text="Uploading"
     showLoader
     testId="grid-item-loading"

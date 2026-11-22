@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { base } from '$app/paths';
+  import { asset } from '$app/paths';
   import IconStack from '$lib/IconStack/IconStack.svelte';
 </script>
 
@@ -11,8 +11,8 @@
 <div class="demo-row">
   <IconStack
     icons={[
-      { type: 'image', content: `${base}/demo-media/placeholder-square.svg` },
-      { type: 'image', content: `${base}/demo-media/placeholder-square.svg` },
+      { type: 'image', content: asset('demo-media/placeholder-square.svg') },
+      { type: 'image', content: asset('demo-media/placeholder-square.svg') },
       { type: 'text', content: '+3' }
     ]}
     testId="icon-stack-demo"

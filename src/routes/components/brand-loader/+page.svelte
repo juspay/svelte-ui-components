@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { base } from '$app/paths';
+  import { asset } from '$app/paths';
   import BrandLoader from '$lib/BrandLoader/BrandLoader.svelte';
 </script>
 
@@ -16,7 +16,7 @@
      actually see. --brand-loader-height is the documented way to say so. -->
 <div class="demo-row" style="--brand-loader-height: 360px;">
   <BrandLoader
-    brandLogoURL="{base}/demo-media/placeholder-square.svg"
+    brandLogoURL={asset('demo-media/placeholder-square.svg')}
     brandText="Loading"
     subText="Please wait..."
     testId="brand-loader-default-demo"

@@ -2,7 +2,24 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.6)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.7)
+
+Clears the last 5 root audit advisories, which are fixed only in SvelteKit 3: @sveltejs/kit 2.70.4 -&gt; 3.4, adapter-static 3 -&gt; 4, @sveltejs/package 2 -&gt; 3, and Svelte 5.56 -&gt; 5.59 (SvelteKit 3 needs 5.57.1 or later). The unused @sveltejs/adapter-auto is dropped.
+
+SvelteKit 3 no longer reads svelte.config.js. Its options move into sveltekit() in vite.config.ts, and the compiler options move to svelte.compiler.js, which both ESLint configs and the compiler-warning test import.
+
+The docs app moves off removed APIs: $app/stores to $app/state, and `base` to asset() for files in static/ and resolve() for pages. Nav slugs are now typed from the generated routes, so a nav entry without a page is a type error.
+
+$lib is kept through SvelteKit's deprecated alias option. Moving about 700 imports and the scripts that parse $lib specifiers to #lib is left for its own change.
+
+The packaged dist is byte-identical to 4.57.7 apart from the order of type unions in seven .d.ts files. dist-wc now bundles Svelte 5.59.1.
+
+-
+build(deps): upgrade to SvelteKit 3 ([937d5ec](https://github.com/juspay/svelte-ui-components/commit/937d5ec012f2dece5ef0bd6b559728dcb94aff2c))
+-
+build(mcp): declare npm as the mcp package's package manager ([01312ba](https://github.com/juspay/svelte-ui-components/commit/01312ba8db6c79d9a5957cc024e60652e326cec4))
+
+## [4.57.7](https://github.com/juspay/svelte-ui-components/compare/4.57.7..4.57.6) - 22 November 2026
 
 pnpm audit on the root reported 29 advisories. In-range bumps clear 24 of them: vite 8.0.16 -&gt; 8.3.8, vitest 5.0.0 -&gt; 5.1.1 (@vitest/mocker), @sveltejs/kit 2.70.3 -&gt; 2.70.4, @sveltejs/adapter-static 3.0.10 -&gt; 3.0.11, eslint 10.4.1 -&gt; 10.15.0 and typescript-eslint 8.60.1 -&gt; 8.73.0 (minimatch 11), plus transitive undici and fast-uri. The 5 that remain are fixed only in SvelteKit 3, a major upgrade left for its own change.
 

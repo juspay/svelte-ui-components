@@ -66,8 +66,10 @@ describe('migration-assets layout — pinned to the configuration that decides i
     const bin: unknown = Reflect.get(record, 'bin');
     const files: unknown = Reflect.get(record, 'files');
 
+    // Without a leading `./`: that is the form `npm pkg fix` writes and npm publishes, so a
+    // publish no longer warns that it corrected the field.
     expect(bin).toEqual({
-      'sui-codemod': `./${DIST_CODEMOD_DIRNAME}/${COMPILED_CODEMOD_DIRNAME}/bin.js`
+      'sui-codemod': `${DIST_CODEMOD_DIRNAME}/${COMPILED_CODEMOD_DIRNAME}/bin.js`
     });
     // `files` is an allow-list: the assets only ship because the whole
     // `dist-codemod` directory does.

@@ -15,7 +15,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/juspay/svelte-ui-components"
+    "url": "git+https://github.com/juspay/svelte-ui-components.git"
   },
   "license": "MIT",
   "homepage": "https://github.com/juspay/svelte-ui-components",
@@ -214,7 +214,7 @@
     }
   },
   "bin": {
-    "sui-codemod": "./dist-codemod/codemod/bin.js"
+    "sui-codemod": "dist-codemod/codemod/bin.js"
   },
   "engines": {
     "node": ">=22.18"

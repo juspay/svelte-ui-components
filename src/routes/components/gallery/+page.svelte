@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { base } from '$app/paths';
+  import { asset } from '$app/paths';
   import Button from '$lib/Button/Button.svelte';
   import Gallery from '$lib/Gallery/Gallery.svelte';
   import Modal from '$lib/Modal/Modal.svelte';
@@ -7,18 +7,18 @@
 
   const images: GalleryImage[] = [
     {
-      src: `${base}/demo-media/sunset-beach.jpg`,
-      thumbnail: `${base}/demo-media/sunset-beach-thumb.jpg`,
+      src: asset('demo-media/sunset-beach.jpg'),
+      thumbnail: asset('demo-media/sunset-beach-thumb.jpg'),
       alt: 'Sunset over the beach',
       caption: 'Golden hour, low tide'
     },
     {
-      src: `${base}/demo-media/promo-clip-poster.jpg`,
+      src: asset('demo-media/promo-clip-poster.jpg'),
       alt: 'Promo clip poster frame',
       caption: 'First frame of the promo clip'
     },
     {
-      src: `${base}/demo-media/assistant-avatar.png`,
+      src: asset('demo-media/assistant-avatar.png'),
       alt: 'Assistant avatar'
     }
   ];

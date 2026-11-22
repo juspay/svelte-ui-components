@@ -1,8 +1,30 @@
+import adapter from '@sveltejs/adapter-static';
 import { sveltekit } from '@sveltejs/kit/vite';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 import { defineConfig } from 'vitest/config';
+import { compilerOptions } from './svelte.compiler.js';
+
+// SvelteKit types `base` as '' or a leading-slash path; the environment variable is a plain
+// string, so it is checked rather than asserted.
+const isBasePath = (path: string): path is '' | `/${string}` => path === '' || path.startsWith('/');
+const base = process.env.BASE_PATH ?? '';
+if (!isBasePath(base)) {
+  throw new Error(`BASE_PATH must be empty or start with "/", got "${base}"`);
+}
 
 export default defineConfig({
-  plugins: [sveltekit()],
+  plugins: [
+    sveltekit({
+      preprocess: vitePreprocess(),
+      compilerOptions,
+      adapter: adapter(),
+      paths: { base },
+      // SvelteKit 3 replaced `$lib` with the `#lib` subpath import. About 700 imports and
+      // several scripts that read import specifiers still use `$lib`, so the old alias is
+      // kept until they move over in their own change.
+      alias: { $lib: 'src/lib' }
+    })
+  ],
   // Vitest always resolves through Vite's SSR pipeline, which by default
   // picks the same server-oriented compiled output a real SSR request would
   // get rather than the client one `mount()` -- and so `@testing-library/

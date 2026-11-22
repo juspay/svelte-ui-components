@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { render } from '@testing-library/svelte';
 import { compile } from 'svelte/compiler';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import config from '../../svelte.config.js';
+import { compilerOptions } from '../../svelte.compiler.js';
 import Card from './Card/Card.svelte';
 import Pill from './Pill/Pill.svelte';
 import ThemeSwitcher from './ThemeSwitcher/ThemeSwitcher.svelte';
@@ -24,7 +24,7 @@ function codesFor(source: string, filename: string): string[] {
   return compile(source, {
     filename: join(ROOT, filename),
     generate: false,
-    ...config.compilerOptions
+    ...compilerOptions
   }).warnings.map((warning) => warning.code);
 }
 

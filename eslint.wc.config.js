@@ -24,7 +24,9 @@
 import ts from 'typescript-eslint';
 import svelte from 'eslint-plugin-svelte';
 import unusedImports from 'eslint-plugin-unused-imports';
-import svelteConfig from './svelte.config.js';
+import { compilerOptions } from './svelte.compiler.js';
+
+const svelteConfig = { compilerOptions };
 
 export default [
   {

@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { page } from '$app/stores';
-  import { base } from '$app/paths';
+  import { page } from '$app/state';
   import { marked } from 'marked';
   import type { Snippet } from 'svelte';
-  import { componentNav } from './_nav';
+  import { componentNav, componentSlugFor, type ComponentSlug } from './_nav';
+  import { componentHref } from './_href';
   import { documentationName } from './_documentation';
 
   let { children }: { children: Snippet } = $props();
@@ -78,7 +78,7 @@
    */
   const GITHUB_DOCS = 'https://github.com/juspay/svelte-ui-components/blob/release/docs';
 
-  const nameToSlug: Record<string, string> = {};
+  const nameToSlug: Record<string, ComponentSlug> = {};
   for (const group of componentNav) {
     for (const item of group.items) {
       nameToSlug[item.name] = item.slug;
@@ -95,9 +95,9 @@
     const demoPrefix = 'https://juspay.github.io/svelte-ui-components/components/';
     if (href.startsWith(demoPrefix)) {
       const url = new URL(href);
-      const slug = url.pathname.slice('/svelte-ui-components/components/'.length);
-      if (Object.hasOwn(slugToName, slug)) {
-        return `${base}/components/${slug}${url.search}${url.hash}`;
+      const slug = componentSlugFor(url.pathname.slice('/svelte-ui-components/components/'.length));
+      if (slug !== null) {
+        return `${componentHref(slug)}${url.search}${url.hash}`;
       }
     }
     const match = /^\.\/([A-Za-z0-9_.-]+)\.md(#.*)?$/.exec(href);
@@ -111,7 +111,7 @@
       // without it prerenders fine here and fails the deployed build -- which is
       // exactly how it shipped: the prerenderer rejects a link that does not begin
       // with `paths.base`, and only the Pages job sets BASE_PATH.
-      return `${base}/components/${slug}${hash ?? ''}`;
+      return `${componentHref(slug)}${hash ?? ''}`;
     }
     return `${GITHUB_DOCS}/${name}.md${hash ?? ''}`;
   }
@@ -141,7 +141,7 @@
     return '';
   }
 
-  let currentSlug = $derived($page.url.pathname.split('/').pop() ?? '');
+  let currentSlug = $derived(page.url.pathname.split('/').pop() ?? '');
   let docName = $derived(documentationName(slugToName[currentSlug] ?? '', documentationNames));
   let rawMarkdown = $derived(docName === null ? '' : docs[docName]);
   let cleanMarkdown = $derived(rawMarkdown.replace(/^# .+\n+/, ''));

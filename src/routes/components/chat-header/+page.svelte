@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { base } from '$app/paths';
+  import { asset } from '$app/paths';
   import ChatHeader from '$lib/ChatHeader/ChatHeader.svelte';
   let expanded = $state(false);
 </script>
@@ -18,7 +18,7 @@
 <div class="chat-theme chat-card header-frame">
   <ChatHeader title="Breeze Assistant" subtitle="Typically replies in seconds" onclose={() => {}}>
     {#snippet avatar()}
-      <img class="header-avatar" src="{base}/demo-media/assistant-avatar.png" alt="" />
+      <img class="header-avatar" src={asset('demo-media/assistant-avatar.png')} alt="" />
     {/snippet}
   </ChatHeader>
 </div>

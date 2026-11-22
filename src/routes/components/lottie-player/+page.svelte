@@ -1,6 +1,6 @@
 <script lang="ts">
   import '../_capability-demo-controls.css';
-  import { base } from '$app/paths';
+  import { asset } from '$app/paths';
   import { LottiePlayer } from '$lib';
   import animationData from './motion.json';
 
@@ -31,6 +31,13 @@
     syncReady();
     return { destroy: () => observer.disconnect() };
   }
+
+  // The load-error demo needs the URL of a file that does not exist. `asset()` only accepts
+  // files that are in `static/`, so the URL is built beside one that is.
+  const unavailableAnimationSrc = asset('demo-media/attachment-notes.txt').replace(
+    /attachment-notes\.txt$/,
+    'unavailable-animation.json'
+  );
 </script>
 
 <div class="page-header">
@@ -48,9 +55,7 @@
       <div class="player-host" use:observeDrawing>
         <LottiePlayer
           bind:this={player}
-          {...unavailable
-            ? { src: `${base}/demo-media/unavailable-animation.json` }
-            : { animationData }}
+          {...unavailable ? { src: unavailableAnimationSrc } : { animationData }}
           {loop}
           {speed}
           autoplay={false}

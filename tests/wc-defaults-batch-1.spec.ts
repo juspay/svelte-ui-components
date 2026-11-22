@@ -19,22 +19,19 @@ import { expect, test } from '@playwright/test';
  * `document.createElement('slot')`. Confirmed against Pill.wc.svelte's already-fixed,
  * compiled `dismissIcon` snippet in `dist-wc/index.js`.
  *
- * Svelte's custom-element wrapper (`SvelteElement` in
- * `.../dom/elements/custom-element.js`) only creates a genuine native `<slot>` DOM
- * element for a given name -- appended into the shadow tree -- when the custom
- * element's real light-DOM children already include one tagged `slot="x"` at
- * `connectedCallback` time (`get_custom_elements_slots()` inspects `this.childNodes`
- * once, before the component is created). When the host supplies no such child, no
- * `<slot>` element is created anywhere in the shadow tree for that name -- the `slot()`
- * runtime helper instead calls the compiled `fallbackFn` directly. So the two
- * directions this suite checks are asymmetric, not mirror images:
+ * How a forwarded `<slot>` reaches the DOM changed under the suite. Up to Svelte 5.56 the
+ * custom-element wrapper created a native `<slot>` for a name only when the host already had
+ * a `slot="x"` child at connect time, and otherwise called the fallback directly. From 5.57
+ * the `slot()` helper always creates a native `<slot>` and puts the fallback inside it, so the
+ * browser's own fallback rules decide what is drawn. The suite therefore asserts the platform
+ * behaviour, which holds under both:
  *
- *  - No host content: assert there is NO `slot[name="x"]` element in the shadow tree
- *    at all (`querySelector` returns `null`), and separately assert the component's
- *    own default markup rendered in its place.
- *  - Host content supplied: a real `<slot>` element IS created, and
- *    `HTMLSlotElement.assignedNodes({ flatten: true })` reliably reports the
- *    host-provided node as assigned to it.
+ *  - No host content: nothing is assigned to `slot[name="x"]` (or there is no such slot), and
+ *    the component's own default markup is present -- so it is what the browser draws. This
+ *    reads `assignedNodes()` without `flatten`: flattened, an unassigned slot reports its own
+ *    fallback children, which would make the default look like host content.
+ *  - Host content supplied: a real `<slot>` element exists, and
+ *    `HTMLSlotElement.assignedNodes({ flatten: true })` reports the host-provided node.
  *
  * Default-content checks that read `.innerHTML` are written to look for a concrete
  * child element (e.g. an `<svg>`) rather than a nonzero string length: Svelte's own
@@ -98,9 +95,12 @@ test.describe('wc-defaults-batch-1: native slot fallback restores built-in defau
 
       return {
         defaultCheckmarkHasSvg: defaultRoot?.querySelector('.box .icon svg') !== null,
-        defaultSlotExists: defaultSlot !== null,
+        defaultSlotted:
+          defaultSlot instanceof HTMLSlotElement && defaultSlot.assignedNodes().length > 0,
         indeterminateDashHasSvg: indeterminateRoot?.querySelector('.box .icon.dash svg') !== null,
-        indeterminateSlotExists: indeterminateSlot !== null,
+        indeterminateSlotted:
+          indeterminateSlot instanceof HTMLSlotElement &&
+          indeterminateSlot.assignedNodes().length > 0,
         overrideAssignedCount:
           overrideSlot instanceof HTMLSlotElement
             ? overrideSlot.assignedNodes({ flatten: true }).length
@@ -118,16 +118,16 @@ test.describe('wc-defaults-batch-1: native slot fallback restores built-in defau
       "no host content: component's own checkmark svg renders"
     ).toBe(true);
     expect(
-      measured.defaultSlotExists,
-      'no host content: no native <slot> element is created for checked-icon'
+      measured.defaultSlotted,
+      'no host content: nothing is slotted over the built-in checked-icon'
     ).toBe(false);
     expect(
       measured.indeterminateDashHasSvg,
       "no host content: component's own dash svg renders"
     ).toBe(true);
     expect(
-      measured.indeterminateSlotExists,
-      'no host content: no native <slot> element is created for indeterminate-icon'
+      measured.indeterminateSlotted,
+      'no host content: nothing is slotted over the built-in indeterminate-icon'
     ).toBe(false);
     expect(
       measured.overrideAssignedCount,
@@ -179,7 +179,8 @@ test.describe('wc-defaults-batch-1: native slot fallback restores built-in defau
         defaultBubbleText: (
           defaultRoot?.querySelector('.tooltip-bubble .tooltip-text')?.textContent ?? ''
         ).trim(),
-        defaultSlotExists: defaultSlot !== null,
+        defaultSlotted:
+          defaultSlot instanceof HTMLSlotElement && defaultSlot.assignedNodes().length > 0,
         overrideAssignedCount:
           overrideSlot instanceof HTMLSlotElement
             ? overrideSlot.assignedNodes({ flatten: true }).length
@@ -197,8 +198,8 @@ test.describe('wc-defaults-batch-1: native slot fallback restores built-in defau
       "no host content: the tooltip's own text prop renders in the bubble"
     ).toBe('Save your changes');
     expect(
-      measured.defaultSlotExists,
-      'no host content: no native <slot> element is created for content'
+      measured.defaultSlotted,
+      'no host content: nothing is slotted over the built-in content'
     ).toBe(false);
     expect(
       measured.overrideAssignedCount,
@@ -246,9 +247,12 @@ test.describe('wc-defaults-batch-1: native slot fallback restores built-in defau
 
       return {
         defaultBackButton: defaultRoot?.querySelector('.back') !== null,
-        defaultLeftSlotExists: defaultLeftSlot !== null,
+        defaultLeftSlotted:
+          defaultLeftSlot instanceof HTMLSlotElement && defaultLeftSlot.assignedNodes().length > 0,
         defaultHeadingText: (defaultRoot?.querySelector('.text')?.textContent ?? '').trim(),
-        defaultCenterSlotExists: defaultCenterSlot !== null,
+        defaultCenterSlotted:
+          defaultCenterSlot instanceof HTMLSlotElement &&
+          defaultCenterSlot.assignedNodes().length > 0,
         overrideLeftAssignedCount:
           overrideLeftSlot instanceof HTMLSlotElement
             ? overrideLeftSlot.assignedNodes({ flatten: true }).length
@@ -274,16 +278,16 @@ test.describe('wc-defaults-batch-1: native slot fallback restores built-in defau
       "no host content: the toolbar's own back control renders"
     ).toBe(true);
     expect(
-      measured.defaultLeftSlotExists,
-      'no host content: no native <slot> element is created for left-content'
+      measured.defaultLeftSlotted,
+      'no host content: nothing is slotted over the built-in left-content'
     ).toBe(false);
     expect(
       measured.defaultHeadingText,
       "no host content: the toolbar's own heading text renders"
     ).toBe('Settings');
     expect(
-      measured.defaultCenterSlotExists,
-      'no host content: no native <slot> element is created for center-content'
+      measured.defaultCenterSlotted,
+      'no host content: nothing is slotted over the built-in center-content'
     ).toBe(false);
     expect(
       measured.overrideLeftAssignedCount,
@@ -345,7 +349,8 @@ test.describe('wc-defaults-batch-1: native slot fallback restores built-in defau
         defaultSecondaryText: (
           defaultRoot?.querySelector('.footer-secondary-button .button-text')?.textContent ?? ''
         ).trim(),
-        defaultSlotExists: defaultSlot !== null,
+        defaultSlotted:
+          defaultSlot instanceof HTMLSlotElement && defaultSlot.assignedNodes().length > 0,
         overrideAssignedCount:
           overrideSlot instanceof HTMLSlotElement
             ? overrideSlot.assignedNodes({ flatten: true }).length
@@ -367,8 +372,8 @@ test.describe('wc-defaults-batch-1: native slot fallback restores built-in defau
       "no host content: the modal's own secondary footer button renders"
     ).toBe('Cancel');
     expect(
-      measured.defaultSlotExists,
-      'no host content: no native <slot> element is created for footer'
+      measured.defaultSlotted,
+      'no host content: nothing is slotted over the built-in footer'
     ).toBe(false);
     expect(
       measured.overrideAssignedCount,
@@ -422,11 +427,15 @@ test.describe('wc-defaults-batch-1: native slot fallback restores built-in defau
         defaultTitleText: (
           defaultRoot?.querySelector('.empty-state-title')?.textContent ?? ''
         ).trim(),
-        defaultTitleSlotExists: defaultTitleSlot !== null,
+        defaultTitleSlotted:
+          defaultTitleSlot instanceof HTMLSlotElement &&
+          defaultTitleSlot.assignedNodes().length > 0,
         defaultDescriptionText: (
           defaultRoot?.querySelector('.empty-state-description')?.textContent ?? ''
         ).trim(),
-        defaultDescriptionSlotExists: defaultDescriptionSlot !== null,
+        defaultDescriptionSlotted:
+          defaultDescriptionSlot instanceof HTMLSlotElement &&
+          defaultDescriptionSlot.assignedNodes().length > 0,
         overrideTitleAssignedCount:
           overrideTitleSlot instanceof HTMLSlotElement
             ? overrideTitleSlot.assignedNodes({ flatten: true }).length
@@ -451,16 +460,16 @@ test.describe('wc-defaults-batch-1: native slot fallback restores built-in defau
       'No results'
     );
     expect(
-      measured.defaultTitleSlotExists,
-      'no host content: no native <slot> element is created for title-snippet'
+      measured.defaultTitleSlotted,
+      'no host content: nothing is slotted over the built-in title-snippet'
     ).toBe(false);
     expect(
       measured.defaultDescriptionText,
       "no host content: the component's own description renders"
     ).toBe('Try a different search.');
     expect(
-      measured.defaultDescriptionSlotExists,
-      'no host content: no native <slot> element is created for description-snippet'
+      measured.defaultDescriptionSlotted,
+      'no host content: nothing is slotted over the built-in description-snippet'
     ).toBe(false);
     expect(
       measured.overrideTitleAssignedCount,
@@ -509,7 +518,8 @@ test.describe('wc-defaults-batch-1: native slot fallback restores built-in defau
 
       return {
         defaultLabelText: (defaultRoot?.querySelector('.text')?.textContent ?? '').trim(),
-        defaultSlotExists: defaultSlot !== null,
+        defaultSlotted:
+          defaultSlot instanceof HTMLSlotElement && defaultSlot.assignedNodes().length > 0,
         overrideAssignedCount:
           overrideSlot instanceof HTMLSlotElement
             ? overrideSlot.assignedNodes({ flatten: true }).length
@@ -527,8 +537,8 @@ test.describe('wc-defaults-batch-1: native slot fallback restores built-in defau
       "no host content: the component's own label text renders"
     ).toBe('Remember me');
     expect(
-      measured.defaultSlotExists,
-      'no host content: no native <slot> element is created for checkbox-label'
+      measured.defaultSlotted,
+      'no host content: nothing is slotted over the built-in checkbox-label'
     ).toBe(false);
     expect(
       measured.overrideAssignedCount,
@@ -571,7 +581,8 @@ test.describe('wc-defaults-batch-1: native slot fallback restores built-in defau
 
       return {
         defaultValueText: (defaultRoot?.querySelector('.statcard-value')?.textContent ?? '').trim(),
-        defaultSlotExists: defaultSlot !== null,
+        defaultSlotted:
+          defaultSlot instanceof HTMLSlotElement && defaultSlot.assignedNodes().length > 0,
         overrideAssignedCount:
           overrideSlot instanceof HTMLSlotElement
             ? overrideSlot.assignedNodes({ flatten: true }).length
@@ -589,8 +600,8 @@ test.describe('wc-defaults-batch-1: native slot fallback restores built-in defau
       "no host content: the component's own value prop renders"
     ).toBe('1,024');
     expect(
-      measured.defaultSlotExists,
-      'no host content: no native <slot> element is created for value-snippet'
+      measured.defaultSlotted,
+      'no host content: nothing is slotted over the built-in value-snippet'
     ).toBe(false);
     expect(
       measured.overrideAssignedCount,
@@ -635,7 +646,8 @@ test.describe('wc-defaults-batch-1: native slot fallback restores built-in defau
 
       return {
         defaultIconHasSvg: defaultRoot?.querySelector('.command-menu-search-icon svg') !== null,
-        defaultSlotExists: defaultSlot !== null,
+        defaultSlotted:
+          defaultSlot instanceof HTMLSlotElement && defaultSlot.assignedNodes().length > 0,
         overrideAssignedCount:
           overrideSlot instanceof HTMLSlotElement
             ? overrideSlot.assignedNodes({ flatten: true }).length
@@ -653,8 +665,8 @@ test.describe('wc-defaults-batch-1: native slot fallback restores built-in defau
       "no host content: the component's own search icon svg renders"
     ).toBe(true);
     expect(
-      measured.defaultSlotExists,
-      'no host content: no native <slot> element is created for search-icon'
+      measured.defaultSlotted,
+      'no host content: nothing is slotted over the built-in search-icon'
     ).toBe(false);
     expect(
       measured.overrideAssignedCount,
@@ -699,7 +711,8 @@ test.describe('wc-defaults-batch-1: native slot fallback restores built-in defau
 
       return {
         defaultArrowHasSvg: defaultRoot?.querySelector('.split-button-arrow svg') !== null,
-        defaultSlotExists: defaultSlot !== null,
+        defaultSlotted:
+          defaultSlot instanceof HTMLSlotElement && defaultSlot.assignedNodes().length > 0,
         overrideAssignedCount:
           overrideSlot instanceof HTMLSlotElement
             ? overrideSlot.assignedNodes({ flatten: true }).length
@@ -717,8 +730,8 @@ test.describe('wc-defaults-batch-1: native slot fallback restores built-in defau
       "no host content: the component's own chevron svg renders"
     ).toBe(true);
     expect(
-      measured.defaultSlotExists,
-      'no host content: no native <slot> element is created for dropdown-icon'
+      measured.defaultSlotted,
+      'no host content: nothing is slotted over the built-in dropdown-icon'
     ).toBe(false);
     expect(
       measured.overrideAssignedCount,

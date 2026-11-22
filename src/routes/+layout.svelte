@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import { afterNavigate } from '$app/navigation';
-  import { base } from '$app/paths';
+  import { asset } from '$app/paths';
+  import { componentHref } from './components/_href';
   import { componentNav } from './components/_nav';
   import { routeName, routeTitle } from './components/_titles';
   import { scrollRegions } from './components/_scroll-regions';
@@ -19,7 +20,7 @@
 
   // The route id, not the URL: it carries no `paths.base`, which the URL does on
   // Pages, so the current link is marked there too.
-  let routeId = $derived($page.route.id);
+  let routeId = $derived(page.route.id);
   // One title per route, derived from the same inventory as the sidebar. It is a
   // reactive derivation of the route, so it is in the prerendered HTML on a direct
   // load and updates on client-side navigation without any per-page code.
@@ -140,7 +141,7 @@
 
 <svelte:head>
   <title>{pageTitle}</title>
-  <link href={`${base}/fonts/nunito-sans/fonts.css`} rel="stylesheet" />
+  <link href={asset('fonts/nunito-sans/fonts.css')} rel="stylesheet" />
 </svelte:head>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -207,7 +208,7 @@
           <span class="nav-group-label">{group.category}</span>
           {#each group.items as item (item.slug)}
             <a
-              href="{base}/components/{item.slug}"
+              href={componentHref(item.slug)}
               class="nav-link"
               class:active={routeId === `/components/${item.slug}`}
               aria-current={routeId === `/components/${item.slug}` ? 'page' : null}

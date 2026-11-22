@@ -1,6 +1,6 @@
 <script lang="ts">
   import '../_capability-demo-controls.css';
-  import { base } from '$app/paths';
+  import { asset } from '$app/paths';
   import { AttachmentChipRow } from '$lib';
   import type { AttachmentChipImage, AttachmentChipFile, AttachmentChipVideo } from '$lib';
 
@@ -8,7 +8,7 @@
     {
       id: 'landscape',
       filename: 'landscape.svg',
-      thumbnailData: `${base}/demo-media/attachment-landscape.svg`
+      thumbnailData: asset('demo-media/attachment-landscape.svg')
     }
   ];
   const initialFiles: AttachmentChipFile[] = Array.from({ length: 6 }, (_, i) => ({
@@ -19,7 +19,7 @@
     {
       id: 'promo',
       filename: 'promo-clip.mp4',
-      thumbnailData: `${base}/demo-media/attachment-landscape.svg`
+      thumbnailData: asset('demo-media/attachment-landscape.svg')
     }
   ];
   let images = $state([...initialImages]);
@@ -89,7 +89,7 @@
     <h3>{opened.name}</h3>
     {#if opened.kind === 'image'}
       <img
-        src="{base}/demo-media/attachment-landscape.svg"
+        src={asset('demo-media/attachment-landscape.svg')}
         alt="Blue hills under a sun"
         width="240"
         height="120"
@@ -100,17 +100,17 @@
         controls
         preload="metadata"
         width="240"
-        src="{base}/demo-media/promo-clip.mp4"
+        src={asset('demo-media/promo-clip.mp4')}
         ><track
           kind="captions"
-          src="{base}/demo-media/promo-clip.vtt"
+          src={asset('demo-media/promo-clip.vtt')}
           srclang="en"
           label="English"
         /></video
       >
     {:else}
       <p>Local sample notes: review the attachment before sending.</p>
-      <a href="{base}/demo-media/attachment-notes.txt" download={opened.name}
+      <a href={asset('demo-media/attachment-notes.txt')} download={opened.name}
         >Download {opened.name}</a
       >
     {/if}

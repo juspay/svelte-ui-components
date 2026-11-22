@@ -46,7 +46,7 @@ describe('routeTitle', () => {
 
 describe('route inventory', () => {
   it('lists every demo route on disk in _nav.ts, so it is reachable and titled', () => {
-    const inNav = new Set(navItems.map((item) => item.slug));
+    const inNav = new Set<string>(navItems.map((item) => item.slug));
     expect(routeSlugsOnDisk.filter((slug) => !inNav.has(slug))).toEqual([]);
   });
 

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { base } from '$app/paths';
+  import { asset } from '$app/paths';
   import ThinkingIndicator from '$lib/ThinkingIndicator/ThinkingIndicator.svelte';
   import Button from '$lib/Button/Button.svelte';
   import type {
@@ -175,7 +175,7 @@
 <div class="demo-row">
   <ThinkingIndicator label="Working on your refund summary…">
     {#snippet avatar()}
-      <img class="assistant-avatar" src="{base}/demo-media/assistant-avatar.png" alt="" />
+      <img class="assistant-avatar" src={asset('demo-media/assistant-avatar.png')} alt="" />
     {/snippet}
   </ThinkingIndicator>
 </div>
@@ -197,7 +197,7 @@
     expanded={false}
   >
     {#snippet avatar()}
-      <img class="assistant-avatar" src="{base}/demo-media/assistant-avatar.png" alt="" />
+      <img class="assistant-avatar" src={asset('demo-media/assistant-avatar.png')} alt="" />
     {/snippet}
   </ThinkingIndicator>
 </div>

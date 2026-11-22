@@ -143,7 +143,7 @@ const { chromium } = req('@playwright/test');
 // re-derivation using the repo root would silently compute the wrong port.
 const pwPort = await import(pathToFileURL(path.join(ROOT, 'scripts/pw-port.ts')).href);
 const PORT = pwPort.playwrightPort(pwPort.FUNCTIONAL);
-const BASE_PATH = process.env.BASE_PATH ?? ''; // mirrors svelte.config.js
+const BASE_PATH = process.env.BASE_PATH ?? ''; // mirrors paths.base in vite.config.ts
 const BASE_URL = `http://localhost:${PORT}`;
 
 // ---------------------------------------------------------------------------

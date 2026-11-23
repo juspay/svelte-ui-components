@@ -411,6 +411,9 @@ for (const theme of THEMES) {
     });
 
     test('a disabled action stays legible and does not take the hover fill', async ({ page }) => {
+      // A contrast capture per action: about 21s in a fast Linux WebKit run and 26-29s
+      // in a slower one, against the 30s default.
+      test.setTimeout(90_000);
       await useTheme(page, theme);
 
       const rows: { label: string; ratio: number; status: string }[] = [];

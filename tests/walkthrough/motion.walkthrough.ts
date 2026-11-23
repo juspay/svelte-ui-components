@@ -456,10 +456,14 @@ test.describe('ModalAnimation: fade and fly entrances collapse under reduced mot
     await highlight(modalContent);
     await beat(page, 1_500);
 
+    // fly drives offset and opacity off the same eased t over 60px, and the pause
+    // lands at opacity <= 0.8, so at least 20% of the travel (12px) remains. A
+    // settled modal is under 5px. More than 30px held only when frames came fast
+    // enough to catch the early fade; at Linux WebKit's slower rate it was 21.6px.
     expect(
       flyMid.offset,
       'the paused frame must show real in-flight travel, not an already-settled modal'
-    ).toBeGreaterThan(30);
+    ).toBeGreaterThan(10);
     // svelte/transition's fly defaults opacity to 0, so this path fades too,
     // independently of the translate above.
     expect(

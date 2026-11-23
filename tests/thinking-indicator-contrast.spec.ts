@@ -112,12 +112,14 @@ const showcase = {
 } as const;
 
 test.describe('ThinkingIndicator rendered text contrast', () => {
+  // About 80s per theme in a fast Linux WebKit run and 90s in a slower one, so a
+  // 90s budget had no headroom at all.
   // Hold the demos' own long timers so the busy phases being measured stay busy for as
   // long as a multi-phase capture takes, instead of racing a 3.2s page timer.
   test.beforeEach(async ({ page }) => {
     await installThinkingClock(page, { holdTimeoutsMs: 500 });
   });
-  test.setTimeout(90_000);
+  test.setTimeout(240_000);
 
   for (const theme of THEMES) {
     for (const [name, locate] of Object.entries(showcase)) {

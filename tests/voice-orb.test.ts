@@ -210,13 +210,13 @@ test.describe('VoiceOrb', () => {
     await page.evaluate(() => {
       document.documentElement.dataset.theme = 'dark';
     });
-    await page.waitForTimeout(300);
-    const dark = await meanInk();
 
     // Dark particles on a light page, light particles on a dark one. A colour
-    // resolved once at mount and never again would return the same number.
+    // resolved once at mount and never again would return the same number. The
+    // dark reading is polled rather than taken after a fixed wait: a slow Linux
+    // WebKit runner was still mid-recolour at 300ms (128).
     expect(light).toBeLessThan(120);
-    expect(dark).toBeGreaterThan(160);
+    await expect.poll(meanInk).toBeGreaterThan(160);
   });
 
   test('an AnalyserNode drives the orb: louder sound, bigger sphere', async ({ page }) => {

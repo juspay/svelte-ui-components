@@ -146,6 +146,7 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
+<a class="skip-link" href="#component-content" inert={drawerOpen}>Skip to component</a>
 <div class="app-layout">
   <header class="topbar" data-pw="app-topbar" inert={drawerOpen}>
     <button
@@ -232,12 +233,35 @@
       onclick={() => closeNav(true)}
     ></button>
   {/if}
-  <main class="content" data-pw="app-main" inert={drawerOpen} use:scrollRegions={scrollOptions}>
+  <main
+    id="component-content"
+    tabindex="-1"
+    class="content"
+    data-pw="app-main"
+    inert={drawerOpen}
+    use:scrollRegions={scrollOptions}
+  >
     {@render children()}
   </main>
 </div>
 
 <style>
+  .skip-link {
+    position: fixed;
+    inset-block-start: 8px;
+    inset-inline-start: 8px;
+    z-index: 60;
+    padding: 8px 12px;
+    transform: translateY(calc(-100% - 12px));
+    background: var(--doc-bg);
+    color: var(--doc-accent-text);
+    border-radius: 6px;
+  }
+  .skip-link:focus {
+    transform: none;
+    outline: 2px solid var(--doc-accent);
+  }
+
   :global(body) {
     margin: 0;
     padding: 0;

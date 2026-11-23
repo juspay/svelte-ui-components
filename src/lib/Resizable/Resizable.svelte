@@ -346,4 +346,28 @@
     right: 0;
     cursor: nwse-resize;
   }
+  /* Only enlarge hits where the host has reserved a clear strip. The
+     pseudo-element leaves the painted handle and panel geometry intact. */
+  @media (any-pointer: coarse) {
+    .handle::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      min-width: var(--resizable-touch-target-size, 0px);
+      min-height: var(--resizable-touch-target-size, 0px);
+    }
+    .handle:not([data-edge*='right'])::after {
+      left: 0;
+    }
+    .handle[data-edge*='right']::after {
+      right: 0;
+    }
+    .handle:not([data-edge*='bottom'])::after {
+      top: 0;
+    }
+    .handle[data-edge*='bottom']::after {
+      bottom: 0;
+    }
+  }
 </style>

@@ -21,6 +21,7 @@
 
   let active: {
     pointerId: number;
+    owner: HTMLElement;
     startX: number;
     startY: number;
     baseX: number;
@@ -66,23 +67,28 @@
   }
 
   function startDrag(event: PointerEvent & { currentTarget: HTMLElement }): void {
-    if (disabled || !withinHandle(event)) {
+    if (disabled || active !== null || !withinHandle(event)) {
       return;
     }
     event.preventDefault();
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      return;
+    }
     active = {
+      owner: event.currentTarget,
       pointerId: event.pointerId,
       startX: event.clientX,
       startY: event.clientY,
       baseX: x,
       baseY: y
     };
-    event.currentTarget.setPointerCapture(event.pointerId);
     onmovestart?.({ x, y });
   }
 
   function moveDrag(event: PointerEvent & { currentTarget: HTMLElement }): void {
-    if (active === null) {
+    if (active === null || active.pointerId !== event.pointerId) {
       return;
     }
     const nextX = axis === 'y' ? x : active.baseX + (event.clientX - active.startX);
@@ -93,15 +99,22 @@
     onmove?.({ x, y });
   }
 
-  function endDrag(event: PointerEvent & { currentTarget: HTMLElement }): void {
-    if (active === null) {
+  function finishDrag(): void {
+    const session = active;
+    if (session === null) {
       return;
     }
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
     active = null;
+    if (session.owner.hasPointerCapture(session.pointerId)) {
+      session.owner.releasePointerCapture(session.pointerId);
+    }
     onmoveend?.({ x, y });
+  }
+
+  function endDrag(event: PointerEvent): void {
+    if (active?.pointerId === event.pointerId) {
+      finishDrag();
+    }
   }
 
   function keyDrag(event: KeyboardEvent & { currentTarget: HTMLElement }): void {
@@ -134,6 +147,8 @@
   }
 </script>
 
+<svelte:window onblur={finishDrag} />
+
 <!-- This named content group moves with arrow keys; it can contain independent
      controls, so button semantics would hide their accessibility semantics. -->
 <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
@@ -148,6 +163,8 @@
   onpointerdown={startDrag}
   onpointermove={moveDrag}
   onpointerup={endDrag}
+  onpointercancel={endDrag}
+  onlostpointercapture={endDrag}
   onkeydown={keyDrag}
 >
   {#if typeof children === 'function'}

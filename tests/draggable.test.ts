@@ -2,39 +2,41 @@ import { expect, test } from '@playwright/test';
 import { gotoHydrated } from './support/hydrated';
 
 test.describe('Draggable', () => {
-  test('dragging the handle moves the element', async ({ page }) => {
-    await gotoHydrated(page, '/components/draggable');
+  for (const button of ['left', 'middle', 'right'] as const) {
+    test(`dragging the handle with the ${button} button moves the element`, async ({ page }) => {
+      await gotoHydrated(page, '/components/draggable');
 
-    const box = page.getByTestId('draggable-demo');
-    const before = await box.boundingBox();
-    if (before === null) {
-      throw new Error('Draggable boundingBox is null');
-    }
+      const box = page.getByTestId('draggable-demo');
+      const before = await box.boundingBox();
+      if (before === null) {
+        throw new Error('Draggable boundingBox is null');
+      }
 
-    const handle = page.locator('.drag-handle');
-    const handleBox = await handle.boundingBox();
-    if (handleBox === null) {
-      throw new Error('handle boundingBox is null');
-    }
+      const handle = page.locator('.drag-handle');
+      const handleBox = await handle.boundingBox();
+      if (handleBox === null) {
+        throw new Error('handle boundingBox is null');
+      }
 
-    const startX = handleBox.x + handleBox.width / 2;
-    const startY = handleBox.y + handleBox.height / 2;
-    const deltaX = 80;
-    const deltaY = 40;
+      const startX = handleBox.x + handleBox.width / 2;
+      const startY = handleBox.y + handleBox.height / 2;
+      const deltaX = 80;
+      const deltaY = 40;
 
-    await page.mouse.move(startX, startY);
-    await page.mouse.down();
-    await page.mouse.move(startX + deltaX, startY + deltaY, { steps: 5 });
-    await page.mouse.up();
+      await page.mouse.move(startX, startY);
+      await page.mouse.down({ button });
+      await page.mouse.move(startX + deltaX, startY + deltaY, { steps: 5 });
+      await page.mouse.up({ button });
 
-    const after = await box.boundingBox();
-    if (after === null) {
-      throw new Error('Draggable boundingBox is null after drag');
-    }
-    // The element moves by exactly the pointer delta (position is unconstrained here).
-    expect(Math.round(after.x - before.x)).toBe(deltaX);
-    expect(Math.round(after.y - before.y)).toBe(deltaY);
-  });
+      const after = await box.boundingBox();
+      if (after === null) {
+        throw new Error('Draggable boundingBox is null after drag');
+      }
+      // The element moves by exactly the pointer delta (position is unconstrained here).
+      expect(Math.round(after.x - before.x)).toBe(deltaX);
+      expect(Math.round(after.y - before.y)).toBe(deltaY);
+    });
+  }
 
   test('clicking body content outside the handle does not start a drag', async ({ page }) => {
     await gotoHydrated(page, '/components/draggable');
@@ -62,6 +64,36 @@ test.describe('Draggable', () => {
     }
     expect(Math.round(after.x)).toBe(Math.round(before.x));
     expect(Math.round(after.y)).toBe(Math.round(before.y));
+  });
+
+  test('only the owning pointer can finish a drag, and a cancelled drag can restart', async ({
+    page
+  }) => {
+    await gotoHydrated(page, '/components/draggable');
+    const box = page.getByTestId('draggable-demo');
+    const handle = page.locator('.drag-handle');
+    await handle.hover();
+    await handle.evaluate((node) =>
+      node.addEventListener(
+        'pointerdown',
+        (event) => {
+          node.setAttribute('data-owner', String((event as PointerEvent).pointerId));
+        },
+        { once: true }
+      )
+    );
+    await page.mouse.down();
+    const owner = Number(await handle.getAttribute('data-owner'));
+    await box.dispatchEvent('pointercancel', { pointerId: owner + 1 });
+    await expect(box).toHaveClass(/dragging/);
+    await box.dispatchEvent('pointercancel', { pointerId: owner });
+    await expect(box).not.toHaveClass(/dragging/);
+    await page.mouse.up();
+    await handle.hover();
+    await page.mouse.down();
+    await expect(box).toHaveClass(/dragging/);
+    await page.mouse.up();
+    await expect(box).not.toHaveClass(/dragging/);
   });
 
   test('arrow keys move the element by step once focused', async ({ page }) => {

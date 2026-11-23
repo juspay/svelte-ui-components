@@ -291,11 +291,12 @@ test.describe('VoiceOrb', () => {
     await expect(calls).toHaveText('0');
     await expect(level).toHaveText('0.00');
 
+    // Starting the tone awaits AudioContext.resume(), which on a loaded Linux
+    // Firefox runner can outlast a fixed wait. Wait for the tone, then for the level.
     await page.getByTestId('tone-start').click();
+    await expect(page.getByTestId('audio-source')).toHaveText('tone');
     await page.getByTestId('tone-level').fill('1');
-    await page.waitForTimeout(1200);
-
-    expect(Number(await level.textContent())).toBeGreaterThan(0.2);
+    await expect.poll(async () => Number(await level.textContent())).toBeGreaterThan(0.2);
     const whileLoud = Number(await calls.textContent());
     expect(whileLoud).toBeGreaterThan(0);
 
@@ -311,9 +312,11 @@ test.describe('VoiceOrb', () => {
   }) => {
     await gotoHydrated(page, '/components/voice-orb');
     await page.getByTestId('tone-start').click();
+    await expect(page.getByTestId('audio-source')).toHaveText('tone');
     await page.getByTestId('tone-level').fill('1');
-    await page.waitForTimeout(1200);
-    expect(Number(await page.getByTestId('orb-level').textContent())).toBeGreaterThan(0.2);
+    await expect
+      .poll(async () => Number(await page.getByTestId('orb-level').textContent()))
+      .toBeGreaterThan(0.2);
 
     await page.getByTestId('audio-stop').click();
     await expect(page.getByTestId('orb-level')).toHaveText('0.00');

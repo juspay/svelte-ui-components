@@ -2,10 +2,8 @@ name: Firefox and WebKit verification
 
 on:
   # Weekly, Monday 04:30 UTC. Scheduled workflows run from the default branch (release).
-  # The last dispatched run (45003303232, release 4.57.10) was still red: WebKit has 7
-  # functional failures (clipboard, motion, 320px overflow, caption scroll); Firefox had 10,
-  # 3 since fixed, leaving 5 VoiceOrb audio plus a WAV playback and a Sankey timeout that
-  # pass locally. All are known, so a red week is news only when that list changes.
+  # Run 45125019123 left WebKit with no failures and Firefox with the 5 VoiceOrb audio
+  # tests, which the sound server step below fixes. So a red week is news.
   schedule:
     - cron: '30 4 * * 1'
   workflow_dispatch:
@@ -51,6 +49,18 @@ jobs:
 
       - name: Install browser
         run: pnpm exec playwright install --with-deps ${{ matrix.engine }}
+
+      # The runner has no sound server, so Firefox cannot open an audio output and an
+      # AudioContext never leaves "suspended": resume() stays pending and the VoiceOrb
+      # audio tests see silence. A null sink gives it a device to play into (probe run
+      # 45174796424: pending without it, running with it, all 5 VoiceOrb tests pass).
+      - name: Start a silent sound server
+        if: matrix.engine == 'firefox'
+        run: |
+          sudo apt-get install -y --no-install-recommends pulseaudio
+          pulseaudio --start --exit-idle-time=-1
+          pactl load-module module-null-sink sink_name=ci_null
+          pactl set-default-sink ci_null
 
       - name: Record tested source and browser inventory
         run: |

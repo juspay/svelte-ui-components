@@ -286,6 +286,9 @@
 
   .pin-input {
     flex: 1;
+    /* A flex item's minimum is its intrinsic width; without this the input keeps the
+       engine's default size and pushes Send past a 320px screen. */
+    min-width: 0;
     padding: 8px 12px;
     border: 1px solid var(--doc-border, #e5e7eb);
     border-radius: 8px;

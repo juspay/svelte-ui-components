@@ -13,10 +13,31 @@ export const prepareNativeClipboard = async (context: BrowserContext): Promise<v
   // supplies the read gesture. No navigator.clipboard replacement is installed.
 };
 
-/** Read the real browser clipboard, using a native paste gesture in Firefox. */
+/**
+ * Read the real browser clipboard. Chromium reads it directly. Firefox, and WebKit
+ * where readText() is refused (Linux WebKit rejects it with NotAllowedError even
+ * with clipboard-read granted; macOS WebKit allows it), use a native paste gesture.
+ */
 export const readNativeClipboard = async (page: Page): Promise<string> => {
-  if (page.context().browser()?.browserType().name() !== 'firefox') {
+  const engine = page.context().browser()?.browserType().name();
+  if (engine === 'chromium') {
     return page.evaluate(() => navigator.clipboard.readText());
+  }
+  if (engine === 'webkit') {
+    const direct = await page.evaluate(() =>
+      navigator.clipboard.readText().then(
+        (text) => ({ ok: true, text }),
+        (error: unknown) => {
+          if (error instanceof DOMException && error.name === 'NotAllowedError') {
+            return { ok: false, text: '' };
+          }
+          throw error;
+        }
+      )
+    );
+    if (direct.ok) {
+      return direct.text;
+    }
   }
   const previous = await page.evaluateHandle(() => document.activeElement);
   await page.evaluate(() => {

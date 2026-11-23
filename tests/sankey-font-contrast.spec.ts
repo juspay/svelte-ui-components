@@ -200,6 +200,10 @@ for (const theme of ['light', 'dark'] as const) {
     test('node and column text retain real contrast through hover, keyboard focus and dimming', async ({
       page
     }) => {
+      // Two screenshots per label, for every label in three states plus the crowded
+      // chart's columns: about 28s in a fast Linux WebKit run, over 30s in a slower
+      // one. The work is the check; the budget gets the headroom.
+      test.setTimeout(90_000);
       await gotoHydrated(page, '/components/sankey-chart');
       await page.evaluate(() => document.fonts.ready);
       const chart = page.locator('.sankey-chart').first();

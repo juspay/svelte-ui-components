@@ -2,7 +2,23 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.10)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.11)
+
+The WC source/track review test read `paused` after clicking play. Its audio
+fixture is one second of silence, and a media element that reaches its end is
+paused again, so on a slow runner the poll could miss the playback entirely; a
+rejected play() is caught by the player and was invisible. The Firefox engines
+run failed there with no evidence. The test now waits for the `play` event and
+records onplayerror, so a failure says which of the two happened.
+
+-
+test: assert media playback started by its play event and report play() errors ([442e833](https://github.com/juspay/svelte-ui-components/commit/442e833b0d98304f977309189a03baa300beda05))
+-
+ci(browser-engines): restore the weekly Firefox and WebKit run ([7997329](https://github.com/juspay/svelte-ui-components/commit/79973291bae214f1a22ab8a2f014eabde4b5f0c6))
+-
+chore(mcp): normalise package.json so npm publish stops correcting it ([a3cdd76](https://github.com/juspay/svelte-ui-components/commit/a3cdd7686bca75e67bc0641aafeabc0aeb981ff0))
+
+## [4.57.11](https://github.com/juspay/svelte-ui-components/compare/4.57.11..4.57.10) - 22 November 2026
 
 BZ-7160 made the dismissal layer call preventDefault() on the Escape it handles,
 which cancels Firefox's native clear of an input[type=search]. The ISSUE-023 spec

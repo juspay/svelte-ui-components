@@ -50,15 +50,16 @@
     display: flex;
     justify-content: flex-end;
     max-width: 700px;
-    --resizable-handle-color: #e4e4e7;
   }
 
   .dock-stage :global(.dock-resizable) {
     height: 100%;
   }
 
+  .dock-stage,
   .resize-stage {
-    --resizable-handle-color: #e4e4e7;
+    --resizable-touch-target-size: 24px;
+    --resizable-handle-color: var(--doc-text-faint);
   }
 
   .box {
@@ -71,11 +72,11 @@
     box-sizing: border-box;
     padding: 16px;
     text-align: center;
-    background: #ffffff;
-    border: 1px solid #d4d4d8;
+    background: var(--doc-input-bg);
+    border: 1px solid var(--doc-btn-border);
     border-radius: 12px;
     overflow: hidden;
-    color: #3f3f46;
+    color: var(--doc-text-primary);
     font-size: 14px;
     line-height: 1.5;
   }

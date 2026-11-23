@@ -34,10 +34,10 @@
     box-sizing: border-box;
     padding: 16px;
     text-align: center;
-    background: #ffffff;
-    border: 1px solid #d4d4d8;
+    background: var(--doc-input-bg);
+    border: 1px solid var(--doc-btn-border);
     border-radius: 12px;
-    color: #3f3f46;
+    color: var(--doc-text-primary);
     font-size: 14px;
     line-height: 1.5;
   }
@@ -47,6 +47,6 @@
     font-weight: 600;
     padding: 4px 10px;
     border-radius: 6px;
-    background: #f4f4f5;
+    background: var(--doc-code-bg);
   }
 </style>

@@ -105,7 +105,7 @@ const dispatchesEvent = (wrapperPath, event) => {
 
 /**
  * GitHub's heading-slug convention, matching the renderer override in
- * src/routes/components/+layout.svelte. `marked` ships no heading ids of its
+ * src/routes/components/+layout.server.ts. `marked` ships no heading ids of its
  * own, so before that override EVERY `](#a-heading)` link in docs/ pointed at
  * nothing -- and SvelteKit's prerenderer fails the build on a missing id. That
  * surfaced four separate times in one day, each time reading as an author being
@@ -119,7 +119,7 @@ const slugify = (text) =>
     .trim()
     .replace(/[^\w\s-]/g, '')
     // One hyphen per whitespace CHARACTER; GitHub does not collapse runs. See the
-    // matching note in src/routes/components/+layout.svelte.
+    // matching note in src/routes/components/+layout.server.ts.
     .replace(/\s/g, '-');
 
 /** kebab-case route slug for a doc page, e.g. ChatComposer -> chat-composer. */

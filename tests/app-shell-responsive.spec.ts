@@ -95,13 +95,19 @@ for (const theme of ['light', 'dark'] as const) {
       }
     });
 
-    test('the first Tab stop on a phone is the menu button, not a hidden sidebar link', async ({
+    test('phone keyboard navigation reaches the skip link, then the menu, and can bypass both', async ({
       page
     }) => {
       await page.setViewportSize(PHONE);
       await gotoHydrated(page, '/components/button');
+      const skip = page.getByRole('link', { name: 'Skip to component' });
+      await page.keyboard.press('Tab');
+      await expect(skip).toBeFocused();
       await page.keyboard.press('Tab');
       await expect(page.getByRole('button', { name: MENU_NAME, exact: true })).toBeFocused();
+      await page.keyboard.press('Shift+Tab');
+      await page.keyboard.press('Enter');
+      await expect(page.getByRole('main')).toBeFocused();
     });
 
     test('the drawer opens, takes focus, makes the page inert, and Escape returns focus', async ({

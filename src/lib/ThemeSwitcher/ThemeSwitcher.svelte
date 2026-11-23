@@ -37,10 +37,34 @@
   // mounted the switcher owns the selection -- clicks, the stored preference and onMount below
   // move it -- so a later change to the prop is deliberately not followed.
   // svelte-ignore state_referenced_locally
-  let currentValue: string = $state(value ?? 'system');
+  let preference = $state(value ?? 'system');
+  let selected = $derived(
+    options.find((option) => option.value === preference) ??
+      options.find((option) => option.value === 'system') ??
+      options.at(0)
+  );
+  let currentValue = $derived(selected?.value ?? preference);
   let systemPreference: string = $state('light');
 
-  let hasSystemOption = $derived(options.some((o) => o.value === 'system'));
+  let mounted = false;
+  let lastNotified: string | null = null;
+
+  function reportSelection(): void {
+    lastNotified = currentValue;
+    onchange?.(currentValue, currentValue === 'system' ? systemPreference : currentValue);
+  }
+
+  function syncSelection(_node: HTMLElement, value: string) {
+    function update(next: string): void {
+      if (mounted && next !== lastNotified) {
+        reportSelection();
+        tick().then(updateIndicator);
+      }
+    }
+    update(value);
+    return { update };
+  }
+
   let effectiveMode = $derived(mode ?? (options.length <= 2 ? 'toggle' : 'segment'));
   let currentIndex = $derived(options.findIndex((o) => o.value === currentValue));
 
@@ -57,12 +81,11 @@
   }
 
   function applyValue(newValue: string): void {
-    currentValue = newValue;
+    preference = newValue;
     if (typeof storageKey === 'string' && storageKey.length > 0) {
       setStorageItem(storageKey, newValue);
     }
-    const resolved = newValue === 'system' ? systemPreference : newValue;
-    onchange?.(newValue, resolved);
+    reportSelection();
     tick().then(updateIndicator);
   }
 
@@ -84,38 +107,43 @@
         stored.length > 0 &&
         options.some((o) => o.value === stored)
       ) {
-        currentValue = stored;
+        preference = stored;
       }
     }
 
-    if (typeof value === 'string' && value !== '') {
-      currentValue = value;
+    if (options.some((option) => option.value === value) && typeof value === 'string') {
+      preference = value;
     }
 
-    onchange?.(currentValue, currentValue === 'system' ? systemPreference : currentValue);
+    mounted = true;
+    reportSelection();
     tick().then(updateIndicator);
 
-    if (hasSystemOption) {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const handler = (e: MediaQueryListEvent) => {
-        systemPreference = e.matches ? 'dark' : 'light';
-        if (currentValue === 'system') {
-          onchange?.(currentValue, systemPreference);
-        }
-      };
-      mediaQuery.addEventListener('change', handler);
-      return () => {
-        mediaQuery.removeEventListener('change', handler);
-      };
-    }
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = (event: MediaQueryListEvent) => {
+      systemPreference = event.matches ? 'dark' : 'light';
+      if (currentValue === 'system') {
+        reportSelection();
+      }
+    };
+    mediaQuery.addEventListener('change', handler);
+    return () => {
+      mounted = false;
+      mediaQuery.removeEventListener('change', handler);
+    };
   });
 </script>
 
 {#if effectiveMode === 'toggle'}
   <button
+    type="button"
+    disabled={options.length === 0}
+    use:syncSelection={currentValue}
     class="toggle-button {classes ?? ''}"
     onclick={handleToggle}
-    aria-label="Switch theme"
+    aria-label={typeof selected === 'object'
+      ? `Switch theme (current: ${selected.label ?? selected.value})`
+      : 'Switch theme'}
     data-pw={typeof testId === 'string' ? testId : null}
     testID={typeof testId === 'string' ? testId : null}
   >
@@ -132,6 +160,7 @@
   </button>
 {:else}
   <div
+    use:syncSelection={currentValue}
     class="segment-control {classes ?? ''}"
     data-pw={typeof testId === 'string' ? testId : null}
     testID={typeof testId === 'string' ? testId : null}
@@ -142,6 +171,7 @@
     ></div>
     {#each options as option, i (option.value)}
       <button
+        type="button"
         bind:this={segmentButtons[i]}
         class="segment-button"
         data-mode={option.value}

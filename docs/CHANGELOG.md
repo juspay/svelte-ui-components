@@ -2,7 +2,23 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.12)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.13)
+
+Each passed in the fast Linux WebKit engines run and failed in the three slower
+ones (52m against 1.1h on the same runner image):
+- Sankey contrast took 28s of its 30s budget and ThinkingIndicator contrast 80s
+of 90s even when fast; both take paired screenshots per label, so the budgets
+get headroom (90s and 240s).
+- the VoiceOrb theme check read the canvas once after a fixed 300ms and caught
+the recolour midway; it polls for the dark reading instead.
+- the ModalAnimation walkthrough required more than 30px of fly travel, but the
+pause only guarantees opacity &lt;= 0.8, i.e. 12px of the 60px still to go. The
+threshold is now the 10px that window guarantees, still apart from settled (&lt;5).
+
+-
+test: stop four WebKit checks depending on how fast the runner is ([dea2233](https://github.com/juspay/svelte-ui-components/commit/dea22334983e968a09041e30b6345478f8f85907))
+
+## [4.57.13](https://github.com/juspay/svelte-ui-components/compare/4.57.13..4.57.12) - 23 November 2026
 
 Linux WebKit draws an unstyled &lt;input type=file&gt; 347px wide, so NativeFileInput
 overflowed a 320px screen. The native control now has max-width: 100% at zero

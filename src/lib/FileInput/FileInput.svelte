@@ -333,6 +333,13 @@
     margin-top: var(--file-input-info-margin-top, 4px);
   }
 
+  /* The native control keeps the browser's look, but not a width wider than its
+     container: Linux WebKit draws an unstyled file input 347px wide, past a 320px
+     screen. Zero specificity, so any consumer width still wins. */
+  :where(.file-input-native) {
+    max-width: 100%;
+  }
+
   .file-input:where(:not(.file-input-native)) {
     display: var(--file-input-display, inline-flex);
     flex-direction: var(--file-input-flex-direction, column);

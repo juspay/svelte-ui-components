@@ -2,7 +2,20 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.11)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.12)
+
+Linux WebKit draws an unstyled &lt;input type=file&gt; 347px wide, so NativeFileInput
+overflowed a 320px screen. The native control now has max-width: 100% at zero
+specificity, keeping its native look while any consumer width still wins. The
+ChatMessageList demo's composer input had the flex minimum of its intrinsic
+width and pushed Send past the edge; it gets min-width: 0.
+
+-
+test: make the clipboard, motion and Tab-sweep checks hold on Linux WebKit ([f282c2c](https://github.com/juspay/svelte-ui-components/commit/f282c2cc9b5671b104e6c1dae623346130c404e0))
+-
+fix: keep the native file input and the chat demo composer inside a 320px screen ([82a65a9](https://github.com/juspay/svelte-ui-components/commit/82a65a935c3e1b93802b1209da2267f02897ef01))
+
+## [4.57.12](https://github.com/juspay/svelte-ui-components/compare/4.57.12..4.57.11) - 23 November 2026
 
 The WC source/track review test read `paused` after clicking play. Its audio
 fixture is one second of silence, and a media element that reaches its end is

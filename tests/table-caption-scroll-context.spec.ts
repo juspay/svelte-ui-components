@@ -36,8 +36,12 @@ async function mountTable(page: Page, caption?: string) {
   return host;
 }
 
+// The sweeps start from focus on a boundary button. focus(), not click(): WebKit
+// does not focus a button it clicks, so on Linux WebKit a reverse sweep started
+// from wherever the click left the navigation point and ran out of presses. The
+// Tab presses themselves stay real.
 async function tabSequence(page: Page, backward = false) {
-  await page.locator(backward ? '#after-caption-table' : '#before-caption-table').click();
+  await page.locator(backward ? '#after-caption-table' : '#before-caption-table').focus();
   const stops: Array<{ tag: string; classes: string }> = [];
   for (let i = 0; i < 30; i++) {
     await page.keyboard.press(backward ? 'Shift+Tab' : 'Tab');
@@ -62,7 +66,7 @@ async function tabToScrollOwner(
   allowDescendant: boolean,
   backward = false
 ) {
-  await page.locator(backward ? '#after-caption-table' : '#before-caption-table').click();
+  await page.locator(backward ? '#after-caption-table' : '#before-caption-table').focus();
   for (let i = 0; i < 20; i++) {
     await page.keyboard.press(backward ? 'Shift+Tab' : 'Tab');
     const reached = await wrapper.evaluate((node, descendants) => {

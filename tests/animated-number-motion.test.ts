@@ -304,7 +304,12 @@ test.describe('AnimatedNumber motion', () => {
         })
     );
 
-    expect(seen.length).toBeGreaterThan(60);
+    // Coverage is "the roll was caught in flight", not a frame rate: headless WebKit
+    // on Linux CI paints about 11 frames a second, so a fixed count of samples failed
+    // there with every frame correct. Three columns per frame, at least five frames,
+    // and at least one sample with two glyphs sharing a window, i.e. mid-swap.
+    expect(seen.length).toBeGreaterThanOrEqual(15);
+    expect(seen.some((frame) => frame.counts[0] === 2)).toBe(true);
     for (const frame of seen) {
       // Never a third glyph in the window: that is the sweep, exactly.
       expect(frame.counts[0]).toBeLessThanOrEqual(2);

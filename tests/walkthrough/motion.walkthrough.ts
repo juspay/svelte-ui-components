@@ -1317,14 +1317,18 @@ test.describe('The indefinite-loop population: running, then stopped and still v
       page,
       'Reduced motion is off. The highlight sweeps across the skeleton continuously.'
     );
+    // Polled, not one reading after a fixed beat: the sweep repeats every 1.5s,
+    // and on a slow Firefox runner (45185821111) the gap between two readings
+    // stretched to a whole cycle, so the highlight read 0.04px apart.
     const offsetBefore = await readTransformOffset(page, selector, '::after');
     await beat(page, 500);
-    const offsetAfter = await readTransformOffset(page, selector, '::after');
+    await expect
+      .poll(
+        async () => Math.abs((await readTransformOffset(page, selector, '::after')) - offsetBefore),
+        { message: 'the sweep must visibly move while reduced motion is off' }
+      )
+      .toBeGreaterThan(1);
     await highlight(shimmer);
-    expect(
-      Math.abs(offsetAfter - offsetBefore),
-      'the sweep must have visibly moved during an unfrozen 500ms window'
-    ).toBeGreaterThan(1);
 
     await setReducedMotion(page, true);
     await caption(page, 'Reduced motion is now on. The sweep stops, but the skeleton remains.');

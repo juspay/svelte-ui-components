@@ -70,6 +70,27 @@ const expectEveryDefaultDemoPainted = async (page: Page): Promise<void> => {
   }
 };
 
+// Not waitForLoadState('networkidle'): in Firefox it twice hung for the whole 30s
+// test timeout (runs 45105249052 and 45185821111) although the trace showed every
+// request answered within a second, apparently counting the aborted font request
+// as still in flight. Instead wait for the load event and then for the page's own
+// record of finished resource loads to stop growing across a 500ms window.
+const settleNetwork = async (page: Page): Promise<void> => {
+  await page.waitForLoadState('load');
+  let previous = -1;
+  await expect
+    .poll(
+      async () => {
+        const count = await page.evaluate(() => performance.getEntriesByType('resource').length);
+        const steady = count === previous;
+        previous = count;
+        return steady;
+      },
+      { intervals: [500] }
+    )
+    .toBe(true);
+};
+
 const loadWcBundle = async (page: Page, path: string): Promise<void> => {
   // A static page is not the SvelteKit app, so it never sets the hydration marker.
   if (path.endsWith('.html')) {
@@ -79,7 +100,7 @@ const loadWcBundle = async (page: Page, path: string): Promise<void> => {
   }
   // Settle the page's own requests first, so a request seen afterwards belongs
   // to the element the test appends and not to the host page.
-  await page.waitForLoadState('networkidle');
+  await settleNetwork(page);
   await page.addScriptTag({ path: 'dist-wc/index.js', type: 'module' });
   await page.waitForFunction(() => typeof customElements.get('sui-status') !== 'undefined', null, {
     timeout: 15_000
@@ -94,7 +115,7 @@ test.describe('Status default icon', () => {
     await gotoHydrated(page, '/components/status');
 
     await expectEveryDefaultDemoPainted(page);
-    await page.waitForLoadState('networkidle');
+    await settleNetwork(page);
 
     expect(legacyRequests(seen)).toEqual([]);
     // Wider than the one file on purpose: the claim is "no avoidable 404", and a
@@ -110,7 +131,7 @@ test.describe('Status default icon', () => {
     await page.reload();
     await page.waitForFunction(() => document.documentElement.dataset.hydrated === 'true');
     await expectEveryDefaultDemoPainted(page);
-    await page.waitForLoadState('networkidle');
+    await settleNetwork(page);
 
     expect(legacyRequests(seen)).toEqual([]);
     expect(failedResponses(seen)).toEqual([]);
@@ -126,7 +147,7 @@ test.describe('Status default icon', () => {
     await page.waitForURL('**/components/status');
 
     await expectEveryDefaultDemoPainted(page);
-    await page.waitForLoadState('networkidle');
+    await settleNetwork(page);
 
     expect(legacyRequests(seen)).toEqual([]);
     expect(failedResponses(seen)).toEqual([]);
@@ -155,7 +176,7 @@ test.describe('Status default icon', () => {
       const icon = page.locator('#wc-default .status-image svg');
       await expectBuiltInCheckmark(icon);
       await expect(icon).toHaveAttribute('aria-label', 'status');
-      await page.waitForLoadState('networkidle');
+      await settleNetwork(page);
 
       expect(legacyRequests(seen)).toEqual([]);
       expect(failedResponses(seen)).toEqual([]);
@@ -199,7 +220,7 @@ test.describe('Status explicit icon URLs', () => {
       route.fulfill({ status: 404, contentType: 'text/plain', body: 'missing' })
     );
     await loadWcBundle(page, '/components/status');
-    await page.waitForLoadState('networkidle');
+    await settleNetwork(page);
     const seen = watchResponses(page);
 
     await page.evaluate(() => {
@@ -215,7 +236,7 @@ test.describe('Status explicit icon URLs', () => {
     // be an inlined <svg>, whose absence is what proves it was not applied.
     await expect(icon.locator('img')).toHaveCount(1);
     await expect(icon.locator('svg')).toHaveCount(0);
-    await page.waitForLoadState('networkidle');
+    await settleNetwork(page);
 
     const image = icon.locator('img');
     const broken = await image.evaluate(
@@ -245,7 +266,7 @@ test.describe('Status explicit icon URLs', () => {
     // "Success", where the built-in icon takes the `statusIconAlt` default.
     const icon = page.locator('#wc-explicit-valid .status-image svg');
     await expect(icon).toHaveAttribute('aria-label', 'Success');
-    await page.waitForLoadState('networkidle');
+    await settleNetwork(page);
 
     expect(seen.some((entry) => entry.url.endsWith('/demo-media/status-success.svg'))).toBe(true);
     expect(legacyRequests(seen)).toEqual([]);

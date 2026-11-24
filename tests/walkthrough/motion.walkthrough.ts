@@ -976,6 +976,19 @@ test.describe('TypewriterText: markdown mode honours the reduced-motion reveal g
       'Reduced motion is off. Revealing markdown should type in character by character.'
     );
     await dismissCaption(page);
+    // Counted so a failure below can say whether the click reached the button. This
+    // failed twice in full suite runs (Firefox 45105249052, WebKit 45463226915) with the
+    // demo completely empty, and passed 120 of 120 times on the same runners alone.
+    await startButton.evaluate((button) => {
+      Reflect.set(window, 'markdownStartClicks', 0);
+      button.addEventListener('click', () =>
+        Reflect.set(
+          window,
+          'markdownStartClicks',
+          Number(Reflect.get(window, 'markdownStartClicks')) + 1
+        )
+      );
+    });
     await startButton.click();
     await beat(page, 250);
     const immediateItems = await demo.locator('li').count();
@@ -987,7 +1000,15 @@ test.describe('TypewriterText: markdown mode honours the reduced-motion reveal g
     // holding, so the position we scroll to, highlight, and hold is the one
     // that is still true 1.5s from now -- not a shorter one about to be
     // outgrown mid-hold.
-    await expect(demo.locator('li')).toHaveCount(2);
+    await expect
+      .poll(() =>
+        demo.evaluate((node) => ({
+          items: node.querySelectorAll('li').length,
+          clicks: Reflect.get(window, 'markdownStartClicks'),
+          text: node.textContent?.slice(0, 80) ?? ''
+        }))
+      )
+      .toEqual(expect.objectContaining({ items: 2 }));
     await demo.scrollIntoViewIfNeeded();
     await highlight(demo);
     await beat(page, 1_500);

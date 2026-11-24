@@ -173,6 +173,10 @@ test.describe('VoiceOrb', () => {
         return String(total);
       });
 
+    // Wait for the first paint before taking the reference: on a slow WebKit runner
+    // (45463226915) the first read was a still-blank canvas ("0") and the second the
+    // painted orb, which reads as movement.
+    await expect.poll(signature).not.toBe('0');
     const first = await signature();
     await page.waitForTimeout(600);
     expect(await signature()).toBe(first);

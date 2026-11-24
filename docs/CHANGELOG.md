@@ -2,7 +2,25 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.13)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.14)
+
+In Firefox, waitForLoadState('networkidle') twice hung for the full 30s
+timeout in the Status default-icon spec (runs 45105249052, 45185821111)
+although the trace showed every request answered within a second. The
+spec now waits for load, then for the page's resource-timing entries to
+stop growing across 500ms.
+
+The Shimmer walkthrough compared two transform readings about 500ms
+apart. The sweep repeats every 1.5s, and on a slow runner the gap
+stretched to a full cycle (0.04px apart). It now polls until the
+highlight has moved.
+
+-
+test: settle Status network checks without networkidle, poll the Shimmer sweep ([0eb93d9](https://github.com/juspay/svelte-ui-components/commit/0eb93d9bf5211b625b9595adbbc5ca39d88fd909))
+-
+ci: give Firefox a silent sound server in the engines run ([142213e](https://github.com/juspay/svelte-ui-components/commit/142213ee40dc838deb18e0016dc37af1d46e4df8))
+
+## [4.57.14](https://github.com/juspay/svelte-ui-components/compare/4.57.14..4.57.13) - 23 November 2026
 
 Each passed in the fast Linux WebKit engines run and failed in the three slower
 ones (52m against 1.1h on the same runner image):

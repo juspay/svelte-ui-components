@@ -146,6 +146,9 @@ for (const theme of ['light', 'dark'] as const) {
     test('all twelve crowded labels survive font readiness, resize and font swaps', async ({
       page
     }) => {
+      // Twelve paired screenshots: Firefox took 23.4s on a good run (45463226915) and
+      // one screenshot stalled 26s on fonts in another (45479405269).
+      test.slow();
       await gotoHydrated(page, '/components/sankey-chart');
       await page.evaluate(() => document.fonts.ready);
       const chart = page.getByTestId('sankey-crowded-chart');

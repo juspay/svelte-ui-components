@@ -119,10 +119,16 @@ test.describe('Sheet — width-capped top/bottom (#572)', () => {
       'sheet-capped-bottom-trigger',
       'sheet-capped-bottom-panel'
     );
-    const box = await boxOf(panel);
     const viewport = viewportOf(page);
 
-    expect(Math.round(box.y + box.height)).toBe(viewport.height);
+    // The fly-in can start after openAndSettle reads getAnimations(), so a single
+    // read caught WebKit 21px short of the edge (45479405269). Poll until it lands.
+    await expect
+      .poll(async () => {
+        const box = await boxOf(panel);
+        return Math.round(box.y + box.height);
+      })
+      .toBe(viewport.height);
   });
 
   test('--sheet-band-border gives a capped panel all four edges', async ({ page }) => {

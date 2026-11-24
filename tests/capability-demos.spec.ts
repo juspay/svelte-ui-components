@@ -173,10 +173,24 @@ for (const theme of ['light', 'dark'] as const) {
       await expect(page.getByTestId('speech-simulated-error')).toContainText(
         'Could not read this text aloud'
       );
+      // The controller hides its error after 4s (DEFAULT_ERROR_TIMEOUT_MS). On a slow
+      // Firefox runner the click itself took 5.6s to return (45463226915), so the alert
+      // came and went before a check afterwards could see it. Record it as it appears.
+      await page.evaluate(() => {
+        const seen: string[] = [];
+        Reflect.set(window, 'speechUnavailableAlerts', seen);
+        new MutationObserver(() => {
+          const alert = document.querySelector('[data-pw="speech-unavailable-error"]');
+          const text = alert?.textContent?.trim() ?? '';
+          if (text !== '' && seen.at(-1) !== text) {
+            seen.push(text);
+          }
+        }).observe(document.body, { childList: true, subtree: true, characterData: true });
+      });
       await page.getByRole('button', { name: 'Try unavailable speech', exact: true }).click();
-      await expect(page.getByTestId('speech-unavailable-error')).toHaveText(
-        'Speech playback is not supported in this browser.'
-      );
+      await expect
+        .poll(() => page.evaluate(() => Reflect.get(window, 'speechUnavailableAlerts')))
+        .toEqual(['Speech playback is not supported in this browser.']);
       await page.goto('/components/button');
       await expect(page.getByRole('heading', { name: 'Button', exact: true })).toBeVisible();
     });

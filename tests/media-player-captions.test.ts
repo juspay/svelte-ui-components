@@ -245,7 +245,11 @@ test.describe('MediaPlayer captions (ISSUE-031)', () => {
       const shown = await settledShot(player);
 
       await toggle.click();
-      await expect.poll(() => trackState(video).then((s) => s.mode)).toBe('hidden');
+      // The whole state, not just mode: this failed once in Firefox (45463226915) with
+      // the captions visibly off, and the mode it read instead was not recorded.
+      await expect
+        .poll(() => trackState(video))
+        .toEqual(expect.objectContaining({ mode: 'hidden' }));
       await page.mouse.move(0, 0);
       const hiddenAfter = await settledShot(player);
 

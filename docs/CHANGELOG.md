@@ -2,7 +2,12 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.14)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.15)
+
+-
+fix: harden component interactions and load documentation per route ([4ce5be9](https://github.com/juspay/svelte-ui-components/commit/4ce5be963a9412b3f7d522d65e716a664d1182d7))
+
+## [4.57.15](https://github.com/juspay/svelte-ui-components/compare/4.57.15..4.57.14) - 24 November 2026
 
 In Firefox, waitForLoadState('networkidle') twice hung for the full 30s
 timeout in the Status default-icon spec (runs 45105249052, 45185821111)

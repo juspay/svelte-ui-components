@@ -7,7 +7,11 @@
   import { tick, onMount, untrack } from 'svelte';
   import { toStore } from 'svelte/store';
   import Button from '../Button/Button.svelte';
-  import { focusTrapTabTarget, getActiveElement } from '../_interaction/focus';
+  import {
+    focusTrapTabTarget,
+    getActiveElement,
+    getFocusTrapBoundary
+  } from '../_interaction/focus';
   import { registerDismissible, isTopmostDismissible } from '../_interaction/dismissal';
   import { composedParent } from '../_interaction/focusable';
 
@@ -30,7 +34,6 @@
     classes
   }: SheetProperties = $props();
 
-  let overlayDiv: HTMLDivElement | null = $state(null);
   let sheetPanel: HTMLDivElement | null = $state(null);
 
   let flyParams = $derived.by(() => {
@@ -106,50 +109,29 @@
     onclose?.();
   }
 
-  function handleOverlayClick(event: MouseEvent) {
-    // Gate dismissal on dismissOnOutsideClick explicitly, not on the overlay's
-    // pointer-events alone: a visible-but-non-dismissible overlay still needs to
-    // catch (and swallow) the click to block the page underneath, without closing.
-    if (event.target === overlayDiv && dismissOnOutsideClick) {
-      close();
-    }
-  }
-
-  // Escape moved out to the shared dismissal module (see registerDismissible
-  // in scrollLockAction below) so only the topmost dismissible layer -- this
-  // sheet, or a Menu/CommandMenu opened on top of it -- answers Escape,
-  // instead of every open surface's own keydown handler reacting to the same
-  // press. Tab and Enter/Space stay here: neither is a cross-component
-  // ownership question, just this panel's own trap and its overlay's
-  // click-equivalent activation.
-  function handleKeyDown(event: KeyboardEvent) {
-    // The overlay only carries role="button" while it is dismissible, and a
-    // role="button" has to answer Enter/Space as well as click (WCAG 2.1
-    // SC 2.1.1) -- tabindex="-1" keeps it out of the Tab sequence, but the
-    // focus trap can still park focus here, and browse-mode AT reaches it.
-    // The target check is what stops an Enter pressed on a focusable
-    // descendant from bubbling up and reading as an activation of the overlay
-    // itself, exactly as handleOverlayClick already guards the click case.
-    if (
-      (event.key === 'Enter' || event.key === ' ') &&
-      dismissOnOutsideClick &&
-      event.target === overlayDiv
-    ) {
-      event.preventDefault();
-      close();
+  function handleTab(event: KeyboardEvent) {
+    if (event.key !== 'Tab' || !sheetPanel || !isTopmostDismissible(sheetPanel)) {
       return;
     }
 
-    if (event.key === 'Tab') {
-      const target = focusTrapTabTarget({
-        container: sheetPanel,
-        activeElement: getActiveElement(sheetPanel),
-        shiftKey: event.shiftKey
-      });
-      if (target !== null) {
-        event.preventDefault();
-        target.focus();
-      }
+    const activeElement = getActiveElement(sheetPanel);
+    // Focus can begin on the panel or land on the backdrop after an interrupted drag.
+    // Tab from either boundary should enter the dialog in the requested direction.
+    if (activeElement === event.currentTarget) {
+      const { first, last } = getFocusTrapBoundary(sheetPanel);
+      event.preventDefault();
+      ((event.shiftKey ? last : first) ?? sheetPanel).focus();
+      return;
+    }
+
+    const target = focusTrapTabTarget({
+      container: sheetPanel,
+      activeElement,
+      shiftKey: event.shiftKey
+    });
+    if (target !== null) {
+      event.preventDefault();
+      target.focus();
     }
   }
 
@@ -281,40 +263,31 @@
 </script>
 
 {#if open}
-  <!-- The overlay only carries role="button" -- and therefore an accessible
-       name -- while it is actually dismissible (dismissOnOutsideClick):
-       clicking it is already a guarded no-op otherwise (see
-       handleOverlayClick), and announcing a no-op as a focusable "button" is
-       worse for assistive tech than leaving it out of the accessibility tree
-       entirely. Modal's overlay applies the same reasoning for the same
-       shape of problem. When it IS dismissible, a role="button" node with no
-       accessible name would be announced as an unlabelled button, so it gets
-       one -- "Close sheet" by default, overridable via `overlayAriaLabel`.
-       The fallback is `||` on a trimmed value rather than `??`: an empty or
-       whitespace-only override is a name a screen reader cannot announce, so
-       it has to fall back like an absent one. `??` would forward it and leave
-       the overlay silently unnamed, which is the defect this whole block
-       exists to prevent. -->
   <div
-    bind:this={overlayDiv}
     use:scrollLockAction
     class="sheet-overlay {showOverlay ? 'overlay-visible' : 'overlay-invisible'} {showOverlay ||
     dismissOnOutsideClick
       ? 'overlay-interactive'
       : 'overlay-noninteractive'} {classes ?? ''}"
-    onclick={handleOverlayClick}
-    onkeydown={handleKeyDown}
-    role={dismissOnOutsideClick ? 'button' : null}
-    aria-label={dismissOnOutsideClick ? overlayAriaLabel?.trim() || 'Close sheet' : null}
-    tabindex="-1"
     data-pw={typeof testId === 'string' ? testId : null}
     testID={typeof testId === 'string' ? testId : null}
     transition:fade={{ duration: 200 }}
   >
+    {#if dismissOnOutsideClick}
+      <button
+        type="button"
+        class="sheet-backdrop"
+        aria-label={overlayAriaLabel?.trim() || 'Close sheet'}
+        tabindex="-1"
+        onclick={close}
+        onkeydown={handleTab}
+      ></button>
+    {/if}
     <div
       bind:this={sheetPanel}
       class="sheet-panel {side}"
       role="dialog"
+      onkeydown={handleTab}
       aria-modal="true"
       aria-label={title ?? 'Sheet'}
       tabindex="-1"
@@ -367,6 +340,16 @@
     bottom: 0;
     z-index: var(--sheet-overlay-z-index, 15);
     -webkit-tap-highlight-color: transparent;
+  }
+
+  .sheet-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
   }
 
   .overlay-visible {

@@ -30,11 +30,8 @@ export type OptionalSheetProperties = {
    */
   dismissOnOutsideClick?: boolean;
   /**
-   * Accessible name (rendered as `aria-label`) for the overlay's `role="button"`
-   * wrapper. Only meaningful when the overlay is dismissible
-   * (`dismissOnOutsideClick`) — that's the only state where the overlay is
-   * announced as a button at all (see Accessibility below). Defaults to
-   * `"Close sheet"`; override for a more specific or localized wording.
+   * Accessible name for the backdrop button when outside dismissal is enabled.
+   * Defaults to "Close sheet". Use a more specific or localized label if needed.
    */
   overlayAriaLabel?: string;
   showCloseButton?: boolean;

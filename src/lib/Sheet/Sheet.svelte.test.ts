@@ -134,15 +134,13 @@ describe('Sheet overlay accessible name', () => {
       overlayAriaLabel,
       content
     });
-    const overlay = container.querySelector<HTMLElement>('.sheet-overlay');
-    expect(overlay).not.toBeNull();
-    return overlay as HTMLElement;
+    const backdrop = container.querySelector<HTMLButtonElement>('.sheet-overlay > button');
+    expect(backdrop).not.toBeNull();
+    return backdrop as HTMLButtonElement;
   };
 
   it('falls back to the default name when the override is an empty string', () => {
-    // `??` forwards '' — leaving role="button" with aria-label="", announced
-    // as an unnamed button. That is the exact defect the conditional role
-    // exists to prevent, reintroduced through the override.
+    // A blank override still needs an accessible fallback.
     expect(open('').getAttribute('aria-label')).toBe('Close sheet');
   });
 

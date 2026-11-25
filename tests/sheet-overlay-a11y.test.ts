@@ -1,69 +1,74 @@
 import { expect, test } from '@playwright/test';
 import { gotoHydrated } from './support/hydrated';
 
-// Two pre-existing a11y defects on Sheet, shipped on every side since 4.0.0:
-//
-// 1. The overlay carried role="button" unconditionally, with no accessible
-//    name — a role with no name is announced as an unlabelled button. It now
-//    only carries the role (and a name) while it is actually dismissible
-//    (dismissOnOutsideClick), mirroring how Modal's overlay already handles
-//    the same shape of problem.
-// 2. `.sheet-panel` set `outline: none` unconditionally, which left a
-//    keyboard user with no visible sign that focus had moved into the panel
-//    on open (the panel is the initial focus target, and the only one on the
-//    "Raw" variant). A `:focus-visible` rule restores the ring for
-//    keyboard/programmatic focus without adding one for a mouse-opened sheet.
-test.describe('Sheet overlay accessible name', () => {
-  test('a dismissible overlay (side="right", default dismissOnOutsideClick) is a named button', async ({
-    page
-  }) => {
+test.describe('Sheet backdrop accessibility', () => {
+  test('the dialog and its controls are outside the dismiss button', async ({ page }) => {
     await gotoHydrated(page, '/components/sheet');
-
-    await page.getByTestId('sheet-right-trigger').click();
-    const overlay = page.getByTestId('sheet-right');
-    await expect(overlay).toBeVisible();
-
-    await expect(overlay).toHaveAttribute('role', 'button');
-    await expect(overlay).toHaveAttribute('aria-label', 'Close sheet');
+    await page.getByText('Open with footer', { exact: true }).click();
+    const sheet = page.getByTestId('sheet-footer');
+    const panel = sheet.getByRole('dialog', { name: 'Confirm' });
+    await expect(panel).toBeVisible();
+    expect(await panel.evaluate((el) => el.closest('button, [role="button"]') !== null)).toBe(
+      false
+    );
+    const backdrop = sheet.getByRole('button', { name: 'Close sheet', exact: true });
+    await expect(backdrop).toHaveAttribute('type', 'button');
+    await expect(backdrop).toHaveAttribute('tabindex', '-1');
+    await expect(panel.getByRole('button', { name: 'Close', exact: true })).toBeVisible();
   });
 
-  test('a non-dismissible overlay (dismissOnOutsideClick=false) carries no role at all', async ({
-    page
-  }) => {
+  test('a non-dismissible overlay has no backdrop button', async ({ page }) => {
     await gotoHydrated(page, '/components/sheet');
-
     await page.getByTestId('sheet-blocking-trigger').click();
-    const overlay = page.getByTestId('sheet-blocking');
-    await expect(overlay).toBeVisible();
-
-    // Clicking it is already a no-op (dismissOnOutsideClick=false), so it must
-    // not be announced as a focusable "button" that does nothing.
-    expect(await overlay.getAttribute('role')).toBeNull();
-    expect(await overlay.getAttribute('aria-label')).toBeNull();
+    const sheet = page.getByTestId('sheet-blocking');
+    await expect(sheet.getByRole('dialog')).toBeVisible();
+    await expect(sheet.getByRole('button', { name: 'Close sheet', exact: true })).toHaveCount(0);
+    await expect(sheet).not.toHaveAttribute('role', 'button');
   });
 
-  test('overlayAriaLabel overrides the default name (side="left")', async ({ page }) => {
+  test('a custom accessible name is applied to the dismissal target', async ({ page }) => {
     await gotoHydrated(page, '/components/sheet');
-
     await page.getByTestId('sheet-custom-overlay-label-trigger').click();
-    const overlay = page.getByTestId('sheet-custom-overlay-label');
-    await expect(overlay).toBeVisible();
-
-    await expect(overlay).toHaveAttribute('role', 'button');
-    await expect(overlay).toHaveAttribute('aria-label', 'Fermer');
+    await expect(
+      page.getByTestId('sheet-custom-overlay-label').getByRole('button', { name: 'Fermer' })
+    ).toBeVisible();
   });
 
-  test('an invisible-but-dismissible overlay (showOverlay=false) is still a named button', async ({
-    page
-  }) => {
+  test('an invisible dismissible backdrop still exposes its named action', async ({ page }) => {
     await gotoHydrated(page, '/components/sheet');
-
     await page.getByTestId('sheet-anchored-trigger').click();
-    const overlay = page.getByTestId('sheet-anchored');
-    await expect(overlay).toBeVisible();
+    const sheet = page.getByTestId('sheet-anchored');
+    await expect(sheet.getByRole('button', { name: 'Close sheet', exact: true })).toBeVisible();
+  });
 
-    await expect(overlay).toHaveAttribute('role', 'button');
-    await expect(overlay).toHaveAttribute('aria-label', 'Close sheet');
+  test('dragging between panel and backdrop leaves the dialog open', async ({ page }) => {
+    await gotoHydrated(page, '/components/sheet');
+    const opener = page.getByTestId('sheet-right-trigger');
+    await opener.focus();
+    await opener.press('Enter');
+    const panel = page.getByRole('dialog', { name: 'Settings' });
+    await expect(panel).toHaveCSS('transform', 'none');
+    const bounds = await panel.boundingBox();
+    if (!bounds) {
+      throw new Error('Expected the open Sheet panel to have bounds.');
+    }
+    const inside = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 };
+    const outside = { x: 5, y: inside.y };
+    for (const [from, to] of [
+      [inside, outside],
+      [outside, inside]
+    ]) {
+      await page.mouse.move(from.x, from.y);
+      await page.mouse.down();
+      await page.mouse.move(to.x, to.y, { steps: 6 });
+      await page.mouse.up();
+      await expect(panel.getByRole('button', { name: 'Close', exact: true })).toBeVisible();
+    }
+    await page.keyboard.press('Shift+Tab');
+    await expect(panel.getByRole('button', { name: 'Close', exact: true })).toBeFocused();
+    await page.mouse.click(outside.x, outside.y);
+    await expect(panel).toBeHidden();
+    await expect(opener).toBeFocused();
   });
 });
 
@@ -133,33 +138,36 @@ test.describe('Sheet panel focus indicator', () => {
   });
 });
 
-test.describe('Sheet overlay keyboard activation', () => {
-  test('a dismissible overlay closes on Enter, as its role="button" promises', async ({ page }) => {
+test.describe('Sheet backdrop keyboard activation', () => {
+  test('Tab from a programmatically focused backdrop re-enters the dialog in either direction', async ({
+    page
+  }) => {
     await gotoHydrated(page, '/components/sheet');
-
-    await page.getByTestId('sheet-right-trigger').click();
-    const overlay = page.getByTestId('sheet-right');
-    await expect(overlay).toBeVisible();
-
-    // tabindex="-1" keeps the overlay out of the Tab sequence, so focus gets
-    // there the way the focus trap puts it there: programmatically.
-    await overlay.evaluate((el: HTMLElement) => el.focus());
-    await page.keyboard.press('Enter');
-
-    await expect(overlay).toBeHidden();
+    await page.getByText('Open with footer', { exact: true }).click();
+    const sheet = page.getByTestId('sheet-footer');
+    const panel = sheet.getByRole('dialog', { name: 'Confirm' });
+    const backdrop = sheet.getByRole('button', { name: 'Close sheet', exact: true });
+    await backdrop.focus();
+    await page.keyboard.press('Shift+Tab');
+    await expect(panel.getByRole('button', { name: 'Save' })).toBeFocused();
+    await backdrop.focus();
+    await page.keyboard.press('Tab');
+    await expect(panel.getByRole('button', { name: 'Close', exact: true })).toBeFocused();
   });
 
-  test('a non-dismissible overlay ignores Enter', async ({ page }) => {
-    await gotoHydrated(page, '/components/sheet');
-
-    await page.getByTestId('sheet-blocking-trigger').click();
-    const overlay = page.getByTestId('sheet-blocking');
-    await expect(overlay).toBeVisible();
-
-    await overlay.evaluate((el: HTMLElement) => el.focus());
-    await page.keyboard.press('Enter');
-
-    // It carries no role at all, so there is nothing for Enter to activate.
-    await expect(overlay).toBeVisible();
-  });
+  for (const key of ['Enter', 'Space']) {
+    test(`the native dismiss button closes on ${key}`, async ({ page }) => {
+      await gotoHydrated(page, '/components/sheet');
+      const opener = page.getByTestId('sheet-right-trigger');
+      await opener.focus();
+      await opener.press('Enter');
+      const sheet = page.getByTestId('sheet-right');
+      const backdrop = sheet.getByRole('button', { name: 'Close sheet', exact: true });
+      await expect(backdrop).toBeVisible();
+      await backdrop.focus();
+      await page.keyboard.press(key);
+      await expect(sheet).toBeHidden();
+      await expect(opener).toBeFocused();
+    });
+  }
 });

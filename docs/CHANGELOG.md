@@ -2,7 +2,12 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.16)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.17)
+
+-
+fix(DateRangePicker): include visible labels in trigger names ([cac3ba5](https://github.com/juspay/svelte-ui-components/commit/cac3ba590529e8cd576814abf45cc76e39883cbf))
+
+## [4.57.17](https://github.com/juspay/svelte-ui-components/compare/4.57.17..4.57.16) - 25 November 2026
 
 -
 test: record the auto-hiding speech alert, wait for the orb's first paint, poll the Sheet edge, give the Sankey sweep a slow-test budget ([b5b9f79](https://github.com/juspay/svelte-ui-components/commit/b5b9f7953c70dcb4c0a62e4e223a78589f6325dd))

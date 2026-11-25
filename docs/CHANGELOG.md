@@ -2,7 +2,12 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.15)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.16)
+
+-
+test: record the auto-hiding speech alert, wait for the orb's first paint, poll the Sheet edge, give the Sankey sweep a slow-test budget ([b5b9f79](https://github.com/juspay/svelte-ui-components/commit/b5b9f7953c70dcb4c0a62e4e223a78589f6325dd))
+
+## [4.57.16](https://github.com/juspay/svelte-ui-components/compare/4.57.16..4.57.15) - 24 November 2026
 
 -
 fix: harden component interactions and load documentation per route ([4ce5be9](https://github.com/juspay/svelte-ui-components/commit/4ce5be963a9412b3f7d522d65e716a664d1182d7))

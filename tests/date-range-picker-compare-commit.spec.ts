@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { gotoHydrated } from './support/hydrated';
+import { fixtureBaseURL } from './support/fixture-server';
 
 /**
  * Compare mode, through the two demos that ship it. A pick in the compare calendar is a draft:
@@ -122,4 +123,37 @@ test('inline compare calendar: the main Apply commits the compare pick; Cancel a
   await page.keyboard.press('Escape');
   await expect(panel).toHaveCount(0);
   await expect(result).toHaveText(committed);
+});
+
+test('native trigger names follow the rendered main and compare labels and expose the open panel', async ({
+  page
+}) => {
+  await page.goto(`${fixtureBaseURL}/date-range-picker/`);
+  const picker = page.getByTestId('drp-trigger-names');
+  const main = picker.getByTestId('drp-trigger-names-trigger');
+  const compare = picker.getByRole('button', { name: /Open compare period picker$/ });
+  const defaultTrigger = page.getByTestId('drp-unconfined-demo-trigger');
+
+  await expect(defaultTrigger).toHaveAccessibleName('Unconfined range Open date picker');
+  await expect(main).toHaveAccessibleName('Report period: Yesterday Open date picker');
+  await expect(compare).toHaveAccessibleName(
+    'Comparison: Choose a period Open compare period picker'
+  );
+  await expect(main).toHaveAttribute('aria-expanded', 'false');
+  await main.press('Enter');
+  await expect(main).toHaveAccessibleName('Report period: Yesterday Close date picker');
+  await expect(main).toHaveAttribute('aria-expanded', 'true');
+  await expect(compare).toHaveAttribute('aria-expanded', 'false');
+  await picker.getByRole('option', { name: 'Last 7 days', exact: true }).click();
+  await picker.getByRole('button', { name: 'Apply date selection' }).click();
+  await expect(main).not.toHaveText('Report period: Yesterday');
+  await expect(main).toHaveAccessibleName(`${(await main.innerText()).trim()} Open date picker`);
+  await expect(main).toBeFocused();
+
+  await compare.press('Enter');
+  await expect(compare).toHaveAttribute('aria-expanded', 'true');
+  await expect(main).toHaveAttribute('aria-expanded', 'false');
+  await page.keyboard.press('Escape');
+  await expect(compare).toHaveAttribute('aria-expanded', 'false');
+  await expect(compare).toBeFocused();
 });

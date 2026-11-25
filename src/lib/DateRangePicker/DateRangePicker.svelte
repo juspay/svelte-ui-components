@@ -836,6 +836,8 @@
      The two layout branches below (`isInlineTime` and its `{:else}`) are
      mutually exclusive, so the same four ids are never in the document twice. */
   const drpFieldUid = $props.id();
+  const triggerId = `${drpFieldUid}-trigger`;
+  const compareTriggerId = `${drpFieldUid}-compare-trigger`;
   const DATE_HINT = 'Enter a date this picker accepts, like 12 Mar 2025.';
   const TIME_HINT = 'Enter a time like 12:00 AM.';
   const startDateField = $derived(
@@ -1072,16 +1074,23 @@
 >
   <!-- Trigger wrapper — bind:this here for panel positioning and focus-return -->
   <div bind:this={triggerRef} class="drp-trigger-wrapper">
+    <!-- Name the button from its rendered label (including consumer snippets) followed by its
+         own action label. The self-reference keeps an icon-only trigger named as well. -->
     <Button
+      nativeAttrs={{ id: triggerId, 'aria-labelledby': `${triggerId}-label ${triggerId}` }}
+      ariaExpanded={isOpen}
+      ariaHaspopup="dialog"
       onclick={togglePicker}
       ariaLabel={isOpen ? 'Close date picker' : 'Open date picker'}
       classes="drp-trigger {isOpen ? 'drp-trigger-open' : ''}"
       {...typeof testId === 'string' ? { testId: `${testId}-trigger` } : {}}
     >
       {#if typeof triggerSnippet === 'function'}
-        {@render triggerSnippet(triggerLabel)}
+        <span id={`${triggerId}-label`} class="drp-snippet-label">
+          {@render triggerSnippet(triggerLabel)}
+        </span>
       {:else}
-        <span class="drp-trigger-label">{triggerLabel}</span>
+        <span id={`${triggerId}-label`} class="drp-trigger-label">{triggerLabel}</span>
         <span class="drp-trigger-icon" aria-hidden="true">
           {#if typeof triggerIcon === 'function'}
             {@render triggerIcon()}
@@ -1099,11 +1108,19 @@
   {#if typeof compareTrigger === 'function'}
     <div bind:this={compareTriggerRef} class="drp-compare-trigger-wrapper">
       <Button
+        nativeAttrs={{
+          id: compareTriggerId,
+          'aria-labelledby': `${compareTriggerId}-label ${compareTriggerId}`
+        }}
+        ariaExpanded={openCompare}
+        ariaHaspopup="dialog"
         onclick={openComparePicker}
         ariaLabel="Open compare period picker"
         classes="drp-compare-trigger {openCompare ? 'drp-compare-trigger-open' : ''}"
       >
-        {@render compareTrigger(compareTriggerLabel)}
+        <span id={`${compareTriggerId}-label`} class="drp-snippet-label">
+          {@render compareTrigger(compareTriggerLabel)}
+        </span>
       </Button>
 
       <!-- Compare period picker panel (standalone): nested here so position:absolute
@@ -1550,6 +1567,11 @@
   .drp-root {
     position: relative;
     display: var(--drp-root-display, inline-block);
+  }
+
+  /* Leave multi-part snippets in the button’s existing flex layout. */
+  .drp-snippet-label {
+    display: contents;
   }
 
   /* ── Trigger wrapper ── */

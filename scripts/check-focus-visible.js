@@ -109,17 +109,17 @@ const ANCESTOR_FOCUS_WITHIN_ALLOWLIST = new Map([
     }
   ],
   [
-    'src/lib/DateRangePicker/DateRangePicker.svelte:1918',
+    'src/lib/DateRangePicker/DateRangePicker.svelte:1940',
     {
       ancestorToken: '.drp-date-input',
-      note: '.drp-date-input-value has no focus rule of its own; compensated by the ancestor .drp-date-input:focus-within (same file, ~line 1907).'
+      note: '.drp-date-input-value has no focus rule of its own; compensated by the ancestor .drp-date-input:focus-within (same file).'
     }
   ],
   [
-    'src/lib/DateRangePicker/DateRangePicker.svelte:2020',
+    'src/lib/DateRangePicker/DateRangePicker.svelte:2042',
     {
       ancestorToken: '.drp-time-input',
-      note: '.drp-time-field has no focus rule of its own; compensated by the ancestor .drp-time-input:focus-within (same file, ~line 1994).'
+      note: '.drp-time-field has no focus rule of its own; compensated by the ancestor .drp-time-input:focus-within (same file).'
     }
   ]
 ]);

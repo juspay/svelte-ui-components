@@ -43,6 +43,16 @@ const compareCalendarSnippet = createRawSnippet(() => ({
 const pointerDownOn = (node: Node): boolean =>
   node.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, composed: true }));
 
+it('retains an action name when a custom trigger has only a decorative icon', () => {
+  const iconOnly = createRawSnippet<[string]>(() => ({
+    render: () => '<span aria-hidden="true">▼</span>'
+  }));
+  const view = render(DateRangePicker, { triggerSnippet: iconOnly, compareTrigger: iconOnly });
+
+  expect(view.getByRole('button', { name: 'Open date picker' })).toBeDefined();
+  expect(view.getByRole('button', { name: 'Open compare period picker' })).toBeDefined();
+});
+
 describe('DateRangePicker main panel focus management', () => {
   it('moves focus to the first focusable element inside the panel when it opens', async () => {
     const { container, getByRole } = render(DateRangePicker, {
@@ -51,7 +61,7 @@ describe('DateRangePicker main panel focus management', () => {
       dualMonth: false
     });
 
-    const trigger = getByRole('button', { name: 'Open date picker' });
+    const trigger = getByRole('button', { name: /Open date picker$/ });
     trigger.focus();
     await fireEvent.click(trigger);
 
@@ -69,7 +79,7 @@ describe('DateRangePicker main panel focus management', () => {
       dualMonth: false
     });
 
-    const trigger = getByRole('button', { name: 'Open date picker' });
+    const trigger = getByRole('button', { name: /Open date picker$/ });
     trigger.focus();
     await fireEvent.click(trigger);
 
@@ -97,7 +107,7 @@ describe('DateRangePicker main panel focus management', () => {
       dualMonth: false
     });
 
-    const trigger = getByRole('button', { name: 'Open date picker' });
+    const trigger = getByRole('button', { name: /Open date picker$/ });
     trigger.focus();
     await fireEvent.click(trigger);
 
@@ -123,7 +133,7 @@ describe('DateRangePicker main panel focus management', () => {
       dualMonth: false
     });
 
-    const trigger = getByRole('button', { name: 'Open date picker' });
+    const trigger = getByRole('button', { name: /Open date picker$/ });
     trigger.focus();
     await fireEvent.click(trigger);
 
@@ -148,7 +158,7 @@ describe('DateRangePicker main panel focus management', () => {
       dualMonth: false
     });
 
-    const trigger = getByRole('button', { name: 'Open date picker' });
+    const trigger = getByRole('button', { name: /Open date picker$/ });
     trigger.focus();
     await fireEvent.click(trigger);
 
@@ -179,7 +189,7 @@ describe('DateRangePicker main panel focus management', () => {
       dualMonth: false
     });
 
-    const trigger = getByRole('button', { name: 'Open date picker' });
+    const trigger = getByRole('button', { name: /Open date picker$/ });
     trigger.focus();
     await fireEvent.click(trigger);
 
@@ -231,7 +241,7 @@ describe('DateRangePicker main panel focus management', () => {
       dualMonth: false
     });
 
-    const trigger = getByRole('button', { name: 'Open date picker' });
+    const trigger = getByRole('button', { name: /Open date picker$/ });
     trigger.focus();
     await fireEvent.click(trigger);
 
@@ -255,7 +265,7 @@ describe('DateRangePicker compare panel focus management (still works alongside 
       compareCalendar: compareCalendarSnippet
     });
 
-    const compareTrigger = getByRole('button', { name: 'Open compare period picker' });
+    const compareTrigger = getByRole('button', { name: /Open compare period picker$/ });
     compareTrigger.focus();
     await fireEvent.click(compareTrigger);
 
@@ -318,7 +328,7 @@ const draftProbe = (pick: { start: Date; end: Date }) => {
 type DrpView = Pick<RenderResult<typeof DateRangePicker>, 'getByRole' | 'queryByRole'>;
 
 const openStandaloneCompare = async (view: DrpView): Promise<void> => {
-  await fireEvent.click(view.getByRole('button', { name: 'Open compare period picker' }));
+  await fireEvent.click(view.getByRole('button', { name: /Open compare period picker$/ }));
   await waitFor(() => {
     expect(view.queryByRole('dialog', { name: 'Compare period picker' })).not.toBeNull();
   });
@@ -495,7 +505,7 @@ describe('DateRangePicker compare draft', () => {
       compareCalendar: probe.snippet,
       onapplycompare
     });
-    await fireEvent.click(view.getByRole('button', { name: 'Open date picker' }));
+    await fireEvent.click(view.getByRole('button', { name: /Open date picker$/ }));
     await waitFor(() => {
       expect(probe.read()).toBe('none to none');
     });
@@ -522,7 +532,7 @@ describe('DateRangePicker compare draft', () => {
       compareCalendar: probe.snippet,
       onapplycompare
     });
-    await fireEvent.click(view.getByRole('button', { name: 'Open date picker' }));
+    await fireEvent.click(view.getByRole('button', { name: /Open date picker$/ }));
     await fireEvent.click(view.getByRole('button', { name: 'pick' }));
     await fireEvent.click(view.getByRole('button', { name: 'Cancel date selection' }));
     await waitFor(() => {
@@ -530,7 +540,7 @@ describe('DateRangePicker compare draft', () => {
     });
     expect(onapplycompare).not.toHaveBeenCalled();
 
-    await fireEvent.click(view.getByRole('button', { name: 'Open date picker' }));
+    await fireEvent.click(view.getByRole('button', { name: /Open date picker$/ }));
     await waitFor(() => {
       expect(probe.read()).toBe('none to none');
     });
@@ -589,7 +599,7 @@ const installViewport = (initialWidth: number) => {
 
 const openPanel = async (props: Record<string, unknown>) => {
   const view = render(DateRangePicker, { testId: 'drp', ...props });
-  await fireEvent.click(view.getByRole('button', { name: 'Open date picker' }));
+  await fireEvent.click(view.getByRole('button', { name: /Open date picker$/ }));
   const panel = await waitFor(() => getPanel(view.container));
   return { ...view, panel };
 };
@@ -818,7 +828,7 @@ describe('DateRangePicker responsiveLayout', () => {
       rangeStart: new Date(2019, 2, 15),
       rangeEnd: new Date(2019, 2, 20)
     });
-    const trigger = getByRole('button', { name: 'Close date picker' });
+    const trigger = getByRole('button', { name: /Close date picker$/ });
     trigger.focus();
     expect(document.activeElement).toBe(trigger);
 

@@ -124,6 +124,23 @@
   />
 </div>
 
+<div>
+  <DateRangePicker
+    mode="range"
+    {presets}
+    initialPresetLabel="Yesterday"
+    placeholder="Choose a period"
+    testId="drp-trigger-names"
+  >
+    {#snippet triggerSnippet(label)}
+      <span>Report period: {label}</span>
+    {/snippet}
+    {#snippet compareTrigger(label)}
+      <span>Comparison: {label}</span>
+    {/snippet}
+  </DateRangePicker>
+</div>
+
 <style>
   .scenarios {
     display: flex;

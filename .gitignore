@@ -35,3 +35,9 @@ dist-codemod
 
 # Optional consumer path for testing a locally linked dist build
 .local-peer-consumer.json
+
+# parity check: generated build inputs, outputs and the baseline stack install
+tests/parity/**/.src/
+tests/parity/**/dist/
+tests/parity/**/node_modules/
+tests/parity/.report/

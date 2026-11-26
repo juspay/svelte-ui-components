@@ -15,6 +15,10 @@ const gitignorePath = path.resolve(import.meta.dirname, '.gitignore');
 
 export default defineConfig(
   { ignores: ['src/wc/**'] },
+  // Parity cases import the library through `sui-under-test`, an alias only the harness's Vite
+  // configs define, so they are outside tsconfig and the type-aware parser. The harness scripts
+  // and _kit.js are linted.
+  { ignores: ['tests/parity/cases/**/*.svelte', 'tests/parity/app/**/*.svelte'] },
   includeIgnoreFile(gitignorePath),
   js.configs.recommended,
   ...ts.configs.recommended,

@@ -576,7 +576,14 @@ pnpm build         # build the library (vite + svelte-package + publint)
 pnpm test          # run integration + unit tests
 pnpm lint          # check formatting and lint rules
 pnpm format        # auto-format source files
+pnpm test:parity   # compare every component, pixel for pixel, with the latest published release
 ```
+
+`pnpm test:parity` builds the same case files twice: against the version pinned in
+`tests/parity/baseline/package.json` and against `src/lib`. It fails when any case renders a single
+pixel differently or records a different event, so a pull request cannot change what consumers see
+without saying so. Bump the pinned version after each release. Writing cases:
+`tests/parity/AUTHORING.md`.
 
 ### Project Structure
 

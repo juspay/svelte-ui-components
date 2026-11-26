@@ -172,8 +172,50 @@ jobs:
   # check `checks` still means "lint, types, unit and every shard passed". It
   # must run when a dependency failed (`!cancelled()`) and fail itself then: a
   # skipped required check does not block a merge.
+  # Every component must render, pixel for pixel, and behave as in the latest published release.
+  # Builds both stacks, renders every case on each and compares them exactly (tests/parity).
+  parity:
+    # Pinned like the integration job: ubuntu-latest can pick an image Playwright has no Chromium for.
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.18.3
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Generate SvelteKit types
+        run: pnpm exec svelte-kit sync
+
+      - name: Parity check
+        run: pnpm run test:parity
+
+      - name: Upload parity report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-report-${{ github.run_attempt }}
+          path: tests/parity/.report/
+          # .report is a dot-folder, which upload-artifact skips by default.
+          include-hidden-files: true
+          retention-days: 14
+
   checks:
-    needs: [static, integration]
+    needs: [static, integration, parity]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
 
@@ -182,6 +224,7 @@ jobs:
         env:
           STATIC: ${{ needs.static.result }}
           INTEGRATION: ${{ needs.integration.result }}
+          PARITY: ${{ needs.parity.result }}
         run: |
-          echo "static: $STATIC, integration: $INTEGRATION"
-          [ "$STATIC" = success ] && [ "$INTEGRATION" = success ]
+          echo "static: $STATIC, integration: $INTEGRATION, parity: $PARITY"
+          [ "$STATIC" = success ] && [ "$INTEGRATION" = success ] && [ "$PARITY" = success ]

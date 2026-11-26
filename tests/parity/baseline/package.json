@@ -1,0 +1,15 @@
+{
+  "name": "parity-baseline",
+  "private": true,
+  "type": "module",
+  "description": "The 'before' side of the parity check: the latest published library, on the same Svelte, Vite and plugin versions as the repo. Bump the library version here after each release.",
+  "dependencies": {
+    "@juspay/svelte-ui-components": "4.57.18",
+    "svelte": "5.59.1",
+    "type-decoder": "2.3.0"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "7.1.2",
+    "vite": "8.3.8"
+  }
+}

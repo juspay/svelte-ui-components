@@ -13,6 +13,12 @@
       showProgressBar: { type: 'Boolean', reflect: true, attribute: 'show-progress-bar' },
       showLoader: { type: 'Boolean', reflect: true, attribute: 'show-loader' },
       loaderType: { type: 'String', reflect: true, attribute: 'loader-type' },
+      legacyLoaderDisables: {
+        type: 'Boolean',
+        reflect: true,
+        attribute: 'legacy-loader-disables'
+      },
+      disabledKeepsFont: { type: 'Boolean', reflect: true, attribute: 'disabled-keeps-font' },
       type: { type: 'String', reflect: true },
       testId: { type: 'String', attribute: 'test-id' },
       statusText: { type: 'String', attribute: 'status-text' },

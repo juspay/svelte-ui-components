@@ -1,3 +1,4 @@
+import { gotoWcTestHost, wcTestHostPath } from './support/wc-test-host';
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { gotoHydrated } from './support/hydrated';
@@ -93,8 +94,8 @@ const settleNetwork = async (page: Page): Promise<void> => {
 
 const loadWcBundle = async (page: Page, path: string): Promise<void> => {
   // A static page is not the SvelteKit app, so it never sets the hydration marker.
-  if (path.endsWith('.html')) {
-    await page.goto(path);
+  if (path === wcTestHostPath) {
+    await gotoWcTestHost(page);
   } else {
     await gotoHydrated(page, path);
   }
@@ -155,9 +156,9 @@ test.describe('Status default icon', () => {
 
   // The relative URL resolved against the document, so the same component at a
   // different depth asked for a different path. Both depths are covered: the
-  // static demo page sits at the origin root, the Status route two levels down.
+  // script-free fixture sits at the origin root, the Status route two levels down.
   for (const [depth, path] of [
-    ['at the origin root', '/wc-form-demo.html'],
+    ['at the origin root', wcTestHostPath],
     ['on a nested route', '/components/status']
   ] as const) {
     test(`<sui-status> with no status-icon paints the built-in icon and requests no icon file ${depth}`, async ({

@@ -1,3 +1,4 @@
+import { gotoWcTestHost } from './support/wc-test-host';
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
@@ -52,13 +53,13 @@ const TRANSPARENT = 'rgba(0, 0, 0, 0)';
  * any rebuild between the navigation and the assertion turns into
  * "Failed to fetch dynamically imported module: /_app/immutable/entry/start.*.js"
  * on `pageerror`, failing a test whose component assertions all passed.
- * `/wc-form-demo.html` is a self-contained file with one inline module and no
- * imports of its own, so the only script that can throw is the one under test.
+ * The same-origin test host has no scripts, so the only bundle it loads
+ * is the one under test.
  */
 const boot = async (page: Page, tag: string): Promise<string[]> => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.goto('/wc-form-demo.html');
+  await gotoWcTestHost(page);
   await page.addScriptTag({ path: 'dist-wc/index.js', type: 'module' });
   await page.waitForFunction((t) => typeof customElements.get(t) !== 'undefined', tag, {
     timeout: 30_000

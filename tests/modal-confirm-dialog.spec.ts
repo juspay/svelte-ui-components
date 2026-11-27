@@ -1,3 +1,4 @@
+import { gotoWcTestHost } from './support/wc-test-host';
 import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
@@ -215,7 +216,7 @@ test.describe('sui-modal: dialog name resolves through the shadow root and porta
   test('modal-role + modal-aria-label name the panel when the overlay is portalled', async ({
     page
   }) => {
-    await page.goto('/wc-form-demo.html');
+    await gotoWcTestHost(page);
     await page.addScriptTag({ path: 'dist-wc/index.js', type: 'module' });
     await page.waitForFunction(() => typeof customElements.get('sui-modal') !== 'undefined', null, {
       timeout: 30_000
@@ -263,7 +264,7 @@ test.describe('sui-modal: aria-describedby resolves only inside the shadow root'
   const MESSAGE = 'Are you sure you want to proceed with this action?';
 
   const loadBundleModule = async (page: Page): Promise<void> => {
-    await page.goto('/wc-form-demo.html');
+    await gotoWcTestHost(page);
     await page.route('**/__sui-wc.js', (route) =>
       route.fulfill({
         status: 200,

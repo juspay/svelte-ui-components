@@ -1,3 +1,4 @@
+import { gotoWcTestHost } from '../support/wc-test-host.js';
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { gotoHydrated } from '../support/hydrated.js';
@@ -379,14 +380,9 @@ test('A portalled dropdown inside a <sui-*> element lands in its shadow root, no
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
 
-  // `/wc-form-demo.html` rather than `gotoHydrated(page, '/')`: this is a
-  // self-contained static page with one inline module and no imports of its
-  // own, so it cannot race a rebuilt, hashed SvelteKit entry chunk the way `/`
-  // can -- see the comment atop `boot()` in tests/portal-shadow-styling.spec.ts,
-  // whose pattern this mirrors. It also carries no `data-hydrated` marker for
-  // gotoHydrated to ever resolve against, since it is not a SvelteKit route.
+  // A script-free host isolates errors from the custom-element bundle.
   await step(page, 'Load the built custom elements onto the static harness page.', async () => {
-    await page.goto('/wc-form-demo.html');
+    await gotoWcTestHost(page);
     await page.addScriptTag({ path: 'dist-wc/index.js', type: 'module' });
     await page.waitForFunction(() => typeof customElements.get('sui-menu') !== 'undefined', null, {
       timeout: 30_000

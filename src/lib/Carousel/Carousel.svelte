@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount } from 'svelte';
   import type { CarouselProperties } from './properties';
 
   let {
@@ -15,135 +15,101 @@
     dotTestId
   }: CarouselProperties = $props();
 
-  let slidesDiv: HTMLDivElement | null = $state(null);
-  let intervalId: number;
-  let endTouch: number;
-  let startTouch: number;
-  let startMouse: number;
-  let endMouse: number;
-  let carouselWidth: string;
-  let carouselDiv: HTMLDivElement | null = $state(null);
-  let activeSlideIndex = $state(0);
-  let widthUnits: string;
+  let intervalId: number | null = null;
+  let requestedSlide = $state(0);
+  let activeSlideIndex = $derived(Math.min(requestedSlide, Math.max(0, views.length - 1)));
 
-  function nextSlide() {
-    if (activeSlideIndex != views.length - 1 || isScrollableLast) {
-      activeSlideIndex++;
-      changeCurrentSlide();
-      if (autoplay) {
-        resetInterval();
+  function reconcileSelection(): void {
+    // Forget a removed slide so a later append does not silently select it again.
+    if (requestedSlide !== activeSlideIndex) {
+      requestedSlide = activeSlideIndex;
+    }
+  }
+
+  function moveSlideBy(step: number): void {
+    if (views.length < 2) {
+      return;
+    }
+    const next = activeSlideIndex + step;
+    if (next >= 0 && next < views.length) {
+      requestedSlide = next;
+    } else if (isScrollableLast) {
+      requestedSlide = (next + views.length) % views.length;
+    } else {
+      return;
+    }
+    if (autoplay) {
+      resetInterval();
+    }
+  }
+
+  function resetInterval(): void {
+    if (intervalId !== null) {
+      window.clearInterval(intervalId);
+    }
+    intervalId = window.setInterval(() => moveSlideBy(1), autoplayInterval);
+  }
+
+  function attachGestures(target: HTMLDivElement): () => void {
+    let startTouch: number | null = null;
+    let startMouse: number | null = null;
+
+    function swipe(start: number | null, end: number): void {
+      if (start === null || Math.abs(start - end) <= 20) {
+        return;
       }
+      const direction = getComputedStyle(target).direction === 'rtl' ? -1 : 1;
+      moveSlideBy(end < start ? direction : -direction);
     }
-  }
 
-  function previousSlide() {
-    if (activeSlideIndex != 0 || isScrollableLast) {
-      activeSlideIndex--;
-      changeCurrentSlide();
-      if (autoplay) {
-        resetInterval();
-      }
+    function handleTouchStart(event: TouchEvent): void {
+      startTouch = event.touches.item(0)?.clientX ?? null;
     }
-  }
 
-  function changeCurrentSlide() {
-    if (activeSlideIndex > views.length - 1) {
-      activeSlideIndex = 0;
-    } else if (activeSlideIndex < 0) {
-      activeSlideIndex = views.length - 1;
-    }
-    if (slidesDiv) {
-      slidesDiv.style.transform = `translateX(${
-        -activeSlideIndex * parseInt(carouselWidth)
-      }${widthUnits})`;
-    }
-  }
-
-  function moveSlideToIndex(index: number) {
-    activeSlideIndex = index;
-    changeCurrentSlide();
-  }
-
-  function resetInterval() {
-    clearInterval(intervalId);
-    intervalId = window.setInterval(nextSlide, autoplayInterval);
-  }
-
-  function handleTouchStart(event: TouchEvent) {
-    if (event.touches.length > 0) {
-      const touch = event.touches.item(0);
+    function handleTouchEnd(event: TouchEvent): void {
+      const touch = event.changedTouches.item(0);
       if (touch !== null) {
-        startTouch = touch.clientX;
+        swipe(startTouch, touch.clientX);
       }
+      clearTouch();
     }
-  }
 
-  function handleTouchEnd(event: TouchEvent) {
-    if (event.changedTouches.length > 0) {
-      const changedTouch = event.changedTouches.item(0);
-      if (changedTouch !== null) {
-        endTouch = changedTouch.clientX;
-        if (startTouch - endTouch > 20) {
-          nextSlide();
-        } else {
-          if (endTouch - startTouch > 20) {
-            previousSlide();
-          }
-        }
-      }
+    function clearTouch(): void {
+      startTouch = null;
     }
-  }
 
-  function handleMouseDown(event: MouseEvent) {
-    if (typeof event.clientX !== 'undefined') {
+    function handleMouseDown(event: MouseEvent): void {
       startMouse = event.clientX;
     }
-  }
 
-  function handeMouseUp(event: MouseEvent) {
-    if (typeof event.clientX !== 'undefined') {
-      endMouse = event.clientX;
-      if (startMouse - endMouse > 20) {
-        nextSlide();
-      } else {
-        if (endMouse - startMouse > 20) {
-          previousSlide();
-        }
-      }
+    function handleMouseUp(event: MouseEvent): void {
+      swipe(startMouse, event.clientX);
+      startMouse = null;
     }
-  }
 
-  function setWidthUnit(carouselWidth: string) {
-    widthUnits = carouselWidth.slice(-3);
-    if (/^-?\d+$/.test(widthUnits.at(0) ?? '')) {
-      widthUnits = widthUnits.slice(-2);
-    }
+    target.addEventListener('touchstart', handleTouchStart);
+    target.addEventListener('touchend', handleTouchEnd);
+    target.addEventListener('touchcancel', clearTouch);
+    target.addEventListener('mousedown', handleMouseDown);
+    target.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      target.removeEventListener('touchstart', handleTouchStart);
+      target.removeEventListener('touchend', handleTouchEnd);
+      target.removeEventListener('touchcancel', clearTouch);
+      target.removeEventListener('mousedown', handleMouseDown);
+      target.removeEventListener('mouseup', handleMouseUp);
+    };
   }
 
   onMount(() => {
-    if (carouselDiv) {
-      carouselWidth = getComputedStyle(carouselDiv).getPropertyValue('--carousel-width');
-      setWidthUnit(carouselWidth);
-      carouselDiv.addEventListener('touchstart', handleTouchStart);
-      carouselDiv.addEventListener('touchend', handleTouchEnd);
-      carouselDiv.addEventListener('mousedown', handleMouseDown);
-      carouselDiv.addEventListener('mouseup', handeMouseUp);
-    }
     if (autoplay) {
-      intervalId = window.setInterval(nextSlide, autoplayInterval);
+      resetInterval();
     }
-  });
-
-  onDestroy(() => {
-    if (carouselDiv) {
-      carouselDiv.removeEventListener('touchstart', handleTouchStart);
-      carouselDiv.removeEventListener('touchend', handleTouchEnd);
-      carouselDiv.removeEventListener('mousedown', handleMouseDown);
-      carouselDiv.removeEventListener('mouseup', handeMouseUp);
-    }
-    if (autoplay) {
-      clearInterval(intervalId);
-    }
+    return () => {
+      if (intervalId !== null) {
+        window.clearInterval(intervalId);
+      }
+    };
   });
 </script>
 
@@ -151,10 +117,11 @@
   class="carousel-container {classes ?? ''}"
   data-pw={typeof testId === 'string' ? testId : null}
   testID={typeof testId === 'string' ? testId : null}
+  {@attach reconcileSelection}
 >
   {#if views.length > 0}
-    <div class="carousel" bind:this={carouselDiv}>
-      <div class="slidesDiv" bind:this={slidesDiv}>
+    <div class="carousel" {@attach attachGestures}>
+      <div class="slidesDiv" style:--slide-index={activeSlideIndex}>
         {#each views as view, index (index)}
           <div class="current-slide">
             <!-- Spread is the real fix: every component in this library takes named
@@ -181,11 +148,11 @@
       {#each views as _, index}
         <div
           class={activeSlideIndex === index ? 'active-dot' : 'dot'}
-          onclick={() => moveSlideToIndex(index)}
+          onclick={() => (requestedSlide = index)}
           onkeydown={(event) => {
             if (event.key === 'Enter' || event.key === ' ') {
               event.preventDefault();
-              moveSlideToIndex(index);
+              requestedSlide = index;
             }
             onkeydown?.(event);
           }}
@@ -210,17 +177,21 @@
 
 <style>
   .carousel-container {
+    /* Without a width token the outer box fills its host, as it did before.
+       The viewport keeps its 300px fallback and the dots follow the outer box. */
     width: var(--carousel-width);
+    max-width: 100%;
   }
   .current-slide {
-    width: var(--carousel-width, 300px);
+    flex: 0 0 100%;
+    min-width: 0;
     height: var(--carousel-height, 100px);
-    flex-shrink: 0;
   }
   .carousel {
     box-shadow: var(--carousel-shadow);
     height: var(--carousel-height, 100px);
     width: var(--carousel-width, 300px);
+    max-width: 100%;
     overflow: hidden;
     border-radius: var(--carousel-border-radius, 0%);
   }
@@ -229,9 +200,19 @@
   }
   .slidesDiv {
     display: flex;
-    transform: translateX(0);
-    transition: transform var(--carousel-track-transition-duration, var(--motion-duration, 0.5s))
-      var(--carousel-track-transition-easing, var(--motion-easing, ease-in-out));
+    /* The track and slide share the viewport width, so translation follows resizing.
+       In LTR the logical end resets right to zero. In RTL the negative right
+       inset outweighs the leftward transform and sends the track right instead. */
+    position: relative;
+    right: calc(-200% * var(--slide-index, 0));
+    inset-inline-end: 0;
+    transform: translateX(calc(-100% * var(--slide-index, 0)));
+    transition-property: transform, right;
+    transition-duration: var(--carousel-track-transition-duration, var(--motion-duration, 0.5s));
+    transition-timing-function: var(
+      --carousel-track-transition-easing,
+      var(--motion-easing, ease-in-out)
+    );
   }
   /* The track slide is the component's motion. The dots below transition only
      `background`, which is a colour change rather than movement, so they are

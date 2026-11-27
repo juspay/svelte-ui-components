@@ -1,4 +1,5 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Locator } from '@playwright/test';
+import { fixtureBaseURL } from './support/fixture-server';
 import { gotoHydrated } from './support/hydrated';
 
 test.describe('Carousel', () => {
@@ -28,7 +29,7 @@ test.describe('Carousel', () => {
     await dot2.click();
 
     // Every slide stays mounted inside .slidesDiv (.carousel just clips via
-    // overflow:hidden + a transform), so getByText(...).toBeVisible() alone
+    // overflow:hidden and an offset), so getByText(...).toBeVisible() alone
     // can't tell "navigated here" from "rendered off-screen the whole time" --
     // confirmed empirically: it reports true for slide 2's content even before
     // this click. The dot's active-dot class is what actually reflects
@@ -139,4 +140,129 @@ test.describe('Carousel backward compatibility and announcements', () => {
     // carousel ARRIVED, including for autoplay and swipe.
     await expect(live).toHaveText('Slide 2 of 3');
   });
+});
+
+async function expectSlideAligned(carousel: Locator, slide: number, total: number): Promise<void> {
+  await expect(carousel.locator('[aria-live="polite"]')).toHaveText(`Slide ${slide} of ${total}`);
+  await expect(carousel.getByRole('button', { name: `Go to slide ${slide}` })).toHaveAttribute(
+    'aria-current',
+    'true'
+  );
+  await expect
+    .poll(() =>
+      carousel
+        .locator('.current-slide')
+        .nth(slide - 1)
+        .evaluate((item) => {
+          const viewport = item.closest('.carousel');
+          if (viewport === null) {
+            throw new Error('Missing carousel viewport');
+          }
+          const slideRect = item.getBoundingClientRect();
+          const viewportRect = viewport.getBoundingClientRect();
+          return Math.max(
+            Math.abs(slideRect.left - viewportRect.left),
+            Math.abs(slideRect.right - viewportRect.right)
+          );
+        })
+    )
+    .toBeLessThanOrEqual(1);
+}
+
+test('aligns the rendered slide at default, fractional and fluid widths', async ({ page }) => {
+  await page.goto(`${fixtureBaseURL}/carousel-layout/`);
+  const host = page.getByTestId('carousel-host');
+  const carousel = page.getByTestId('layout-carousel');
+  await expect(carousel).toHaveCSS('width', '360px');
+  await expect(carousel.locator('.carousel')).toHaveCSS('width', '300px');
+  await carousel.getByRole('button', { name: 'Go to slide 2' }).press('Enter');
+  await expectSlideAligned(carousel, 2, 3);
+
+  await host.evaluate((element) => element.style.setProperty('--carousel-width', '270.5px'));
+  await expectSlideAligned(carousel, 2, 3);
+
+  await host.evaluate((element) =>
+    element.style.setProperty('--carousel-width', 'calc(100% - 16px)')
+  );
+  await expect(carousel.locator('.carousel')).toHaveCSS('width', '328px');
+  await expectSlideAligned(carousel, 2, 3);
+
+  await host.evaluate((element) => {
+    element.style.width = '260px';
+    element.setAttribute('dir', 'rtl');
+  });
+  await expect(carousel.locator('.carousel')).toHaveCSS('width', '228px');
+  await carousel.getByRole('button', { name: 'Go to slide 3' }).click();
+  await expectSlideAligned(carousel, 3, 3);
+
+  await page.getByRole('button', { name: 'Shorten list' }).click();
+  await expectSlideAligned(carousel, 1, 1);
+  await page.getByRole('button', { name: 'Empty list' }).click();
+  await expect(carousel.locator('.carousel')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Restore list' }).click();
+  const track = carousel.locator('.carousel');
+  const box = await track.boundingBox();
+  if (box === null) {
+    throw new Error('Missing restored carousel viewport');
+  }
+  const y = box.y + box.height / 2;
+  await page.mouse.move(box.x + 20, y);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 90, y);
+  await page.mouse.up();
+  await expectSlideAligned(carousel, 2, 3);
+});
+
+test('the published custom element aligns the active slide after its host resizes', async ({
+  page
+}) => {
+  await page.goto('about:blank');
+  await page.addScriptTag({ path: 'dist-wc/index.js', type: 'module' });
+  await page.evaluate(async () => {
+    await customElements.whenDefined('sui-carousel');
+    const carousel = document.createElement('sui-carousel');
+    // An empty Svelte component is sufficient here: the browser measures the actual
+    // boxes produced by the packaged wrapper and the shared Carousel implementation.
+    function slide() {
+      return {};
+    }
+    Reflect.set(carousel, 'views', [{ component: slide }, { component: slide }]);
+    carousel.toggleAttribute('show-dots', true);
+    carousel.style.width = '360px';
+    carousel.style.setProperty('--carousel-width', 'calc(100% - 10px)');
+    document.body.append(carousel);
+  });
+  const carousel = page.locator('sui-carousel');
+  await carousel.getByRole('button', { name: 'Go to slide 2' }).click();
+  await expectSlideAligned(carousel, 2, 2);
+  await carousel.evaluate((element) => {
+    element.style.width = '240px';
+  });
+  await expect(carousel.locator('.carousel')).toHaveCSS('width', '220px');
+  await expectSlideAligned(carousel, 2, 2);
+});
+
+test('the narrow demo shows the full selected slide without a horizontal pan', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  await gotoHydrated(page, '/components/carousel');
+  const carousel = page.getByTestId('carousel-manual-demo');
+  await carousel.getByRole('button', { name: 'Go to slide 2' }).click();
+  await expectSlideAligned(carousel, 2, 3);
+  const viewport = carousel.locator('.carousel');
+  const geometry = await viewport.evaluate((element) => {
+    const row = element.closest('.demo-row');
+    if (row === null) {
+      throw new Error('Missing Carousel demo row');
+    }
+    const frame = element.getBoundingClientRect();
+    const host = row.getBoundingClientRect();
+    return {
+      left: frame.left - host.left,
+      right: host.right - frame.right,
+      scroll: row.scrollLeft
+    };
+  });
+  expect(geometry.left).toBeGreaterThanOrEqual(-1);
+  expect(geometry.right).toBeGreaterThanOrEqual(-1);
+  expect(geometry.scroll).toBe(0);
 });

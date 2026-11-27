@@ -21,6 +21,7 @@ export default defineConfig({
         resolve(import.meta.dirname, 'tests/fixtures/hitl-deadline/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/overlay-scroll-ownership/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/form-association/index.html'),
+        resolve(import.meta.dirname, 'tests/fixtures/carousel-layout/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/composite-validity/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/button-shrinkable/index.html'),
         resolve(import.meta.dirname, 'tests/fixtures/date-range-picker/index.html'),

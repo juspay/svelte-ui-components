@@ -2,7 +2,20 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.18)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.19)
+
+legacyLoaderDisables and disabledKeepsFont, as legacy-loader-disables and
+disabled-keeps-font, so the custom element exposes every Button prop
+(scripts/wc-parity/prop-parity.test.ts).
+
+-
+fix(Button): make the 1.x behaviours opt-in so 4.x consumers are unchanged ([4f158e2](https://github.com/juspay/svelte-ui-components/commit/4f158e21bc0f98e2646d55197503fe6d9fc2bc4e))
+-
+fix(Button): keep 1.x behaviour for disabled font, loader-less showLoader and label overflow ([f9e6682](https://github.com/juspay/svelte-ui-components/commit/f9e6682f346a807a21d7fce8cae0cac5c48d41c0))
+-
+fix(wc): declare the Button opt-in props on the sui-button wrapper ([0d5db86](https://github.com/juspay/svelte-ui-components/commit/0d5db8638266565db7f63ea8d66ab1fc9651503e))
+
+## [4.57.19](https://github.com/juspay/svelte-ui-components/compare/4.57.19..4.57.18) - 27 November 2026
 
 `pnpm test:parity` renders the same case files against the published
 release pinned in tests/parity/baseline (4.57.18) and against src/lib, on

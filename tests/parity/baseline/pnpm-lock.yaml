@@ -8,8 +8,8 @@ importers:
   .:
     dependencies:
       '@juspay/svelte-ui-components':
-        specifier: 4.57.18
-        version: 4.57.18(svelte@5.59.1)(type-decoder@2.3.0)
+        specifier: 4.57.20
+        version: 4.57.20(svelte@5.59.1)(type-decoder@2.3.0)
       svelte:
         specifier: 5.59.1
         version: 5.59.1
@@ -74,23 +74,20 @@ packages:
         integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==
       }
 
-  '@juspay/svelte-ui-components@4.57.18':
+  '@juspay/svelte-ui-components@4.57.20':
     resolution:
       {
-        integrity: sha512-jO0cYBcCJXGD2ir4bCc2/zuyFDBlDdw9xpEFI9bbB4t6/whtpb3D2xZEsjdyNSJPJFicYr0HX73ZIEeDvKraZg==
+        integrity: sha512-bv6Ei3tpAzI50rrVQ5UkE0lAcwar7wJCwkgRIM+/JJgzB5bj3lwTZewZvSf00HMGHtK0sCiMVEigF009aFYuSg==
       }
     engines: { node: '>=22.18' }
     hasBin: true
     peerDependencies:
       lottie-web: '>=5.0.0'
-      marked: ^18.0.0
       svelte: ^5.41.2
       type-decoder: ^2.1.0
       typescript: '>=5.0.0'
     peerDependenciesMeta:
       lottie-web:
-        optional: true
-      marked:
         optional: true
       typescript:
         optional: true
@@ -517,6 +514,14 @@ packages:
         integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==
       }
 
+  marked@18.3.0:
+    resolution:
+      {
+        integrity: sha512-ed8zmPXlBb3UfGXN5iHMQyMhFpdqLgoV5umUXx/Q1R+FW3q8VpqpyoKUwlENL9appo2UMvNLURDVaT3AMOryGA==
+      }
+    engines: { node: '>= 20' }
+    hasBin: true
+
   nanoid@3.3.20:
     resolution:
       {
@@ -698,8 +703,9 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.3
       '@jridgewell/sourcemap-codec': 1.6.0
 
-  '@juspay/svelte-ui-components@4.57.18(svelte@5.59.1)(type-decoder@2.3.0)':
+  '@juspay/svelte-ui-components@4.57.20(svelte@5.59.1)(type-decoder@2.3.0)':
     dependencies:
+      marked: 18.3.0
       parse5: 8.1.1
       svelte: 5.59.1
       type-decoder: 2.3.0
@@ -874,6 +880,8 @@ snapshots:
   magic-string@0.30.21:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.6.0
+
+  marked@18.3.0: {}
 
   nanoid@3.3.20: {}
 

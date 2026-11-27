@@ -70,35 +70,22 @@
     { name: 'focus', actions: [['focus', 'button']] },
     { name: 'element-bound', actions: [['click', '#t']] },
     { name: 'css-vars' },
-    // 1.x compatibility (fix/v1-parity-gaps). Defaults must match the release; only the opt-in
-    // cases differ, and each knownDifference is removed once the release containing it is the
-    // parity baseline.
+    // 1.x compatibility opt-ins, released in 4.57.20.
     { name: 'disabled-in-large-container' },
-    {
-      name: 'disabled-keeps-font-in-large-container',
-      knownDifference: "disabledKeepsFont keeps a disabled button's own font, as 1.x did"
-    },
+    { name: 'disabled-keeps-font-in-large-container' },
     { name: 'enabled-in-large-container' },
     { name: 'text-overflow-default-clips' },
-    {
-      name: 'text-overflow-visible',
-      knownDifference:
-        '--button-text-overflow: visible lets a long label overflow instead of being clipped'
-    },
+    { name: 'text-overflow-visible' },
     {
       name: 'legacy-show-loader-default',
       actions: [['click', 'button.button-el', { force: true }]]
     },
     {
       name: 'legacy-show-loader-opt-in-null-type',
-      knownDifference:
-        'legacyLoaderDisables: showLoader with loaderType null disables without dimming, as in 1.x; the click is not delivered',
       actions: [['click', 'button.button-el', { force: true }]]
     },
     {
       name: 'legacy-show-loader-opt-in-no-type',
-      knownDifference:
-        'legacyLoaderDisables: showLoader with no loaderType disables without dimming, as in 1.x; the click is not delivered',
       actions: [['click', 'button.button-el', { force: true }]]
     },
     {

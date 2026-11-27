@@ -1,0 +1,2 @@
+minimumReleaseAgeExclude:
+  - '@juspay/svelte-ui-components@4.57.20'

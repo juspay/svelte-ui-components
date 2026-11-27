@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      marked:
+        specifier: ^18.0.0
+        version: 18.0.5
       parse5:
         specifier: ^8.0.1
         version: 8.0.1
@@ -78,9 +81,6 @@ importers:
       lottie-web:
         specifier: ^5.13.0
         version: 5.13.0
-      marked:
-        specifier: ^18.0.5
-        version: 18.0.5
       prettier:
         specifier: ^3.8.3
         version: 3.8.3

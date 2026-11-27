@@ -119,3 +119,29 @@ describe('Button shrinkable', () => {
     expect(root(container).classList.contains('button-shrinkable')).toBe(false);
   });
 });
+
+describe('Button legacy showLoader without a loader type', () => {
+  it('disables the button without dimming it when loaderType is unset or null, as 1.x did', () => {
+    for (const props of [{}, { loaderType: null }]) {
+      const { container } = render(Button, { text: 'Pay', showLoader: true, ...props });
+      const node = button(container);
+      expect(node.disabled).toBe(true);
+      expect(node.classList.contains('legacy-busy')).toBe(true);
+      expect(node.querySelector('.button-loader')).toBeNull();
+    }
+  });
+
+  it('dims a button that is also not enabled, as 1.x did', () => {
+    const { container } = render(Button, { text: 'Pay', showLoader: true, enable: false });
+    const node = button(container);
+    expect(node.disabled).toBe(true);
+    expect(node.classList.contains('legacy-busy')).toBe(false);
+  });
+
+  it('leaves the Circular and ProgressBar loaders as they were', () => {
+    const circular = render(Button, { text: 'Pay', showLoader: true, loaderType: 'Circular' });
+    expect(button(circular.container).classList.contains('legacy-busy')).toBe(false);
+    const bar = render(Button, { text: 'Pay', showLoader: true, loaderType: 'ProgressBar' });
+    expect(button(bar.container).disabled).toBe(false);
+  });
+});

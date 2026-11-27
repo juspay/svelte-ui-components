@@ -75,8 +75,11 @@ export type OptionalButtonProperties = {
   enable?: boolean;
   /** @deprecated Prefer `loading`. Shows a loader; pair with `loaderType`. */
   showLoader?: boolean;
-  /** @deprecated Used with `showLoader`. `'Circular'` or `'ProgressBar'`. */
-  loaderType?: LoaderType;
+  /**
+   * @deprecated Used with `showLoader`. `'Circular'` or `'ProgressBar'`. `null` (the 1.x default)
+   * or unset with `showLoader` disables the button without a spinner and without dimming it.
+   */
+  loaderType?: LoaderType | null;
   /** @deprecated Drives the progress-bar animation when `loaderType='ProgressBar'`. */
   showProgressBar?: boolean;
   type?: 'submit' | 'reset' | 'button';

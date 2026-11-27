@@ -2,7 +2,26 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.17)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.18)
+
+`pnpm test:parity` renders the same case files against the published
+release pinned in tests/parity/baseline (4.57.18) and against src/lib, on
+the same Svelte, Vite and plugin versions, and requires every pixel and
+every recorded event to match. A control case must fail and a blank
+screenshot fails unless a case expects it, so a green run measured
+something. A case that differs only under parallel load is rerun alone
+three times; if all three match it is reported as flaky and does not fail
+the run (--strict makes it fail).
+
+676 cases cover the 19 components V2 Nimble uses. On this branch they
+match the release exactly (0 different pixels, source and packaged
+output). The new `parity` CI job runs the check and the `checks` gate
+requires it.
+
+-
+test: add a pixel parity check against the latest published release ([97b3d31](https://github.com/juspay/svelte-ui-components/commit/97b3d31f99d00ad678366f7b189c2fbcaee5d92b))
+
+## [4.57.18](https://github.com/juspay/svelte-ui-components/compare/4.57.18..4.57.17) - 25 November 2026
 
 -
 fix(DateRangePicker): include visible labels in trigger names ([cac3ba5](https://github.com/juspay/svelte-ui-components/commit/cac3ba590529e8cd576814abf45cc76e39883cbf))

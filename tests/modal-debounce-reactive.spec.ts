@@ -1,3 +1,4 @@
+import { gotoWcTestHost } from './support/wc-test-host';
 import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { gotoHydrated } from './support/hydrated';
@@ -126,7 +127,7 @@ test.describe('Modal debounceTime is reactive', () => {
 // stall between two clicks, so the two clicks cannot land outside it by accident.
 test.describe('sui-modal debounceTime is reactive', () => {
   const mountWc = async (page: Page): Promise<void> => {
-    await page.goto('/wc-form-demo.html');
+    await gotoWcTestHost(page);
     await page.addScriptTag({ path: 'dist-wc/index.js', type: 'module' });
     await page.waitForFunction(() => typeof customElements.get('sui-modal') !== 'undefined', null, {
       timeout: 30_000

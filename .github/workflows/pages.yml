@@ -52,14 +52,6 @@ jobs:
           BASE_PATH: /svelte-ui-components
         run: pnpm build
 
-      - name: Build web components
-        run: pnpm run build:wc
-
-      - name: Add web components to site
-        run: |
-          mkdir -p build/wc
-          cp dist-wc/index.js build/wc/index.js
-
       - name: Upload Pages artifact
         if: github.event_name == 'push'
         uses: actions/upload-pages-artifact@v3

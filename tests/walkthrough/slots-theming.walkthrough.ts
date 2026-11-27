@@ -1,3 +1,4 @@
+import { gotoWcTestHost } from '../support/wc-test-host.js';
 import { expect, test } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
 import { gotoHydrated } from '../support/hydrated.js';
@@ -31,7 +32,7 @@ import { beat, caption, highlight, step } from './support/narrate.js';
  * No route under src/routes/components/ mounts the real `<sui-*>` custom
  * element build (they all render the plain Svelte components), so the first
  * two walkthroughs below build their own demo DOM against the static
- * `/wc-form-demo.html` host page and dist-wc/index.js, exactly as
+ * custom-element test host and dist-wc/index.js, exactly as
  * tests/portal-shadow-styling.spec.ts already does -- no new demo routes or
  * static pages are added here.
  */
@@ -50,19 +51,9 @@ type ComputedColors = {
   readonly color: string;
 };
 
-/**
- * Loads the built custom elements against the static form-demo page.
- *
- * The static page, not `/`, for the reason tests/portal-shadow-styling.spec.ts
- * documents: the SvelteKit shell's entry chunk is a hashed dynamic import
- * that throws "Failed to fetch dynamically imported module" on any rebuild
- * between navigation and assertion, which would fail a walkthrough whose own
- * assertions all passed. The static page has one inline module and nothing
- * else that can throw. dist-wc/index.js registers every `<sui-*>` tag in one
- * bundle, so waiting on any single tag proves the rest are ready too.
- */
+/** Load the bundle into a script-free page, then wait for registration. */
 const bootCustomElements = async (page: Page, tag: string): Promise<void> => {
-  await page.goto('/wc-form-demo.html');
+  await gotoWcTestHost(page);
   await page.addScriptTag({ path: 'dist-wc/index.js', type: 'module' });
   await page.waitForFunction((t) => typeof customElements.get(t) !== 'undefined', tag, {
     timeout: 30_000

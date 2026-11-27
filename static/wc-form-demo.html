@@ -1,95 +1,221 @@
 <!doctype html>
-<meta charset="utf-8" />
-<title>Custom elements in a form</title>
-<style>
-  body {
-    font: 15px/1.5 system-ui, sans-serif;
-    margin: 0;
-    padding: 24px 28px;
-    color: #111;
-    background: #fff;
-  }
-  h1 { font-size: 20px; margin: 0 0 4px; }
-  p.lede { margin: 0 0 20px; color: #555; max-width: 60ch; }
-  form { display: grid; gap: 14px; max-width: 460px; }
-  .row { display: flex; align-items: center; gap: 12px; }
-  .actions { display: flex; gap: 10px; margin-top: 6px; }
-  button { font: inherit; padding: 6px 14px; }
-  #out {
-    margin-top: 22px;
-    padding: 14px 16px;
-    background: #0f1115;
-    color: #d7dae0;
-    border-radius: 6px;
-    font-family: ui-monospace, Menlo, monospace;
-    font-size: 14px;
-    min-height: 96px;
-    white-space: pre;
-    max-width: 460px;
-  }
-  #validity { margin-top: 10px; font-weight: 600; }
-  .invalid { color: #c5120a; }
-  .valid { color: #14743a; }
-</style>
-
-<h1>Custom elements in a form</h1>
-<p class="lede">
-  Every control below is a <code>&lt;sui-*&gt;</code> custom element with its own shadow root. What
-  the form collects is printed underneath, live.
-</p>
-
-<form id="signup">
-  <div class="row"><sui-input name="email" value="ada@example.com" label="Email"></sui-input></div>
-  <div class="row"><sui-checkbox name="terms" value="accepted" text="Accept terms" required></sui-checkbox></div>
-  <div class="row"><sui-toggle name="notifications" value="on" text="Notifications" checked></sui-toggle></div>
-  <div class="row">
-    <sui-radio name="pay" value="wallet" text="Wallet" selected-value="wallet"></sui-radio>
-    <sui-radio name="pay" value="cod" text="Cash on delivery" selected-value="wallet"></sui-radio>
-  </div>
-  <div class="row"><sui-slider name="volume" value="41"></sui-slider></div>
-  <div class="actions">
-    <button type="submit" id="submit">Submit</button>
-    <button type="reset" id="reset">Reset</button>
-    <button type="button" id="check">checkValidity()</button>
-  </div>
-</form>
-
-<div id="out" data-pw="wc-form-output">(nothing collected yet)</div>
-<div id="validity" data-pw="wc-form-validity"></div>
-
-<script type="module">
-  const form = document.querySelector('#signup');
-  const out = document.querySelector('#out');
-  const validity = document.querySelector('#validity');
-
-  const render = () => {
-    const entries = [...new FormData(form).entries()];
-    out.textContent = entries.length === 0
-      ? '(the form collects nothing)'
-      : entries.map(([k, v]) => `${k} = ${v}`).join('\n');
-  };
-
-  form.addEventListener('submit', (event) => {
-    event.preventDefault();
-    render();
-  });
-  form.addEventListener('reset', () => {
-    setTimeout(render, 60);
-  });
-  document.querySelector('#check').addEventListener('click', () => {
-    const ok = form.checkValidity();
-    validity.textContent = ok ? 'form.checkValidity() → true' : 'form.checkValidity() → false';
-    validity.className = ok ? 'valid' : 'invalid';
-  });
-
-  // Radio grouping is a consumer concern: the component reports the click and
-  // the page decides what the group's selection now is.
-  for (const radio of form.querySelectorAll('sui-radio')) {
-    radio.addEventListener('click', () => {
-      for (const sibling of form.querySelectorAll('sui-radio')) {
-        sibling.selectedValue = radio.value;
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Custom elements in a form</title>
+    <style>
+      body {
+        font:
+          15px/1.5 system-ui,
+          sans-serif;
+        margin: 0;
+        padding: 24px clamp(16px, 5vw, 28px);
+        color: #111;
+        background: #fff;
       }
-      render();
-    });
-  }
-</script>
+      h1 {
+        font-size: 20px;
+        margin: 0 0 4px;
+      }
+      p.lede {
+        margin: 0 0 20px;
+        color: #555;
+        max-width: 60ch;
+      }
+      form {
+        display: grid;
+        gap: 14px;
+        max-width: 460px;
+      }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+      }
+      .row > * {
+        min-width: 0;
+        max-width: 100%;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 6px;
+      }
+      button {
+        font: inherit;
+        padding: 6px 14px;
+        min-height: 44px;
+      }
+      #out {
+        margin-top: 22px;
+        padding: 14px 16px;
+        background: #0f1115;
+        color: #d7dae0;
+        border-radius: 6px;
+        font-family: ui-monospace, Menlo, monospace;
+        font-size: 14px;
+        min-height: 96px;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        max-width: 460px;
+      }
+      #validity {
+        margin-top: 10px;
+        font-weight: 600;
+      }
+      .invalid {
+        color: #c5120a;
+      }
+      .valid {
+        color: #14743a;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Custom elements in a form</h1>
+      <p class="lede">
+        Every control below is a <code>&lt;sui-*&gt;</code> custom element with its own shadow root.
+        What the form collects is printed underneath, live.
+      </p>
+
+      <p id="loading" role="status">Loading form controls…</p>
+      <noscript>Enable JavaScript to use this example.</noscript>
+
+      <form id="signup">
+        <div class="row">
+          <sui-input name="email" value="ada@example.com" label="Email"></sui-input>
+        </div>
+        <div class="row">
+          <sui-checkbox name="terms" value="accepted" text="Accept terms" required></sui-checkbox>
+        </div>
+        <div class="row">
+          <sui-toggle name="notifications" value="on" text="Notifications" checked></sui-toggle>
+        </div>
+        <div class="row">
+          <sui-radio name="pay" value="wallet" text="Wallet" selected-value="wallet"></sui-radio>
+          <sui-radio
+            name="pay"
+            value="cod"
+            text="Cash on delivery"
+            selected-value="wallet"
+          ></sui-radio>
+        </div>
+        <div class="row">
+          <sui-slider name="volume" value="41" aria-label="Volume"></sui-slider>
+        </div>
+        <div class="actions">
+          <button type="submit" id="submit" disabled>Submit</button>
+          <button type="reset" id="reset" disabled>Reset</button>
+          <button type="button" id="check" disabled>checkValidity()</button>
+        </div>
+      </form>
+
+      <div id="out" data-pw="wc-form-output" aria-live="polite">(nothing collected yet)</div>
+      <div id="validity" data-pw="wc-form-validity" aria-live="polite"></div>
+    </main>
+
+    <script type="module">
+      const form = document.querySelector('#signup');
+      const out = document.querySelector('#out');
+      const validity = document.querySelector('#validity');
+      const loading = document.querySelector('#loading');
+      const actions = form.querySelectorAll('.actions button');
+      const controls = [
+        ...form.querySelectorAll('sui-input, sui-checkbox, sui-toggle, sui-radio, sui-slider')
+      ];
+      let ready = false;
+
+      const render = () => {
+        const entries = [...new FormData(form).entries()];
+        out.textContent =
+          entries.length === 0
+            ? '(the form collects nothing)'
+            : entries.map(([k, v]) => `${k} = ${v}`).join('\n');
+      };
+
+      function showValidity(ok) {
+        validity.textContent = ok ? 'form.checkValidity() → true' : 'form.checkValidity() → false';
+        validity.className = ok ? 'valid' : 'invalid';
+      }
+
+      form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        if (ready) {
+          render();
+          showValidity(form.checkValidity());
+        }
+      });
+      // Native validation dispatches invalid before it blocks submit. Capture the
+      // event because it does not bubble, and render without revalidating.
+      form.addEventListener(
+        'invalid',
+        () => {
+          if (ready) showValidity(false);
+        },
+        true
+      );
+      form.addEventListener('reset', (event) => {
+        if (ready) {
+          requestAnimationFrame(() => {
+            render();
+            validity.textContent = '';
+          });
+        } else {
+          event.preventDefault();
+        }
+      });
+      document.querySelector('#check').addEventListener('click', () => {
+        if (ready) showValidity(form.checkValidity());
+      });
+
+      // Radio grouping is a consumer concern: the component reports the click and
+      // the page decides what the group's selection now is.
+      for (const radio of form.querySelectorAll('sui-radio')) {
+        radio.addEventListener('click', () => {
+          for (const sibling of form.querySelectorAll('sui-radio')) {
+            sibling.selectedValue = radio.value;
+          }
+          requestAnimationFrame(render);
+        });
+      }
+
+      try {
+        await import('./wc/index.js');
+        if (controls.some((control) => !customElements.get(control.localName))) {
+          throw new Error('The bundle did not register the form controls.');
+        }
+        // Registration creates the hosts before Svelte has rendered their native inputs.
+        // Wait until the form owns every host and its shadow control exists.
+        await new Promise((resolve, reject) => {
+          const deadline = performance.now() + 5000;
+          function checkControls() {
+            if (
+              controls.every(
+                (control) =>
+                  Array.from(form.elements).includes(control) &&
+                  control.shadowRoot?.querySelector('input')
+              )
+            ) {
+              resolve();
+            } else if (performance.now() < deadline) {
+              setTimeout(checkControls, 20);
+            } else {
+              reject(new Error('The form controls did not initialize.'));
+            }
+          }
+          checkControls();
+        });
+        ready = true;
+        for (const action of actions) action.disabled = false;
+        loading.textContent = '';
+        loading.hidden = true;
+      } catch {
+        loading.textContent = 'The form controls could not load. Reload this page to try again.';
+      }
+    </script>
+  </body>
+</html>

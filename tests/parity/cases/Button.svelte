@@ -70,12 +70,13 @@
     { name: 'focus', actions: [['focus', 'button']] },
     { name: 'element-bound', actions: [['click', '#t']] },
     { name: 'css-vars' },
-    // 1.x compatibility (fix/v1-parity-gaps). Each knownDifference is intended in that change and is
-    // removed once the release containing it is the parity baseline.
+    // 1.x compatibility (fix/v1-parity-gaps). Defaults must match the release; only the opt-in
+    // cases differ, and each knownDifference is removed once the release containing it is the
+    // parity baseline.
+    { name: 'disabled-in-large-container' },
     {
-      name: 'disabled-in-large-container',
-      knownDifference:
-        "a disabled button keeps the button's own font instead of the container's (as 1.x did)"
+      name: 'disabled-keeps-font-in-large-container',
+      knownDifference: "disabledKeepsFont keeps a disabled button's own font, as 1.x did"
     },
     { name: 'enabled-in-large-container' },
     { name: 'text-overflow-default-clips' },
@@ -85,15 +86,19 @@
         '--button-text-overflow: visible lets a long label overflow instead of being clipped'
     },
     {
-      name: 'legacy-show-loader-null-type',
-      knownDifference:
-        'showLoader with loaderType null disables the button without dimming it, as in 1.x; the click is no longer delivered',
+      name: 'legacy-show-loader-default',
       actions: [['click', 'button.button-el', { force: true }]]
     },
     {
-      name: 'legacy-show-loader-no-type',
+      name: 'legacy-show-loader-opt-in-null-type',
       knownDifference:
-        'showLoader with no loaderType disables the button without dimming it, as in 1.x; the click is no longer delivered',
+        'legacyLoaderDisables: showLoader with loaderType null disables without dimming, as in 1.x; the click is not delivered',
+      actions: [['click', 'button.button-el', { force: true }]]
+    },
+    {
+      name: 'legacy-show-loader-opt-in-no-type',
+      knownDifference:
+        'legacyLoaderDisables: showLoader with no loaderType disables without dimming, as in 1.x; the click is not delivered',
       actions: [['click', 'button.button-el', { force: true }]]
     },
     {
@@ -324,6 +329,10 @@
   <div style="font-size: 20px; font-weight: 300;">
     <Button text="Continue" disabled />
   </div>
+{:else if name === 'disabled-keeps-font-in-large-container'}
+  <div style="font-size: 20px; font-weight: 300;">
+    <Button text="Continue" disabled disabledKeepsFont />
+  </div>
 {:else if name === 'enabled-in-large-container'}
   <div style="font-size: 20px; font-weight: 300;">
     <Button text="Continue" />
@@ -338,10 +347,12 @@
   >
     <Button text="APPLY" />
   </div>
-{:else if name === 'legacy-show-loader-null-type'}
-  <Button text="Pay" showLoader loaderType={null} onclick={log('onclick')} />
-{:else if name === 'legacy-show-loader-no-type'}
+{:else if name === 'legacy-show-loader-default'}
   <Button text="Pay" showLoader onclick={log('onclick')} />
+{:else if name === 'legacy-show-loader-opt-in-null-type'}
+  <Button text="Pay" showLoader loaderType={null} legacyLoaderDisables onclick={log('onclick')} />
+{:else if name === 'legacy-show-loader-opt-in-no-type'}
+  <Button text="Pay" showLoader legacyLoaderDisables onclick={log('onclick')} />
 {:else if name === 'legacy-show-loader-not-enabled'}
-  <Button text="Pay" showLoader enable={false} onclick={log('onclick')} />
+  <Button text="Pay" showLoader enable={false} legacyLoaderDisables onclick={log('onclick')} />
 {/if}

@@ -121,9 +121,21 @@ describe('Button shrinkable', () => {
 });
 
 describe('Button legacy showLoader without a loader type', () => {
-  it('disables the button without dimming it when loaderType is unset or null, as 1.x did', () => {
+  it('has no effect by default, as in 4.x', () => {
+    const { container } = render(Button, { text: 'Pay', showLoader: true });
+    const node = button(container);
+    expect(node.disabled).toBe(false);
+    expect(node.classList.contains('legacy-busy')).toBe(false);
+  });
+
+  it('with legacyLoaderDisables, disables without dimming when loaderType is unset or null', () => {
     for (const props of [{}, { loaderType: null }]) {
-      const { container } = render(Button, { text: 'Pay', showLoader: true, ...props });
+      const { container } = render(Button, {
+        text: 'Pay',
+        showLoader: true,
+        legacyLoaderDisables: true,
+        ...props
+      });
       const node = button(container);
       expect(node.disabled).toBe(true);
       expect(node.classList.contains('legacy-busy')).toBe(true);
@@ -131,17 +143,41 @@ describe('Button legacy showLoader without a loader type', () => {
     }
   });
 
-  it('dims a button that is also not enabled, as 1.x did', () => {
-    const { container } = render(Button, { text: 'Pay', showLoader: true, enable: false });
+  it('with legacyLoaderDisables, still dims a button that is not enabled', () => {
+    const { container } = render(Button, {
+      text: 'Pay',
+      showLoader: true,
+      enable: false,
+      legacyLoaderDisables: true
+    });
     const node = button(container);
     expect(node.disabled).toBe(true);
     expect(node.classList.contains('legacy-busy')).toBe(false);
   });
 
   it('leaves the Circular and ProgressBar loaders as they were', () => {
-    const circular = render(Button, { text: 'Pay', showLoader: true, loaderType: 'Circular' });
+    const circular = render(Button, {
+      text: 'Pay',
+      showLoader: true,
+      loaderType: 'Circular',
+      legacyLoaderDisables: true
+    });
     expect(button(circular.container).classList.contains('legacy-busy')).toBe(false);
-    const bar = render(Button, { text: 'Pay', showLoader: true, loaderType: 'ProgressBar' });
+    const bar = render(Button, {
+      text: 'Pay',
+      showLoader: true,
+      loaderType: 'ProgressBar',
+      legacyLoaderDisables: true
+    });
     expect(button(bar.container).disabled).toBe(false);
+  });
+});
+
+describe('Button disabledKeepsFont', () => {
+  it('adds the keeps-font class only when opted in', () => {
+    const off = render(Button, { text: 'Pay', disabled: true });
+    expect(button(off.container).classList.contains('keeps-font')).toBe(false);
+    const on = render(Button, { text: 'Pay', disabled: true, disabledKeepsFont: true });
+    expect(button(on.container).classList.contains('keeps-font')).toBe(true);
   });
 });

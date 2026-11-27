@@ -76,10 +76,22 @@ export type OptionalButtonProperties = {
   /** @deprecated Prefer `loading`. Shows a loader; pair with `loaderType`. */
   showLoader?: boolean;
   /**
-   * @deprecated Used with `showLoader`. `'Circular'` or `'ProgressBar'`. `null` (the 1.x default)
-   * or unset with `showLoader` disables the button without a spinner and without dimming it.
+   * @deprecated Used with `showLoader`. `'Circular'` or `'ProgressBar'`. Accepts `null`, the 1.x
+   * default; see `legacyLoaderDisables`.
    */
   loaderType?: LoaderType | null;
+  /**
+   * Opt in to 1.x behaviour for `showLoader` without a `loaderType` (unset or `null`): the
+   * button is disabled, without a spinner and without dimming. Defaults to `false`, where such a
+   * `showLoader` has no effect. For consumers moving from 1.x.
+   */
+  legacyLoaderDisables?: boolean;
+  /**
+   * Opt in to 1.x behaviour for a disabled button's font: keep the button's own size and weight
+   * instead of its container's (`--disabled-font-*` otherwise default to `inherit`). Defaults to
+   * `false`. For consumers moving from 1.x.
+   */
+  disabledKeepsFont?: boolean;
   /** @deprecated Drives the progress-bar animation when `loaderType='ProgressBar'`. */
   showProgressBar?: boolean;
   type?: 'submit' | 'reset' | 'button';

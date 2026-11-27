@@ -55,8 +55,13 @@
   // The legacy ProgressBar loader stays clickable until the first click starts the bar, then
   // it disables (the documented flow). So it must NOT count toward "disabled" before it starts.
   let isProgressBarLoader = $derived(showLoader && loaderType === 'ProgressBar');
+  // 1.x: `showLoader` with no loader type disabled the button without a spinner and without
+  // dimming it (only `enable` dimmed). Kept for the deprecated pair's 1.x callers.
+  let isLegacyBusy = $derived(showLoader && typeof loaderType !== 'string');
   let isBusy = $derived(showCircularLoader || showProgressBar);
-  let isDisabled = $derived(disabled || !enable || showCircularLoader || showProgressBar);
+  let isDisabled = $derived(
+    disabled || !enable || showCircularLoader || showProgressBar || isLegacyBusy
+  );
   let resolvedRel = $derived(rel ?? (target === '_blank' ? 'noopener noreferrer' : null));
 
   function handleButtonClick(event: MouseEvent): void {
@@ -82,6 +87,7 @@
     class={unstyled ? (classes ?? '') : `button-el ${elementClasses ?? ''}`}
     style={unstyled ? (style ?? null) : null}
     class:disabled={isDisabled && !unstyled}
+    class:legacy-busy={isLegacyBusy && enable && !disabled && !unstyled}
     onclick={handleButtonClick}
     {onkeydown}
     {onkeyup}
@@ -343,8 +349,9 @@
     cursor: var(--disabled-cursor, not-allowed);
     opacity: var(--disabled-opacity, 0.4);
     color: var(--disabled-text-color, var(--button-text-color, var(--_btn-text-color, white)));
-    font-size: var(--disabled-font-size, inherit);
-    font-weight: var(--disabled-font-weight, inherit);
+    /* A disabled button keeps its own font (as 1.x did), not its container's. */
+    font-size: var(--disabled-font-size, var(--button-font-size, var(--_btn-font-size, 14px)));
+    font-weight: var(--disabled-font-weight, var(--button-font-weight, 500));
     text-decoration: var(--button-disabled-text-decoration, var(--button-text-decoration, none));
     /* Preserve the variant border when disabled so secondary (bordered) stays distinct from ghost. */
     border: var(--disabled-border, var(--button-border, var(--_btn-border, none)));
@@ -374,8 +381,14 @@
     /* With nowrap as the default, a label longer than the button's box would
        otherwise bleed past it — truncate with an ellipsis instead. Full labels
        stay available via the button's accessible name / title at the call site. */
-    overflow: hidden;
+    overflow: var(--button-text-overflow, hidden);
     text-overflow: ellipsis;
+  }
+
+  /* 1.x `showLoader` without a loader type: disabled, but drawn like an enabled button. */
+  .button-el.disabled.legacy-busy {
+    opacity: var(--opacity, 1);
+    cursor: var(--cursor, pointer);
   }
 
   .button-el:hover:not(.disabled) {

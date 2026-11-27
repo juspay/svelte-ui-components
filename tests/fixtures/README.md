@@ -5,6 +5,10 @@ a native form. Its `fa-*` test ids belong to the tests, independently of the doc
 demos. The change counter observes native events on the form, and submission
 serializes the form's real `FormData`.
 
+`carousel-layout/` mounts Carousel as a consumer without a width token. Its
+geometry tests resize the host, change direction and replace the slide list
+without touching the documentation demo.
+
 `embedded-fill/` mounts DateRangePicker and Calendar in 300px hosts that set, or leave unset, the
 tokens a host uses to make them fill its container. Its `fill-*` test ids belong to
 `tests/date-range-picker-embedded-fill.test.ts`, whose control hosts are kept out of the docs demo so

@@ -1,6 +1,4 @@
 <script module>
-  const KD_DISABLED_FONT =
-    "a disabled button now keeps the button's own font (14px, 500) instead of inheriting the InputButton container's, so it matches the enabled button as in 1.x (fix/v1-parity-gaps)";
   const typeInto = (text) => [
     ['click', 'input'],
     ['type', 'input', text]
@@ -14,18 +12,15 @@
     { name: 'right-button-click', actions: [['click', '.right-button button']] },
     {
       name: 'right-button-click-invalid-blocked',
-      knownDifference: KD_DISABLED_FONT,
       actions: [...typeInto('12'), ['click', '.right-button button', { force: true }]]
     },
     { name: 'right-button-enter-key', actions: [...typeInto('abcd'), ['key', 'Enter']] },
     {
       name: 'right-button-enter-key-invalid-blocked',
-      knownDifference: KD_DISABLED_FONT,
       actions: [...typeInto('12'), ['key', 'Enter']]
     },
     {
       name: 'right-button-disabled-while-in-progress',
-      knownDifference: KD_DISABLED_FONT,
       actions: typeInto('ab')
     },
     { name: 'right-button-enabled-when-valid', actions: typeInto('abcd') },
@@ -49,39 +44,34 @@
     { name: 'validation-valid', actions: typeInto('abcd') },
     {
       name: 'validation-in-progress-focused',
-      knownDifference: KD_DISABLED_FONT,
       actions: typeInto('ab')
     },
     {
       name: 'validation-in-progress-blurred',
-      knownDifference: KD_DISABLED_FONT,
       actions: [...typeInto('ab'), ['blur', 'input']]
     },
-    { name: 'validation-invalid', knownDifference: KD_DISABLED_FONT, actions: typeInto('99') },
+    { name: 'validation-invalid', actions: typeInto('99') },
     {
       name: 'invalid-message-shows',
-      knownDifference: KD_DISABLED_FONT,
       actions: [...typeInto('99'), ['blur', 'input']]
     },
     { name: 'external-error' },
     {
       name: 'external-error-over-internal',
-      knownDifference: KD_DISABLED_FONT,
       actions: typeInto('99')
     },
     { name: 'info-message' },
-    { name: 'info-and-error-message', knownDifference: KD_DISABLED_FONT, actions: typeInto('99') },
+    { name: 'info-and-error-message', actions: typeInto('99') },
     { name: 'tel-with-preset', actions: typeInto('9876543210') },
     {
       name: 'tel-preset-in-progress',
-      knownDifference: KD_DISABLED_FONT,
       actions: typeInto('98765')
     },
     { name: 'max-length', actions: typeInto('abcdefghij') },
     { name: 'placeholder' },
     { name: 'prefilled' },
     { name: 'disabled-input' },
-    { name: 'disabled-right-button', knownDifference: KD_DISABLED_FONT },
+    { name: 'disabled-right-button' },
     { name: 'readonly-input' },
     { name: 'long-label-wraps' },
     { name: 'classes' },

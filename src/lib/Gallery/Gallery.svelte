@@ -269,6 +269,7 @@
     <div class="gallery-item" role="listitem">
       {#if itemsAreInteractive}
         <button
+          type="button"
           class="gallery-item-content"
           onclick={(event) => handleImageClick(index, event)}
           aria-label={enableLightbox

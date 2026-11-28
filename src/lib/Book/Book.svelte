@@ -168,6 +168,7 @@
     <div class="page-indicator">
       {#each pages as _, index (index)}
         <button
+          type="button"
           class="dot"
           class:dot-active={index === currentPage}
           onclick={() => goToPage(index)}

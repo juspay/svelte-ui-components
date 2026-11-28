@@ -623,6 +623,7 @@
 >
   {#if showStartArrow}
     <button
+      type="button"
       class="tabs-arrow tabs-arrow-start"
       aria-label={isVertical ? 'Scroll tabs up' : 'Scroll tabs left'}
       onclick={() => scroll('start')}
@@ -715,6 +716,7 @@
   </svelte:element>
   {#if showEndArrow}
     <button
+      type="button"
       class="tabs-arrow tabs-arrow-end"
       aria-label={isVertical ? 'Scroll tabs down' : 'Scroll tabs right'}
       onclick={() => scroll('end')}

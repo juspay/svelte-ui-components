@@ -1,5 +1,9 @@
 # Component contract fixtures
 
+`form-safe-controls/` embeds Book, Gallery, Pagination, Tabs and Table in one
+native form. Tests exercise their controls and check the native submit counter
+and serialized draft. The Save button verifies the actual submit path.
+
 `form-association/` mounts the real Checkbox, Toggle and Select components inside
 a native form. Its `fa-*` test ids belong to the tests, independently of the docs
 demos. The change counter observes native events on the form, and submission

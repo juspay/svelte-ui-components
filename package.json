@@ -1,6 +1,6 @@
 {
   "name": "@juspay/svelte-ui-components",
-  "version": "4.57.20",
+  "version": "4.57.21",
   "description": "A themeable Svelte 5 UI component library with CSS custom property driven styling",
   "keywords": [
     "svelte",

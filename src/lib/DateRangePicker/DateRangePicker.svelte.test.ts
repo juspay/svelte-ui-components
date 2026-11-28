@@ -1139,3 +1139,35 @@ describe('DateRangePicker typed dates on a range with times', () => {
     expect(dayButton(16).disabled).toBe(true);
   });
 });
+
+describe('DateRangePicker typed dates under a day-first locale', () => {
+  it('reads its own en-IN fields as valid, including a same-day range', async () => {
+    const day = new Date(2026, 6, 10);
+    const { getByLabelText } = await openPanel({
+      showDateInputs: true,
+      locale: 'en-IN',
+      rangeStart: day,
+      rangeEnd: day
+    });
+    const startDateInput = getByLabelText('Start date') as HTMLInputElement;
+    const endDateInput = getByLabelText('End date') as HTMLInputElement;
+
+    expect(startDateInput.value).toBe('10 Jul 2026');
+    expect(endDateInput.value).toBe('10 Jul 2026');
+    expect(startDateInput.getAttribute('aria-invalid')).not.toBe('true');
+    expect(endDateInput.getAttribute('aria-invalid')).not.toBe('true');
+  });
+
+  it('accepts a typed day-first date', async () => {
+    const { getByLabelText } = await openPanel({
+      showDateInputs: true,
+      locale: 'en-IN',
+      rangeStart: new Date(2026, 6, 10),
+      rangeEnd: new Date(2026, 6, 20)
+    });
+    const endDateInput = getByLabelText('End date') as HTMLInputElement;
+    await fireEvent.input(endDateInput, { target: { value: '15 July 2026' } });
+
+    expect(endDateInput.getAttribute('aria-invalid')).not.toBe('true');
+  });
+});

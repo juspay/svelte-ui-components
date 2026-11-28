@@ -74,6 +74,12 @@ const SHORT_MONTH_NAMES = [
 /** Matches the DateRangePicker's own display format, e.g. "Jul 10, 2026" or "Jul 10 2026". */
 const MONTH_NAME_DATE_PATTERN = /^([A-Za-z]{3,})\.?\s+(\d{1,2}),?\s+(\d{4})$/;
 
+/**
+ * Matches day-first month-name dates, e.g. "10 Jul 2026", "10 Jul, 2026" or "10 July 2026": the
+ * display format under day-first locales such as en-IN and en-GB, which also write "Sept".
+ */
+const DAY_FIRST_MONTH_NAME_DATE_PATTERN = /^(\d{1,2})\s+([A-Za-z]{3,})\.?,?\s+(\d{4})$/;
+
 /** Matches numeric "M/D/YYYY" or "M-D-YYYY" input. */
 const NUMERIC_SLASH_DATE_PATTERN = /^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/;
 
@@ -109,7 +115,8 @@ const buildDateFromParts = (year: number, monthIndex: number, day: number): Date
 /**
  * Parse a typed calendar-date string into a local-midnight Date, or null when the text is
  * unparseable or names a calendar date that does not exist (e.g. "Feb 30, 2026"). Accepts the
- * component's own display format ("Jul 10, 2026"), numeric "M/D/YYYY", and ISO "YYYY-MM-DD".
+ * component's own display format in month-first locales ("Jul 10, 2026") and day-first ones
+ * ("10 Jul 2026"), numeric "M/D/YYYY", and ISO "YYYY-MM-DD".
  */
 export const parseDateDisplay = (display: string): Date | null => {
   const trimmedDisplay = display.trim();
@@ -129,6 +136,15 @@ export const parseDateDisplay = (display: string): Date | null => {
       return null;
     }
     return buildDateFromParts(Number(monthNameMatch[3]), monthIndex, Number(monthNameMatch[2]));
+  }
+
+  const dayFirstMatch = DAY_FIRST_MONTH_NAME_DATE_PATTERN.exec(trimmedDisplay);
+  if (dayFirstMatch !== null) {
+    const monthIndex = SHORT_MONTH_NAMES.indexOf(dayFirstMatch[2].slice(0, 3).toLowerCase());
+    if (monthIndex === -1) {
+      return null;
+    }
+    return buildDateFromParts(Number(dayFirstMatch[3]), monthIndex, Number(dayFirstMatch[1]));
   }
 
   const slashMatch = NUMERIC_SLASH_DATE_PATTERN.exec(trimmedDisplay);

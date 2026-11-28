@@ -2,7 +2,36 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.21)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.22)
+
+Lighthouse carried these as a local pnpm patch on 4.57.3. Moving them into
+the library lets it drop the patch.
+
+Select
+- aria-controls and aria-activedescendant point at the listbox only while
+it is rendered, so a closed combobox no longer references a missing id.
+- bottomContent renders beside the listbox, never inside it (a listbox may
+only contain options), whether or not search sits in the menu.
+- Tab from the trigger walks into the menu's focusable stops and out again
+for every variant, not only the in-menu search one.
+
+Sheet
+- The overlay wrapper no longer carries role="button". It contains the
+dialog, so the role nested the whole panel inside a button. A named native
+&lt;button&gt; behind the panel is now the dismiss control, rendered only while
+dismissOnOutsideClick is true.
+- Tab from the panel or the backdrop enters the dialog in the requested
+direction.
+
+Table
+- New focusHorizontalOverflow prop: makes a captioned, horizontally
+overflowing table's scroll group a Tab stop, so keyboard users can scroll
+a read-only table with no focusable cell. Exposed on sui-table too.
+
+-
+fix(Select,Sheet,Table): close the keyboard and screen-reader gaps from the Lighthouse audit ([81fa3d4](https://github.com/juspay/svelte-ui-components/commit/81fa3d4428ff2b128177a771194215c9e305403a))
+
+## [4.57.22](https://github.com/juspay/svelte-ui-components/compare/4.57.22..4.57.21) - 28 November 2026
 
 -
 fix(Carousel): align active slides with the rendered viewport ([0cb3a82](https://github.com/juspay/svelte-ui-components/commit/0cb3a821e0e1de9dfa937a569d4aa07b6973c0cd))

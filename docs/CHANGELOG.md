@@ -2,7 +2,12 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.23)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.24)
+
+-
+feat(wc): add selective imports and complete the UI audit fixes ([c7d33cb](https://github.com/juspay/svelte-ui-components/commit/c7d33cb305ca152de250f1ada00732c82fba3c90))
+
+## [4.57.24](https://github.com/juspay/svelte-ui-components/compare/4.57.24..4.57.23) - 28 November 2026
 
 -
 fix: prevent navigation controls from submitting host forms ([96991f0](https://github.com/juspay/svelte-ui-components/commit/96991f09018c5faa432703acb09bf41f5d3b5259))

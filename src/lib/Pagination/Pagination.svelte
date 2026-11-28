@@ -75,6 +75,7 @@
   testID={typeof testId === 'string' && testId.length > 0 ? testId : null}
 >
   <button
+    type="button"
     class="page-button prev-button"
     disabled={disabled || currentPage <= 1}
     onclick={() => goToPage(currentPage - 1)}
@@ -90,6 +91,7 @@
       <span class="ellipsis">&#8230;</span>
     {:else}
       <button
+        type="button"
         class="page-button"
         class:active={page === currentPage}
         {disabled}
@@ -104,6 +106,7 @@
 
   {#if isLoadMore}
     <button
+      type="button"
       class="page-button load-more-button"
       {disabled}
       onclick={loadMore}
@@ -115,6 +118,7 @@
     </button>
   {:else}
     <button
+      type="button"
       class="page-button next-button"
       disabled={isNextDisabled}
       onclick={() => goToPage(currentPage + 1)}

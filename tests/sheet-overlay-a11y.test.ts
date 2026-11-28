@@ -4,10 +4,11 @@ import { gotoHydrated } from './support/hydrated';
 // Two pre-existing a11y defects on Sheet, shipped on every side since 4.0.0:
 //
 // 1. The overlay carried role="button" unconditionally, with no accessible
-//    name — a role with no name is announced as an unlabelled button. It now
-//    only carries the role (and a name) while it is actually dismissible
-//    (dismissOnOutsideClick), mirroring how Modal's overlay already handles
-//    the same shape of problem.
+//    name — a role with no name is announced as an unlabelled button. The
+//    overlay also contains the dialog, so a button role on it nested the whole
+//    panel inside a button. The overlay now carries no role; while it is
+//    dismissible (dismissOnOutsideClick) a named native <button> sits behind
+//    the panel as the dismiss control.
 // 2. `.sheet-panel` set `outline: none` unconditionally, which left a
 //    keyboard user with no visible sign that focus had moved into the panel
 //    on open (the panel is the initial focus target, and the only one on the
@@ -23,8 +24,10 @@ test.describe('Sheet overlay accessible name', () => {
     const overlay = page.getByTestId('sheet-right');
     await expect(overlay).toBeVisible();
 
-    await expect(overlay).toHaveAttribute('role', 'button');
-    await expect(overlay).toHaveAttribute('aria-label', 'Close sheet');
+    expect(await overlay.getAttribute('role')).toBeNull();
+    await expect(overlay.locator(':scope > button.sheet-backdrop')).toHaveAccessibleName(
+      'Close sheet'
+    );
   });
 
   test('a non-dismissible overlay (dismissOnOutsideClick=false) carries no role at all', async ({
@@ -40,6 +43,7 @@ test.describe('Sheet overlay accessible name', () => {
     // not be announced as a focusable "button" that does nothing.
     expect(await overlay.getAttribute('role')).toBeNull();
     expect(await overlay.getAttribute('aria-label')).toBeNull();
+    await expect(overlay.locator('button.sheet-backdrop')).toHaveCount(0);
   });
 
   test('overlayAriaLabel overrides the default name (side="left")', async ({ page }) => {
@@ -49,8 +53,8 @@ test.describe('Sheet overlay accessible name', () => {
     const overlay = page.getByTestId('sheet-custom-overlay-label');
     await expect(overlay).toBeVisible();
 
-    await expect(overlay).toHaveAttribute('role', 'button');
-    await expect(overlay).toHaveAttribute('aria-label', 'Fermer');
+    expect(await overlay.getAttribute('role')).toBeNull();
+    await expect(overlay.locator(':scope > button.sheet-backdrop')).toHaveAccessibleName('Fermer');
   });
 
   test('an invisible-but-dismissible overlay (showOverlay=false) is still a named button', async ({
@@ -62,8 +66,10 @@ test.describe('Sheet overlay accessible name', () => {
     const overlay = page.getByTestId('sheet-anchored');
     await expect(overlay).toBeVisible();
 
-    await expect(overlay).toHaveAttribute('role', 'button');
-    await expect(overlay).toHaveAttribute('aria-label', 'Close sheet');
+    expect(await overlay.getAttribute('role')).toBeNull();
+    await expect(overlay.locator(':scope > button.sheet-backdrop')).toHaveAccessibleName(
+      'Close sheet'
+    );
   });
 });
 
@@ -134,16 +140,18 @@ test.describe('Sheet panel focus indicator', () => {
 });
 
 test.describe('Sheet overlay keyboard activation', () => {
-  test('a dismissible overlay closes on Enter, as its role="button" promises', async ({ page }) => {
+  test('a dismissible overlay closes on Enter from its backdrop button', async ({ page }) => {
     await gotoHydrated(page, '/components/sheet');
 
     await page.getByTestId('sheet-right-trigger').click();
     const overlay = page.getByTestId('sheet-right');
     await expect(overlay).toBeVisible();
 
-    // tabindex="-1" keeps the overlay out of the Tab sequence, so focus gets
-    // there the way the focus trap puts it there: programmatically.
-    await overlay.evaluate((el: HTMLElement) => el.focus());
+    // tabindex="-1" keeps the backdrop out of the Tab sequence, so focus gets
+    // there the way an interrupted drag leaves it: programmatically.
+    await overlay
+      .locator(':scope > button.sheet-backdrop')
+      .evaluate((el: HTMLElement) => el.focus());
     await page.keyboard.press('Enter');
 
     await expect(overlay).toBeHidden();
@@ -159,7 +167,7 @@ test.describe('Sheet overlay keyboard activation', () => {
     await overlay.evaluate((el: HTMLElement) => el.focus());
     await page.keyboard.press('Enter');
 
-    // It carries no role at all, so there is nothing for Enter to activate.
+    // It carries no role and no backdrop button, so there is nothing for Enter to activate.
     await expect(overlay).toBeVisible();
   });
 });

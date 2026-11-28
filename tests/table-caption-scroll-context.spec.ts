@@ -252,3 +252,36 @@ test('configured vertical tables name only an actual overflow owner as content a
   await expect(inner).toHaveAccessibleName('Tableau des abonnements');
   await expect(host.getByRole('table', { name: 'Tableau des abonnements' })).toBeVisible();
 });
+
+test('focusHorizontalOverflow adds one Tab stop only while a captioned table overflows sideways', async ({
+  page
+}) => {
+  const host = await mountTable(page, 'Subscription plan details');
+  const inner = host.locator('.table-scroll');
+  await expect.poll(() => inner.evaluate((n) => n.scrollWidth - n.clientWidth)).toBeGreaterThan(20);
+  await expect(inner).not.toHaveAttribute('tabindex');
+  const withoutProp = await tabSequence(page);
+
+  await host.evaluate((node) => Reflect.set(node, 'focusHorizontalOverflow', true));
+  await expect(inner).toHaveAttribute('tabindex', '0');
+  const withProp = await tabSequence(page);
+  expect(withProp.filter((stop) => /\btable-scroll\b/.test(stop.classes))).toHaveLength(1);
+  expect(withProp.filter((stop) => !/\btable-scroll\b/.test(stop.classes))).toEqual(
+    withoutProp.filter((stop) => !/\btable-scroll\b/.test(stop.classes))
+  );
+  await tabToScrollOwner(page, inner, false);
+  await holdToScroll(page, inner, 'left');
+
+  // No caption means no accessible name for the stop, so it is never added.
+  await host.evaluate((node) => Reflect.set(node, 'caption', ''));
+  await expect(inner).not.toHaveAttribute('tabindex');
+  await host.evaluate((node) => Reflect.set(node, 'caption', 'Subscription plan details'));
+  await expect(inner).toHaveAttribute('tabindex', '0');
+
+  // Once the table fits, there is nothing to scroll and the stop goes away.
+  await host.evaluate((node) => {
+    node.style.width = '1600px';
+  });
+  await expect.poll(() => inner.evaluate((n) => n.scrollWidth - n.clientWidth)).toBeLessThan(3);
+  await expect(inner).not.toHaveAttribute('tabindex');
+});

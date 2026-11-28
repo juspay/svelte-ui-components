@@ -716,6 +716,8 @@ export type OptionalTableProperties = {
   testId?: string;
   /** Visually hidden native table caption; non-empty also names existing scroll groups. */
   caption?: string;
+  /** Give a named, horizontally overflowing read-only table a keyboard scroll target. */
+  focusHorizontalOverflow?: boolean;
   sortAscIcon?: Snippet;
   sortDescIcon?: Snippet;
   sortDefaultIcon?: Snippet;

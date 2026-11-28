@@ -67,7 +67,7 @@ jobs:
 
       - name: Checkout
         if: steps.gate.outputs.run == 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
           # Yama authenticates with its own PAT; don't leave the ephemeral Actions
@@ -82,7 +82,7 @@ jobs:
         continue-on-error: true
         # External consumer → published action. For strict supply-chain
         # immutability pin the full commit SHA behind this ref.
-        uses: juspay/yama@v3.0.4
+        uses: juspay/yama@d03720e7d5479cf23a441b360c8d2e662f3b9ca6 # v3.0.4
         with:
           github-token: ${{ secrets.YAMA_GITHUB_TOKEN }}
           ai-provider: litellm
@@ -92,7 +92,7 @@ jobs:
           config-path: yama.config.yaml
           # Review only — post inline comments + a verdict; never rewrite the PR
           # description.
-          skip-description-enhance: "true"
+          skip-description-enhance: 'true'
 
       - name: Enforce verdict
         if: steps.gate.outputs.run == 'true'

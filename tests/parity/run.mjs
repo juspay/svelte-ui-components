@@ -35,6 +35,9 @@ const args = process.argv.slice(2);
 const argValue = (flag) => (args.includes(flag) ? args[args.indexOf(flag) + 1] : null);
 const filter = argValue('--filter');
 const target = argValue('--target') ?? 'src';
+// Reviewed screenshots use the pinned CI Chromium and Linux system fonts.
+const reviewedVisuals =
+  argValue('--reviewed-visuals') ?? (process.env.CI ? join(HERE, 'reviewed-visuals') : null);
 // `--aa baseline` (or candidate) compares a stack with itself: any failure is a case that is not
 // deterministic, and so cannot be used to compare the two stacks.
 const selfCheck = argValue('--aa');
@@ -306,6 +309,7 @@ const entries = lists.baseline.filter(
 async function runEntry(entry, worker) {
   const before = await capture(worker.page, servers[selfCheck ?? 'baseline'].origin, entry);
   const after = await capture(worker.page, servers[selfCheck ?? 'candidate'].origin, entry);
+  const safe = entry.id.replace(/[^A-Za-z0-9_-]/g, '_');
   const pixels = await compare(worker.comparer, before.shot, after.shot);
   const eventsMatch = JSON.stringify(before.events) === JSON.stringify(after.events);
   const errorsMatch = JSON.stringify(before.errors) === JSON.stringify(after.errors);
@@ -327,6 +331,20 @@ async function runEntry(entry, worker) {
     }
     if (!eventsMatch) {
       problems.push('events differ');
+      fatal ||= entry.visualDifferenceOnly;
+    }
+    if (entry.visualDifferenceOnly && reviewedVisuals !== null && !selfCheck) {
+      const approved = join(reviewedVisuals, `${safe}.png`);
+      if (!existsSync(approved)) {
+        problems.push('reviewed candidate screenshot is missing');
+        fatal = true;
+      } else {
+        const review = await compare(worker.comparer, readFileSync(approved), after.shot);
+        if (!review.sizeMatches || review.different > 0) {
+          problems.push(`reviewed candidate screenshot differs by ${review.different} pixels`);
+          fatal = true;
+        }
+      }
     }
     if (!errorsMatch) {
       problems.push('page errors differ');
@@ -350,7 +368,6 @@ async function runEntry(entry, worker) {
   if (entry.knownDifference && !entry.expectDifferent && !selfCheck && !fatal) {
     status = problems.length > 0 ? 'known-difference' : 'known-difference-resolved';
   }
-  const safe = entry.id.replace(/[^A-Za-z0-9_-]/g, '_');
   writeFileSync(join(REPORT, 'images', `${safe}.before.png`), before.shot);
   writeFileSync(join(REPORT, 'images', `${safe}.after.png`), after.shot);
   if (pixels.diff) {

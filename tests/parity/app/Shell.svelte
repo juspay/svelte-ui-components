@@ -8,13 +8,18 @@
   window.__cases = Object.entries(registry)
     .sort(([a], [b]) => a.localeCompare(b))
     .flatMap(([file, mod]) =>
-      (mod.cases ?? []).map((entry) => ({
-        id: `${file}:${entry.name}`,
-        actions: entry.actions ?? [],
-        expectDifferent: entry.expectDifferent === true,
-        allowBlank: entry.allowBlank === true,
-        knownDifference: typeof entry.knownDifference === 'string' ? entry.knownDifference : null
-      }))
+      (mod.cases ?? []).map((entry) => {
+        const visualDifferenceOnly = typeof entry.knownVisualDifference === 'string';
+        const reason = visualDifferenceOnly ? entry.knownVisualDifference : entry.knownDifference;
+        return {
+          id: `${file}:${entry.name}`,
+          actions: entry.actions ?? [],
+          expectDifferent: entry.expectDifferent === true,
+          allowBlank: entry.allowBlank === true,
+          knownDifference: typeof reason === 'string' ? reason : null,
+          visualDifferenceOnly
+        };
+      })
     );
   const id = new URLSearchParams(location.search).get('case');
   const [file, caseName] = id === null ? [null, null] : id.split(':');

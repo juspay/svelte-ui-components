@@ -57,8 +57,14 @@ click option when the target is disabled or covered. Prefer `data-pw` ids and ro
 component renders; they are part of its contract.
 
 Other flags: `expectDifferent: true` (only for controls), `allowBlank: true` (the case is meant to
-render nothing visible), `knownDifference: '<why>'` (an accepted, explained difference; the run
-fails if it stops differing, so the note is removed with the fix).
+render nothing visible), `knownDifference: '<why>'` (an accepted, explained difference), and
+`knownVisualDifference: '<why>'` (an accepted screenshot difference that still requires exact
+event parity). The run fails when the declared difference goes away. In CI, a visual-only case
+must also match its reviewed candidate screenshot in `reviewed-visuals/<case-id>.png`; use
+the case ID with punctuation replaced by underscores. Inspect the baseline, candidate and diff
+in the Ubuntu parity artifact before copying its `images/<case-id>.after.png` to that directory.
+Local parity checks events on every platform. Pass `--reviewed-visuals <dir>` to also check the
+candidate against screenshots from the same renderer as the local run.
 
 ## What to record
 

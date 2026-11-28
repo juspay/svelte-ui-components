@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import Button from '../Button/Button.svelte';
   import type { CarouselProperties } from './properties';
 
   let {
@@ -15,9 +16,15 @@
     dotTestId
   }: CarouselProperties = $props();
 
-  let intervalId: number | null = null;
+  let rotationRequested = $state(true);
+  let hovered = $state(false);
   let requestedSlide = $state(0);
   let activeSlideIndex = $derived(Math.min(requestedSlide, Math.max(0, views.length - 1)));
+  let canAdvance = $derived(
+    views.length > 1 && (isScrollableLast || activeSlideIndex < views.length - 1)
+  );
+  let rotating = $derived(autoplay && rotationRequested && canAdvance && !hovered);
+  let rotationEnabled = $derived(autoplay && rotationRequested && canAdvance);
 
   function reconcileSelection(): void {
     // Forget a removed slide so a later append does not silently select it again.
@@ -38,16 +45,36 @@
     } else {
       return;
     }
-    if (autoplay) {
-      resetInterval();
-    }
   }
 
-  function resetInterval(): void {
-    if (intervalId !== null) {
-      window.clearInterval(intervalId);
+  function scheduleRotation(): () => void {
+    if (!rotating) {
+      return () => {};
     }
-    intervalId = window.setInterval(() => moveSlideBy(1), autoplayInterval);
+    const position = activeSlideIndex;
+    const timer = window.setTimeout(() => {
+      if (rotating && activeSlideIndex === position) {
+        moveSlideBy(1);
+      }
+    }, autoplayInterval);
+    return () => window.clearTimeout(timer);
+  }
+
+  function toggleRotation(): void {
+    if (rotationEnabled) {
+      rotationRequested = false;
+      return;
+    }
+    if (!canAdvance) {
+      requestedSlide = 0;
+    }
+    rotationRequested = true;
+  }
+
+  function stopForKeyboardFocus(event: FocusEvent): void {
+    if (event.target instanceof Element && event.target.matches(':focus-visible')) {
+      rotationRequested = false;
+    }
   }
 
   function attachGestures(target: HTMLDivElement): () => void {
@@ -102,15 +129,37 @@
   }
 
   onMount(() => {
-    if (autoplay) {
-      resetInterval();
-    }
-    return () => {
-      if (intervalId !== null) {
-        window.clearInterval(intervalId);
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    function syncReducedMotion(): void {
+      if (media.matches) {
+        rotationRequested = false;
       }
-    };
+    }
+    syncReducedMotion();
+    media.addEventListener('change', syncReducedMotion);
+    return () => media.removeEventListener('change', syncReducedMotion);
   });
+
+  function suspendOnInteraction(node: HTMLDivElement): () => void {
+    function enter(event: PointerEvent): void {
+      if (event.pointerType === 'mouse') {
+        hovered = true;
+      }
+    }
+    function leave(event: PointerEvent): void {
+      if (event.pointerType === 'mouse') {
+        hovered = false;
+      }
+    }
+    node.addEventListener('focusin', stopForKeyboardFocus);
+    node.addEventListener('pointerenter', enter);
+    node.addEventListener('pointerleave', leave);
+    return () => {
+      node.removeEventListener('focusin', stopForKeyboardFocus);
+      node.removeEventListener('pointerenter', enter);
+      node.removeEventListener('pointerleave', leave);
+    };
+  }
 </script>
 
 <div
@@ -118,7 +167,17 @@
   data-pw={typeof testId === 'string' ? testId : null}
   testID={typeof testId === 'string' ? testId : null}
   {@attach reconcileSelection}
+  {@attach scheduleRotation}
+  {@attach suspendOnInteraction}
 >
+  {#if autoplay && views.length > 1}
+    <div class="rotation-controls">
+      <Button
+        text={rotationEnabled ? 'Pause rotation' : 'Start rotation'}
+        onclick={toggleRotation}
+      />
+    </div>
+  {/if}
   {#if views.length > 0}
     <div class="carousel" {@attach attachGestures}>
       <div class="slidesDiv" style:--slide-index={activeSlideIndex}>
@@ -166,11 +225,7 @@
       {/each}
     </div>
   {/if}
-  <!-- Slide changes are silent to assistive tech otherwise: the dots announce
-       where they GO, but nothing announces where the carousel ARRIVED, whether
-       the move came from autoplay, a swipe or a dot. polite so it never
-       interrupts, and atomic so the whole position is read as one phrase. -->
-  <div class="carousel-live-region" aria-live="polite" aria-atomic="true">
+  <div class="carousel-live-region" aria-live={rotating ? 'off' : 'polite'} aria-atomic="true">
     {#if views.length > 0}Slide {activeSlideIndex + 1} of {views.length}{/if}
   </div>
 </div>
@@ -225,34 +280,43 @@
     }
   }
 
+  .rotation-controls {
+    display: flex;
+    margin-block-end: 8px;
+  }
+
   .dots-wrapper {
-    gap: var(--dot-gap, 10px);
+    gap: max(0px, calc(var(--dot-gap, 10px) + var(--dot-width, 5px) - 24px));
     padding-top: var(--dot-padding-top, 10px);
     display: flex;
+    flex-wrap: wrap;
     justify-content: center;
   }
-  .dot {
-    width: var(--dot-width, 5px);
-    height: var(--dot-height, 5px);
-    border-radius: 50%;
-    background: var(--carousel-dot-color, #c4c4c4);
+
+  .dot,
+  .active-dot {
+    display: grid;
+    place-items: center;
+    min-inline-size: 24px;
+    width: max(24px, var(--dot-width, 5px));
+    height: max(24px, var(--dot-height, 5px));
     cursor: pointer;
-    /* Only background actually differs between .dot and .active-dot, so only
-       background is transitioned. `transition: all` used to catch `outline`
-       too, animating the keyboard focus ring in on every Tab. */
     transition: background var(--carousel-dot-transition-duration, var(--motion-duration, 0.3s))
       var(--carousel-dot-transition-easing, var(--motion-easing, ease));
   }
 
-  .active-dot {
+  .dot::before,
+  .active-dot::before {
+    content: '';
     width: var(--dot-width, 5px);
     height: var(--dot-height, 5px);
     border-radius: 50%;
-    cursor: pointer;
+    background: var(--carousel-dot-color, #c4c4c4);
+    transition: inherit;
+  }
+
+  .active-dot::before {
     background: var(--carousel-dot-active-color, #000000);
-    /* See .dot above: scoped to background so outline is never transitioned. */
-    transition: background var(--carousel-dot-transition-duration, var(--motion-duration, 0.3s))
-      var(--carousel-dot-transition-easing, var(--motion-easing, ease));
   }
 
   .dot:focus-visible,

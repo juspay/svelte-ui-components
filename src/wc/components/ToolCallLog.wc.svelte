@@ -36,7 +36,7 @@
   const dispatchers = $derived(dispatchEvents(hostEl, props));
 </script>
 
-<ToolCallLog {...props} {...dispatchers} />
+<ToolCallLog {...props} {...dispatchers} chips={props.chips ?? []} />
 
 <style>
   /* A custom element defaults to `display: inline`, which has no definite

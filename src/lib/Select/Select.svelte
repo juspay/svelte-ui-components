@@ -1421,7 +1421,7 @@
   }
 
   .select-control.has-clear .select-trigger:where(:not(.select-native)) {
-    padding-inline-end: calc(var(--select-clear-size, 18px) + 36px);
+    padding-inline-end: calc(max(24px, var(--select-clear-size, 18px)) + 36px);
   }
 
   .select-control.has-clear .select-arrow {
@@ -1438,8 +1438,8 @@
     align-items: center;
     justify-content: center;
     flex: none;
-    width: var(--select-clear-size, 18px);
-    height: var(--select-clear-size, 18px);
+    width: max(24px, var(--select-clear-size, 18px));
+    height: max(24px, var(--select-clear-size, 18px));
     margin: 0;
     padding: 0;
     border: none;

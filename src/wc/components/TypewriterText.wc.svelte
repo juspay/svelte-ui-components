@@ -48,7 +48,7 @@
   const dispatchers = $derived(dispatchEvents(hostEl, props));
 </script>
 
-<TypewriterText {...props} {...dispatchers} />
+<TypewriterText {...props} {...dispatchers} text={props.text ?? ''} />
 
 <style>
   /* A custom element defaults to `display: inline`, which has no definite

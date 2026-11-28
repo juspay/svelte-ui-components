@@ -74,7 +74,7 @@
   const dispatchers = $derived(dispatchEvents(hostEl, props));
 </script>
 
-<Tabs {...props} {...dispatchers} dir={tabsDir} ariaLabel={tabsAriaLabel}>
+<Tabs {...props} {...dispatchers} items={props.items ?? []} dir={tabsDir} ariaLabel={tabsAriaLabel}>
   {#snippet scrollLeftIcon()}
     <!--
       A snippet declared here is always a function, so Tabs.svelte's own

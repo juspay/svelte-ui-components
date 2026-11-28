@@ -2,7 +2,12 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.58.0)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.58.1)
+
+-
+feat: reduce consumer bundles and share component behavior ([f574e62](https://github.com/juspay/svelte-ui-components/commit/f574e6291215a5a87224c2bcada01e30b012c835))
+
+## [4.58.1](https://github.com/juspay/svelte-ui-components/compare/4.58.1..4.58.0) - 28 November 2026
 
 Under day-first locales (en-IN, en-GB) the picker formats its typed fields as
 "10 Jul 2026", and parseDateDisplay accepted only ISO, "Jul 10, 2026" and

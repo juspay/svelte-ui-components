@@ -52,4 +52,52 @@ describe('parseDateDisplay', () => {
     expect(parsed?.getSeconds()).toBe(0);
     expect(parsed?.getMilliseconds()).toBe(0);
   });
+
+  it('parses day-first month-name dates', () => {
+    for (const text of ['10 Jul 2026', '10 Jul, 2026', '10 July 2026', '10 jul. 2026']) {
+      const parsed = parseDateDisplay(text);
+      expect(parsed?.getFullYear(), text).toBe(2026);
+      expect(parsed?.getMonth(), text).toBe(6);
+      expect(parsed?.getDate(), text).toBe(10);
+    }
+    expect(parseDateDisplay('10 Sept 2026')?.getMonth()).toBe(8);
+  });
+
+  it('round-trips every month of the en-IN and en-GB display format', () => {
+    const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' };
+    for (const locale of ['en-IN', 'en-GB', 'en-US']) {
+      for (let monthIndex = 0; monthIndex < 12; monthIndex++) {
+        const date = new Date(2026, monthIndex, 28);
+        const text = date.toLocaleDateString(locale, options);
+        expect(parseDateDisplay(text)?.getTime(), `${locale} ${text}`).toBe(date.getTime());
+      }
+    }
+  });
+
+  it('keeps the existing formats unchanged', () => {
+    const expected = new Date(2026, 6, 10).getTime();
+    for (const text of [
+      'Jul 10, 2026',
+      'Jul 10 2026',
+      'July 10, 2026',
+      '7/10/2026',
+      '7-10-2026',
+      '2026-07-10'
+    ]) {
+      expect(parseDateDisplay(text)?.getTime(), text).toBe(expected);
+    }
+  });
+
+  it('rejects day-first text that names no real date', () => {
+    expect(parseDateDisplay('31 Feb 2026')).toBeNull();
+    expect(parseDateDisplay('10 Foo 2026')).toBeNull();
+    expect(parseDateDisplay('0 Jul 2026')).toBeNull();
+  });
+
+  it('parses the same day identically for a range start and end', () => {
+    const start = parseDateDisplay('10 Jul 2026');
+    const end = parseDateDisplay('10 Jul 2026');
+    expect(start).not.toBeNull();
+    expect(start?.getTime()).toBe(end?.getTime());
+  });
 });

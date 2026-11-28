@@ -41,3 +41,9 @@ tests/parity/**/.src/
 tests/parity/**/dist/
 tests/parity/**/node_modules/
 tests/parity/.report/
+
+# v1 parity check: generated build inputs, outputs and the baseline stack install
+tests/v1-parity/**/.src/
+tests/v1-parity/**/dist/
+tests/v1-parity/**/node_modules/
+tests/v1-parity/.report/

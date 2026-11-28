@@ -30,6 +30,10 @@ import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 const ROOT = new URL('..', import.meta.url).pathname;
+// src/lib/v1 is the 1.34.1 surface kept for consumers that have not migrated (docs/V1_COMPAT.md).
+// Its markup and CSS are kept as 1.34.1 shipped them, and tests/v1-parity proves they still render
+// identically. Holding it to this gate would change what it renders, so it is not walked here.
+const V1_DIR = join(ROOT, 'src/lib/v1');
 const LIB = join(ROOT, 'src/lib');
 const SRC = join(ROOT, 'src');
 const DARK_LAYER = join(ROOT, 'src/lib/styles/theme-dark.css');
@@ -38,6 +42,9 @@ function walk(dir, test) {
   const out = [];
   for (const entry of readdirSync(dir)) {
     const full = join(dir, entry);
+    if (full === V1_DIR) {
+      continue;
+    }
     if (statSync(full).isDirectory()) {
       out.push(...walk(full, test));
     } else if (test(entry)) {

@@ -7,6 +7,6 @@
     "moduleResolution": "bundler",
     "types": ["$app/types", "node"]
   },
-  "exclude": ["node_modules", "src/wc", "tests/parity"],
+  "exclude": ["node_modules", "src/wc", "tests/parity", "tests/v1-parity"],
   "include": ["src", "vite.config.ts", "playwright.config.ts", "tests"]
 }

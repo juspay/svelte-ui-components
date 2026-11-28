@@ -2,7 +2,18 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.24)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.58.0)
+
+Under day-first locales (en-IN, en-GB) the picker formats its typed fields as
+"10 Jul 2026", and parseDateDisplay accepted only ISO, "Jul 10, 2026" and
+M/D/YYYY, so the picker marked its own fields invalid. The hint already asks for
+"12 Mar 2025". The parser now also reads "10 Jul 2026", "10 Jul, 2026" and
+"10 July 2026" (and en-IN's "Sept"); every existing format parses as before.
+
+-
+fix(DateRangePicker): read day-first dates such as 10 Jul 2026 ([7bc3bed](https://github.com/juspay/svelte-ui-components/commit/7bc3bed913fa9b5bb48f7358fbaf063b63275af4))
+
+## [4.58.0](https://github.com/juspay/svelte-ui-components/compare/4.58.0..4.57.24) - 28 November 2026
 
 -
 feat(wc): add selective imports and complete the UI audit fixes ([c7d33cb](https://github.com/juspay/svelte-ui-components/commit/c7d33cb305ca152de250f1ada00732c82fba3c90))

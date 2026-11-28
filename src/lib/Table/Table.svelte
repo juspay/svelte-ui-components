@@ -37,6 +37,7 @@
     isContentScrollable = false,
     testId,
     caption,
+    focusHorizontalOverflow = false,
     sortAscIcon,
     sortDescIcon,
     sortDefaultIcon,
@@ -862,8 +863,16 @@
       class:scrollable-left={canScrollLeft}
       class:scrollable-right={canScrollRight}
     >
+      <!-- A named scroll group is focusable only while it overflows, so keyboard users can
+           scroll a read-only table that has no focusable cell of its own. -->
+      <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
       <div
         class="table-scroll"
+        tabindex={focusHorizontalOverflow &&
+        scrollCaption !== null &&
+        (canScrollLeft || canScrollRight)
+          ? 0
+          : null}
         role={scrollCaption !== null ? 'group' : null}
         aria-label={scrollCaption}
         use:trackHorizontalScroll

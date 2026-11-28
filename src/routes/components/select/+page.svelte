@@ -360,9 +360,14 @@
     items={fruits}
     bind:value={bottomContentValue}
     placeholder="Choose a fruit"
+    testId="select-bottom-content"
   >
     {#snippet bottomContent()}
-      <button class="manage-link" onclick={() => console.log('Manage options clicked')}>
+      <button
+        class="manage-link"
+        data-pw="select-bottom-content-manage"
+        onclick={() => console.log('Manage options clicked')}
+      >
         + Manage options
       </button>
     {/snippet}

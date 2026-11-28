@@ -170,6 +170,31 @@ test.describe('Select — in-menu search (#415)', () => {
     await expect(page.getByTestId('select-menu-apply')).toBeFocused();
   });
 
+  test('bottom content without in-menu search sits outside the listbox and is Tab reachable', async ({
+    page
+  }) => {
+    const select = page.getByTestId('select-bottom-content');
+    const trigger = select.locator('.select-trigger');
+    // A closed combobox must not point at a listbox that is not in the document.
+    await expect(trigger).not.toHaveAttribute('aria-controls');
+    await trigger.focus();
+    await page.keyboard.press('Enter');
+    const manage = page.getByTestId('select-bottom-content-manage');
+    await expect(manage).toBeVisible();
+    await expect(select.locator('[role="listbox"] button')).toHaveCount(0);
+    const listboxId = await select.locator('[role="listbox"]').getAttribute('id');
+    await expect(trigger).toHaveAttribute('aria-controls', listboxId ?? '');
+    await page.keyboard.press('Tab');
+    await expect(manage).toBeFocused();
+    await page.keyboard.press('Shift+Tab');
+    await expect(trigger).toBeFocused();
+    await expect(manage).toBeVisible();
+    await page.keyboard.press('Tab');
+    await page.keyboard.press('Tab');
+    await expect(manage).toHaveCount(0);
+    await expect(trigger).not.toBeFocused();
+  });
+
   test('filtered select-all preserves other values and pinned actions apply or clear', async ({
     page
   }) => {

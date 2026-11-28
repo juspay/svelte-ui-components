@@ -19,6 +19,7 @@
       isContentScrollable: { type: 'Boolean', attribute: 'is-content-scrollable' },
       testId: { type: 'String', attribute: 'test-id' },
       caption: { type: 'String' },
+      focusHorizontalOverflow: { type: 'Boolean', attribute: 'focus-horizontal-overflow' },
       classes: { type: 'String' },
       getRowTestId: { type: 'Object' },
       getCellTestId: { type: 'Object' },

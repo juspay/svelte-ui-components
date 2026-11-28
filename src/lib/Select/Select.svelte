@@ -261,7 +261,9 @@
   });
 
   let highlightedOptionId: string | null = $derived(
-    highlightedIndex >= 0 ? `${listboxId}-option-${highlightedIndex}` : null
+    open && !disabled && highlightedIndex >= 0 && highlightedIndex < optionRows.length
+      ? `${listboxId}-option-${highlightedIndex}`
+      : null
   );
 
   let searchPlaceholder = $derived(open && displayText.length > 0 ? displayText : placeholder);
@@ -643,14 +645,14 @@
   /* Leaving the menu forwards should continue from the trigger, as if the
      panel had never been in the tab order -- which is literally true for a
      portaled one, whose DOM position is the end of <body>. */
-  function focusAfterTrigger(): void {
+  function focusAfterTrigger(trigger: HTMLElement): void {
     if (triggerEl === null || typeof document === 'undefined') {
       return;
     }
     const tabbable = [...document.querySelectorAll<HTMLElement>(FOCUSABLE)].filter(
       (element) => element.closest('.select-dropdown') === null
     );
-    tabbable.at(tabbable.indexOf(triggerEl) + 1)?.focus();
+    tabbable.at(tabbable.indexOf(trigger) + 1)?.focus();
   }
 
   function handleKeydown(event: KeyboardEvent): void {
@@ -714,8 +716,9 @@
         if (!open) {
           break;
         }
-        /* Outside the in-menu variant, Tab always means focus is leaving. */
-        if (!searchInMenu) {
+        const menuStops = menuFocusables();
+        const trigger = searchInTrigger && searchInputEl !== null ? searchInputEl : triggerEl;
+        if (menuStops.length === 0 || trigger === null) {
           // Closing is rendered after this keydown. Firefox otherwise includes
           // the still-present scrollable dropdown in native Tab navigation,
           // then loses focus to body when that temporary target is removed.
@@ -732,32 +735,32 @@
           /* Backwards out of the trigger genuinely leaves the widget; every
              other Shift+Tab walks back through the menu and must not close
              it, or the search box could never be left and re-entered. */
-          if (active === triggerEl) {
+          if (active === trigger) {
             close();
-          } else if (active === searchInputEl) {
+          } else if (active === menuStops[0]) {
             /* The trigger is not the portaled panel's DOM predecessor, so
                native Shift+Tab would land outside the widget entirely. */
             event.preventDefault();
-            triggerEl?.focus();
+            trigger.focus();
           }
           break;
         }
-        if (active === triggerEl) {
+        if (active === trigger) {
           /* A portaled panel is appended to <body>, so it is not the
              trigger's DOM-order successor and native Tab would skip the whole
              menu. Moving focus explicitly makes the in-flow and portaled
              variants answer Tab identically. */
           event.preventDefault();
-          searchInputEl?.focus();
+          menuStops[0].focus();
           break;
         }
         /* Forward Tab only leaves once there is nothing left to reach: the
            search box is followed by any pinned bottom actions, which were
            unreachable while Tab from the search closed the menu outright. */
-        if (active === menuFocusables().at(-1)) {
+        if (active === menuStops.at(-1)) {
           event.preventDefault();
           close();
-          focusAfterTrigger();
+          focusAfterTrigger(trigger);
         }
         break;
       }
@@ -768,7 +771,7 @@
      handler of their own. The search box already carries one, and letting its
      bubbled event run a second time here moved the highlight twice per key. */
   function handleMenuKeydown(event: KeyboardEvent): void {
-    if (event.target !== searchInputEl) {
+    if (event.key === 'Tab' && event.target !== searchInputEl) {
       handleKeydown(event);
     }
   }
@@ -940,7 +943,7 @@
         role="combobox"
         aria-expanded={open}
         aria-haspopup="listbox"
-        aria-controls={listboxId}
+        aria-controls={open && !disabled ? listboxId : null}
         aria-label={accessibleName}
         aria-labelledby={accessibleLabelledby}
         aria-disabled={disabled ? 'true' : null}
@@ -1207,15 +1210,10 @@
           {/if}
         {/each}
       {/if}
-      {#if typeof bottomContent === 'function' && !searchInMenu}
-        <div class="select-bottom-content">
-          {@render bottomContent()}
-        </div>
-      {/if}
     {/snippet}
 
     {#if open && !disabled}
-      {#if searchInMenu}
+      {#if searchInMenu || typeof bottomContent === 'function'}
         <!-- The panel itself carries no role here: a listbox may only contain
            options, so the search box has to be a SIBLING of the listbox rather
            than a child of it. `aria-controls` on the trigger still points at
@@ -1237,27 +1235,29 @@
           use:portalToRoot
           use:dismissalAction
         >
-          <input
-            class="select-menu-search"
-            type="search"
-            value={query}
-            oninput={handleSearchInput}
-            onkeydown={handleKeydown}
-            bind:this={searchInputEl}
-            placeholder={placeholder.length > 0 ? placeholder : 'Search'}
-            aria-label="Search options"
-            aria-controls={listboxId}
-            autocomplete="off"
-            data-pw={typeof testId === 'string' ? `${testId}-menu-search` : null}
-            testID={typeof testId === 'string' ? `${testId}-menu-search` : null}
-          />
+          {#if searchInMenu}
+            <input
+              class="select-menu-search"
+              type="search"
+              value={query}
+              oninput={handleSearchInput}
+              onkeydown={handleKeydown}
+              bind:this={searchInputEl}
+              placeholder={placeholder.length > 0 ? placeholder : 'Search'}
+              aria-label="Search options"
+              aria-controls={listboxId}
+              autocomplete="off"
+              data-pw={typeof testId === 'string' ? `${testId}-menu-search` : null}
+              testID={typeof testId === 'string' ? `${testId}-menu-search` : null}
+            />
+          {/if}
           <!-- tabindex="-1" because the list scrolls, and a scroll container is
              a tab stop of its own in Chromium -- which swallowed the Tab that
              should reach the pinned bottom actions. The options are navigated
              from the search box via aria-activedescendant, so the list itself
              never needs to hold focus. -->
           <div
-            class="select-menu-list"
+            class:select-menu-list={searchInMenu}
             role="listbox"
             id={listboxId}
             aria-label={accessibleName}

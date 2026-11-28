@@ -134,15 +134,23 @@ describe('Sheet overlay accessible name', () => {
       overlayAriaLabel,
       content
     });
+    // The dismiss control is a native button behind the panel, so the overlay
+    // wrapper (which also contains the dialog) is never itself a button.
     const overlay = container.querySelector<HTMLElement>('.sheet-overlay');
-    expect(overlay).not.toBeNull();
-    return overlay as HTMLElement;
+    expect(overlay?.getAttribute('role')).toBeNull();
+    const backdrop = container.querySelector<HTMLElement>('button.sheet-backdrop');
+    expect(backdrop).not.toBeNull();
+    return backdrop as HTMLElement;
   };
 
+  it('renders no dismiss button when outside clicks do not dismiss', () => {
+    const { container } = render(Sheet, { open: true, dismissOnOutsideClick: false, content });
+    expect(container.querySelector('button.sheet-backdrop')).toBeNull();
+  });
+
   it('falls back to the default name when the override is an empty string', () => {
-    // `??` forwards '' — leaving role="button" with aria-label="", announced
-    // as an unnamed button. That is the exact defect the conditional role
-    // exists to prevent, reintroduced through the override.
+    // `??` forwards '' — leaving the button with aria-label="", announced
+    // as an unnamed button, reintroduced through the override.
     expect(open('').getAttribute('aria-label')).toBe('Close sheet');
   });
 

@@ -2,7 +2,12 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.20)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.21)
+
+-
+fix(Carousel): align active slides with the rendered viewport ([0cb3a82](https://github.com/juspay/svelte-ui-components/commit/0cb3a821e0e1de9dfa937a569d4aa07b6973c0cd))
+
+## [4.57.21](https://github.com/juspay/svelte-ui-components/compare/4.57.21..4.57.20) - 28 November 2026
 
 -
 fix: make standalone web-component form validation work on direct visits ([a8520d0](https://github.com/juspay/svelte-ui-components/commit/a8520d0a9c1aefe3fa6f6d4ec76a289ac75e5a78))

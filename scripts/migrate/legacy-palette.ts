@@ -614,10 +614,16 @@ export function renderStylesheet(
 function listLibraryFiles(root: string): readonly string[] {
   const libDir = join(root, 'src', 'lib');
   const found: string[] = [];
+  // src/lib/v1 keeps 1.34.1's values on purpose (docs/V1_COMPAT.md); it is not part of the
+  // current palette this file pins.
+  const v1Dir = join(libDir, 'v1');
   const visit = (dir: string): void => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const full = join(dir, entry.name);
       if (entry.isDirectory()) {
+        if (full === v1Dir) {
+          continue;
+        }
         visit(full);
         continue;
       }

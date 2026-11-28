@@ -57,6 +57,7 @@
     "lint:wc-unused": "eslint --config eslint.wc.config.js src/wc",
     "lint:test-focus": "node scripts/check-test-focus.js",
     "lint:focus-visible": "node scripts/check-focus-visible.js",
+    "test:v1-parity": "node tests/v1-parity/run.mjs",
     "test:walkthrough": "playwright test --config playwright.walkthrough.config.ts",
     "test:walkthrough:engines": "playwright test --config playwright.walkthrough.engines.config.ts"
   },
@@ -64,6 +65,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "svelte": "./dist/index.js"
+    },
+    "./v1": {
+      "types": "./dist/v1/index.d.ts",
+      "svelte": "./dist/v1/index.js"
     },
     "./wc": {
       "types": "./dist-wc/index.d.ts",

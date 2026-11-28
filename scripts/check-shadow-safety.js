@@ -26,6 +26,10 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 const ROOT = new URL('..', import.meta.url).pathname;
+// src/lib/v1 is the 1.34.1 surface kept for consumers that have not migrated (docs/V1_COMPAT.md).
+// Its markup and CSS are kept as 1.34.1 shipped them, and tests/v1-parity proves they still render
+// identically. Holding it to this gate would change what it renders, so it is not walked here.
+const V1_DIR = join(ROOT, 'src/lib/v1');
 const SRC = join(ROOT, 'src/lib');
 
 // The helpers themselves must read the raw APIs -- that is their whole job.
@@ -35,6 +39,9 @@ function walk(dir) {
   const out = [];
   for (const entry of readdirSync(dir)) {
     const full = join(dir, entry);
+    if (full === V1_DIR) {
+      continue;
+    }
     if (statSync(full).isDirectory()) {
       out.push(...walk(full));
     } else if (/\.(svelte|ts)$/.test(entry) && !/\.test\.(ts|svelte)$/.test(entry)) {

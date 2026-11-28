@@ -38,6 +38,15 @@ This library takes a different approach: **components are unstyled by default** 
 
 ---
 
+## Still on 1.x?
+
+`@juspay/svelte-ui-components/v1` is the 1.34.1 API on Svelte 5: the same
+`properties` objects, `default*Properties` exports, `on:` events and named
+slots. Change the import path, upgrade Svelte, and migrate one component at a
+time. 699 of 706 checked cases render pixel-identical to 1.34.1;
+[`docs/V1_COMPAT.md`](docs/V1_COMPAT.md) explains the other seven and how this
+is checked.
+
 ## Breaking changes, and the release they actually shipped in
 
 **Both changes below shipped in 3.5.1, which went out as a patch by mistake.**

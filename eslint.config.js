@@ -84,6 +84,28 @@ export default defineConfig(
       }
     }
   },
+  // src/lib/v1 is the 1.34.1 surface kept as it shipped (docs/V1_COMPAT.md). These rules would
+  // change its behaviour: a key on an each block changes how DOM nodes are reused, and the self
+  // assignments are how Svelte 4 components announce a change. compat.ts is new code and keeps
+  // every rule.
+  {
+    files: [
+      'src/lib/v1/**/*.svelte',
+      'src/lib/v1/**/properties.ts',
+      'src/lib/v1/utils.ts',
+      'src/lib/v1/types.ts'
+    ],
+    rules: {
+      'svelte/require-each-key': 'off',
+      'svelte/no-useless-mustaches': 'off',
+      'no-restricted-syntax': 'off',
+      'no-useless-assignment': 'off',
+      '@typescript-eslint/consistent-type-assertions': 'off'
+    }
+  },
+  // The v1 parity cases are compiled by Svelte 4 as well as Svelte 5, so they are written in
+  // Svelte 4 syntax that this config's runes-mode parser rejects. The harness scripts are linted.
+  { ignores: ['tests/v1-parity/cases/**', 'tests/v1-parity/app/**'] },
   // Test files need to stub complex DOM types that cannot be narrowed without assertions.
   {
     files: ['**/*.test.ts', '**/*.test.js', '**/*.spec.ts', '**/*.spec.js'],

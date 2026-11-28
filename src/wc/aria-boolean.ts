@@ -8,3 +8,18 @@ export function ariaBoolean(value: unknown): boolean | undefined {
   }
   return undefined;
 }
+
+/** Coerce attributes whose absence lets the component decide its own default. */
+export function optionalBooleanAttribute(value: unknown, name?: string): boolean | null {
+  if (value === null || typeof value === 'undefined') {
+    return null;
+  }
+  if (typeof value === 'boolean') {
+    return value;
+  }
+  const text = String(value).trim().toLowerCase();
+  if (text === 'false') {
+    return false;
+  }
+  return text === '' || text === 'true' || text === name ? true : null;
+}

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { nextEnabledIndex } from '../_interaction/nextEnabledIndex';
   import type { CommandMenuProperties, CommandItem } from './properties';
   import { tick, onMount, onDestroy, untrack } from 'svelte';
   import { toStore } from 'svelte/store';
@@ -149,15 +150,10 @@
   }
 
   function findNextActive(from: number, delta: 1 | -1): number {
-    let candidate = from + delta;
-    while (candidate >= 0 && candidate < flatItems.length) {
-      const item = flatItems.at(candidate);
-      if (typeof item === 'object' && !item.disabled) {
-        return candidate;
-      }
-      candidate += delta;
-    }
-    return -1;
+    return nextEnabledIndex(flatItems.length, from, delta, false, (index) => {
+      const item = flatItems.at(index);
+      return typeof item !== 'object' || item.disabled === true;
+    });
   }
 
   function handleKeyDown(event: KeyboardEvent) {

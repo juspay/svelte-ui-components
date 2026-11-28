@@ -4,6 +4,9 @@ export type LottiePlayerProperties = MandatoryLottiePlayerProperties &
   OptionalLottiePlayerProperties &
   LottiePlayerEventProperties;
 
+/** Properties for SVG animations supported by the Lottie light runtime. */
+export type LottiePlayerLiteProperties = Omit<LottiePlayerProperties, 'renderer'>;
+
 /**
  * Placeholder for future mandatory props. Follows the library-wide pattern used by Card, Badge,
  * etc. — kept so the type shape is consistent when mandatory props are added later.
@@ -30,6 +33,8 @@ export type OptionalLottiePlayerProperties = {
    * Default true — decorative animations should be invisible to screen readers.
    */
   ariaHidden?: boolean;
+  /** Localized name used when ariaHidden is false. Default 'Animation'. */
+  ariaLabel?: string;
   testId?: string;
   classes?: string;
 };

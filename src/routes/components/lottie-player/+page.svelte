@@ -1,10 +1,10 @@
 <script lang="ts">
   import '../_capability-demo-controls.css';
   import { asset } from '$app/paths';
-  import { LottiePlayer } from '#lib';
+  import { LottiePlayerLite } from '#lib';
   import animationData from './motion.json';
 
-  let player: LottiePlayer | null = $state(null);
+  let player: LottiePlayerLite | null = $state(null);
   let loop = $state(false);
   let speed = $state(1);
   let playbackState = $state('Loading animation');
@@ -53,7 +53,7 @@
   <div class="animation" role="img" aria-label="Animation preview">
     {#key `${loop}-${unavailable}-${resetCount}`}
       <div class="player-host" use:observeDrawing>
-        <LottiePlayer
+        <LottiePlayerLite
           bind:this={player}
           {...unavailable ? { src: unavailableAnimationSrc } : { animationData }}
           {loop}

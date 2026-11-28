@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onDestroy, untrack } from 'svelte';
   import { prefersReducedMotion } from '../utils';
+  import { loadMarkdownRenderer } from '../MarkdownText/load';
   import type { TypewriterTextProperties, TypewriterCharacterDelayRange } from './properties';
 
   let {
@@ -20,11 +21,6 @@
 
   // Keep the promise stable across streamed prop updates so the await block does
   // not flash escaped source between already-rendered Markdown frames.
-  let rendererPromise: Promise<typeof import('../MarkdownText/markdown')> | null = null;
-  function loadMarkdownRenderer(): Promise<typeof import('../MarkdownText/markdown')> {
-    rendererPromise ??= import('../MarkdownText/markdown');
-    return rendererPromise;
-  }
   const markdownRenderer = $derived(markdown === true ? loadMarkdownRenderer() : null);
   // Object-valued custom-element props may receive JSON null or other non-objects.
   const safeMarkdownOptions = $derived(

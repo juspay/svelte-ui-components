@@ -10,6 +10,7 @@
       speed: { type: 'Number', reflect: true },
       renderer: { type: 'String', reflect: true },
       lottiePlayerAriaHidden: { type: 'String', reflect: true, attribute: 'aria-hidden' },
+      lottiePlayerAriaLabel: { type: 'String', reflect: true, attribute: 'aria-label' },
       classes: { type: 'String' },
       testId: { type: 'String', attribute: 'test-id' },
       oncomplete: { type: 'Object' },
@@ -22,7 +23,7 @@
   import LottiePlayer from '#lib/LottiePlayer/LottiePlayer.svelte';
   import { dispatchEvents } from '../dispatch';
   import { ariaBoolean } from '../aria-boolean';
-  let { lottiePlayerAriaHidden, ...props } = $props();
+  let { lottiePlayerAriaHidden, lottiePlayerAriaLabel, ...props } = $props();
 
   // Named hostEl, not host: svelte2tsx confuses a local variable named after a rune's name
   // minus its `$` with the rune itself (sveltejs/svelte#13715, same class as `state` vs
@@ -45,7 +46,12 @@
   const dispatchers = $derived(dispatchEvents(hostEl, props));
 </script>
 
-<LottiePlayer {...props} ariaHidden={ariaBoolean(lottiePlayerAriaHidden)} {...dispatchers} />
+<LottiePlayer
+  {...props}
+  ariaHidden={ariaBoolean(lottiePlayerAriaHidden)}
+  ariaLabel={lottiePlayerAriaLabel}
+  {...dispatchers}
+/>
 
 <style>
   /* A custom element defaults to `display: inline`, which has no definite

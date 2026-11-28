@@ -74,6 +74,7 @@
 />
 
 <script lang="ts">
+  import { optionalBooleanAttribute } from '../aria-boolean';
   import { formAssociated } from '../form-associated';
   import Input from '#lib/Input/Input.svelte';
   import type { InputProperties } from '#lib/Input/properties.js';
@@ -126,22 +127,8 @@
   // Restores the tri-state the attribute string flattens: absent stays null so
   // the browser default is untouched, "false" is honoured, and a bare
   // `spellcheck` (empty value, the HTML boolean-attribute idiom) reads as true.
-  const asSpellcheck = (value: unknown): boolean | null => {
-    if (value === null || value === undefined) {
-      return null;
-    }
-    if (typeof value === 'boolean') {
-      return value;
-    }
-    const text = String(value).trim().toLowerCase();
-    if (text === 'false') {
-      return false;
-    }
-    if (text === '' || text === 'true' || text === 'spellcheck') {
-      return true;
-    }
-    return null;
-  };
+  const asSpellcheck = (value: unknown): boolean | null =>
+    optionalBooleanAttribute(value, 'spellcheck');
 
   /*
    * Input has no `{:else}` default for either icon, so there is no built-in glyph to

@@ -59,7 +59,7 @@
   $effect(() => note('showLoader', loader));
 </script>
 
-<div style="padding: 8px; font-family: sans-serif; --loader-animation-duration: 100000s;">
+<div class="grid-fixture" style="padding: 8px; font-family: sans-serif;">
   {#if name === 'basic'}
     <GridItem icon={png} text="Basic" />
   {:else if name === 'no-header-icon'}
@@ -135,3 +135,10 @@
     </div>
   {/if}
 </div>
+
+<style>
+  /* Compare the visible loading state at a fixed frame on both stacks. */
+  .grid-fixture :global(.grid-body-loader)::before {
+    animation: none;
+  }
+</style>

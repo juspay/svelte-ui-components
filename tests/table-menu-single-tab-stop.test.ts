@@ -7,11 +7,14 @@ import { gotoHydrated } from './support/hydrated';
 // duplicated tab stop and an unnamed one. These assert the shape rather than the symptom —
 // a test that only looks for the Button passes either way.
 test.describe('Table row menus — one named tab stop', () => {
+  test.beforeEach(async ({ page }) => {
+    await gotoHydrated(page, '/components/table');
+    await page.getByText('Show interactive cells', { exact: true }).click();
+  });
+
   test('the action-group menu wrapper is inert, and the Button carries the ARIA', async ({
     page
   }) => {
-    await gotoHydrated(page, '/components/table');
-
     const wrapper = page.locator('[data-pw="demo-manage-menu-0"] .menu-trigger');
     await expect(wrapper).not.toHaveAttribute('role', /.*/);
     await expect(wrapper).not.toHaveAttribute('tabindex', /.*/);
@@ -23,8 +26,6 @@ test.describe('Table row menus — one named tab stop', () => {
   });
 
   test('the popup menu wrapper is inert, and the Button carries the ARIA', async ({ page }) => {
-    await gotoHydrated(page, '/components/table');
-
     const wrapper = page.locator('[data-pw="demo-more-popup-0"] .menu-trigger');
     await expect(wrapper).not.toHaveAttribute('role', /.*/);
     await expect(wrapper).not.toHaveAttribute('tabindex', /.*/);
@@ -35,8 +36,6 @@ test.describe('Table row menus — one named tab stop', () => {
   });
 
   test('a row menu contributes exactly one focusable element', async ({ page }) => {
-    await gotoHydrated(page, '/components/table');
-
     // The defect was two focus stops for one conceptual control, one of them nameless.
     // Counting is what distinguishes the fix from a wrapper that merely gained a label.
     const focusable = await page
@@ -52,8 +51,6 @@ test.describe('Table row menus — one named tab stop', () => {
   });
 
   test('the header filter trigger is the Button, not a wrapper around it', async ({ page }) => {
-    await gotoHydrated(page, '/components/table');
-
     // Same mechanism, third call site: a column filter renders a real Button in the trigger
     // snippet too, so every filterable column carried the same nameless second tab stop.
     const wrapper = page.locator('[data-pw="meta-status-filter"] .menu-trigger');
@@ -66,8 +63,6 @@ test.describe('Table row menus — one named tab stop', () => {
   });
 
   test('the trigger still opens the menu and reports expansion', async ({ page }) => {
-    await gotoHydrated(page, '/components/table');
-
     // interactiveTrigger moves the click wiring off the wrapper and onto the snippet, so
     // the menu stops opening entirely if the snippet does not spread what Menu hands it.
     const button = page.getByTestId('demo-manage-menu-trigger-0');
@@ -78,8 +73,6 @@ test.describe('Table row menus — one named tab stop', () => {
   });
 
   test('the row menu still selects an item', async ({ page }) => {
-    await gotoHydrated(page, '/components/table');
-
     const button = page.getByTestId('demo-manage-menu-trigger-0');
     await button.click();
 

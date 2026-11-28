@@ -61,12 +61,14 @@ for (const colorScheme of ['light', 'dark'] as const) {
       page
     }) => {
       await gotoHydrated(page, '/components/table');
+      await page.getByText('Show interactive cells', { exact: true }).click();
       const combos = page.getByRole('combobox');
       await expect(combos).toHaveCount(9);
       for (const combo of await combos.all()) {
         await expect(combo).toHaveAttribute('aria-label', /.+ for .+/);
       }
       await expect(page.getByTestId('demo-note-0')).toHaveAccessibleName('Note for Growth Monthly');
+      await page.getByText('Show built-in cells', { exact: true }).click();
       const table = page.getByTestId('table-builtin-cells');
       await expect(table.getByRole('switch')).toHaveCount(3);
       await expect(table.getByRole('checkbox')).toHaveCount(0);
@@ -83,6 +85,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
       page
     }) => {
       await gotoHydrated(page, '/components/table');
+      await page.getByText('Show built-in cells', { exact: true }).click();
       const table = page.getByTestId('table-builtin-cells');
       await table.evaluate((el) => {
         const before = document.createElement('button');

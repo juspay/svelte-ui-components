@@ -561,6 +561,16 @@ export type TableEmptyContext = {
 
 export type TableProperties = OptionalTableProperties & TableEventProperties;
 
+/** Columns rendered as text or through caller-provided snippets. */
+export type PlainTableColumn = Omit<TableColumn, 'type'> & {
+  type?: 'text' | 'custom';
+};
+
+/** Table sorting, selection and pagination with text and custom cell renderers. */
+export type PlainTableProperties = Omit<TableProperties, 'columns'> & {
+  columns?: PlainTableColumn[];
+};
+
 /**
  * Accessible names Table generates for its own controls, for callers who do
  * not ship an English UI.

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { scrollRegions } from '../_interaction/scrollRegions';
+  import { watchMarkdownCode } from '../_interaction/scrollRegions';
   import { renderMarkdown } from './markdown';
   import type { MarkdownTextProperties } from './properties';
 
@@ -17,16 +17,12 @@
   let html = $derived(
     renderMarkdown(markdown, { breaks, tableLabel, tableWrapperClass, sanitize, unwrapFence })
   );
-
-  function watchCodeBlocks(node: HTMLElement): () => void {
-    return scrollRegions(node, { context: 'Markdown', demoRows: false, codeSelector: 'pre' })
-      .destroy;
-  }
+  const hasCode = $derived(/<pre(?:\s|>)/i.test(html));
 </script>
 
 <div
   class="markdown-text {classes ?? ''}"
-  {@attach /<pre(?:\s|>)/i.test(html) ? watchCodeBlocks : null}
+  {@attach hasCode ? watchMarkdownCode : null}
   data-pw={typeof testId === 'string' ? testId : null}
   testID={typeof testId === 'string' ? testId : null}
 >

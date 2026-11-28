@@ -4,6 +4,7 @@ import { gotoHydrated } from './support/hydrated';
 test.describe('Table — interactive cell renderers', () => {
   test('button cell fires the column handler and never the row click', async ({ page }) => {
     await gotoHydrated(page, '/components/table');
+    await page.getByText('Show interactive cells', { exact: true }).click();
     const table = page.getByTestId('table-interactive-cells');
     await expect(table).toBeVisible();
     await table.getByTestId('demo-renew-0').click();
@@ -15,6 +16,7 @@ test.describe('Table — interactive cell renderers', () => {
     page
   }) => {
     await gotoHydrated(page, '/components/table');
+    await page.getByText('Show interactive cells', { exact: true }).click();
     const table = page.getByTestId('table-interactive-cells');
     await table
       .getByRole('rowgroup')
@@ -29,6 +31,7 @@ test.describe('Table — interactive cell renderers', () => {
 
   test('disabled button cell renders disabled', async ({ page }) => {
     await gotoHydrated(page, '/components/table');
+    await page.getByText('Show interactive cells', { exact: true }).click();
     const table = page.getByTestId('table-interactive-cells');
     await expect(table.getByTestId('demo-renew-1')).toBeDisabled();
   });
@@ -37,6 +40,7 @@ test.describe('Table — interactive cell renderers', () => {
     page
   }) => {
     await gotoHydrated(page, '/components/table');
+    await page.getByText('Show interactive cells', { exact: true }).click();
     const table = page.getByTestId('table-interactive-cells');
     const select = table.getByTestId('demo-tier-0');
     await select.getByRole('combobox').click();
@@ -47,6 +51,7 @@ test.describe('Table — interactive cell renderers', () => {
 
   test('select cell fires onSelect with the chosen option id, no row click', async ({ page }) => {
     await gotoHydrated(page, '/components/table');
+    await page.getByText('Show interactive cells', { exact: true }).click();
     const table = page.getByTestId('table-interactive-cells');
     const select = table.getByTestId('demo-tier-0');
     await select.getByRole('combobox').click();
@@ -59,6 +64,7 @@ test.describe('Table — interactive cell renderers', () => {
 
   test('input cell fires onInput with the typed value, no row click', async ({ page }) => {
     await gotoHydrated(page, '/components/table');
+    await page.getByText('Show interactive cells', { exact: true }).click();
     const table = page.getByTestId('table-interactive-cells');
     const input = table.getByTestId('demo-note-1');
     await input.first().fill('hello');
@@ -70,6 +76,7 @@ test.describe('Table — interactive cell renderers', () => {
     page
   }) => {
     await gotoHydrated(page, '/components/table');
+    await page.getByText('Show interactive cells', { exact: true }).click();
     const table = page.getByTestId('table-interactive-cells');
     const input = table.getByTestId('demo-note-1');
     // demo-note-1 carries validationPattern '^\d+$' + onErrorMessage 'Digits only'.
@@ -83,6 +90,7 @@ test.describe('Table — interactive cell renderers', () => {
     page
   }) => {
     await gotoHydrated(page, '/components/table');
+    await page.getByText('Show interactive cells', { exact: true }).click();
     const table = page.getByTestId('table-interactive-cells');
     await table.getByTestId('demo-edit-0').click();
     await expect(page.getByTestId('interactive-log')).toContainText('primary r0');
@@ -95,6 +103,7 @@ test.describe('Table — interactive cell renderers', () => {
 
   test('action-group without a primary button renders menu only', async ({ page }) => {
     await gotoHydrated(page, '/components/table');
+    await page.getByText('Show interactive cells', { exact: true }).click();
     const table = page.getByTestId('table-interactive-cells');
     const secondManageCell = table
       .getByRole('rowgroup')
@@ -109,6 +118,7 @@ test.describe('Table — interactive cell renderers', () => {
 
   test('popup-menu cell dispatches onMenuAction, no row click', async ({ page }) => {
     await gotoHydrated(page, '/components/table');
+    await page.getByText('Show interactive cells', { exact: true }).click();
     const table = page.getByTestId('table-interactive-cells');
     await table.getByTestId('demo-more-popup-trigger-0').click();
     await page.getByText('Archive', { exact: true }).first().click();

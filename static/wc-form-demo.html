@@ -184,7 +184,7 @@
       }
 
       try {
-        await import('./wc/index.js');
+        await import('./wc/form.js');
         if (controls.some((control) => !customElements.get(control.localName))) {
           throw new Error('The bundle did not register the form controls.');
         }

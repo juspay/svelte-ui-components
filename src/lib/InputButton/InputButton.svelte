@@ -1,4 +1,5 @@
 <script lang="ts">
+  import FieldMessage from '../_field/FieldMessage.svelte';
   import { describeField } from '../_field/description';
   import Button from '#lib/Button/Button.svelte';
   import Input from '#lib/Input/Input.svelte';
@@ -175,27 +176,23 @@
     {/if}
   </div>
   {#if field.showsError}
-    <div
+    <FieldMessage
       id={field.errorId}
-      role="alert"
-      class={typeof error === 'string' && error.length > 0
+      text={resolvedError}
+      testId={typeof testId === 'string' ? `${testId}-error-message` : null}
+      alert
+      classes={(typeof error === 'string' && error.length > 0
         ? 'external-error-message'
-        : 'error-message'}
-      data-pw={typeof testId === 'string' ? `${testId}-error-message` : null}
-      testID={typeof testId === 'string' ? `${testId}-error-message` : null}
-    >
-      {resolvedError}
-    </div>
+        : 'error-message') + ' sui-inputbutton-field-message'}
+    />
   {/if}
   {#if field.showsInfo}
-    <div
+    <FieldMessage
       id={field.infoId}
-      class="info-message"
-      data-pw={typeof testId === 'string' ? `${testId}-info-message` : null}
-      testID={typeof testId === 'string' ? `${testId}-info-message` : null}
-    >
-      {inputProperties.infoMessage}
-    </div>
+      text={inputProperties.infoMessage}
+      testId={typeof testId === 'string' ? `${testId}-info-message` : null}
+      classes="info-message sui-inputbutton-field-message"
+    />
   {/if}
 </div>
 
@@ -265,7 +262,7 @@
     outline: var(--invalid-outline, 1px solid var(--input-field-error-stroke, #e11900));
   }
 
-  .error-message {
+  :global(.error-message.sui-inputbutton-field-message) {
     font-weight: var(--input-error-msg-text-weight, 400);
     font-size: var(--input-error-msg-text-size, 12px);
     /* Shares --input-error-msg-text-color with Input.svelte -- kept in sync with its
@@ -274,7 +271,7 @@
     margin: var(--input-btn-error-msg-margin, 12px 0px 0px 0px);
   }
 
-  .info-message {
+  :global(.info-message.sui-inputbutton-field-message) {
     font-weight: var(--input-info-msg-text-weight, 400);
     font-size: var(--input-info-msg-text-size, 12px);
     /* Shares --input-info-msg-text-color with Input.svelte -- see its .info-message
@@ -302,7 +299,7 @@
     --input-padding: var(--inputbutton-lg-padding, 14px 20px);
   }
 
-  .external-error-message {
+  :global(.external-error-message.sui-inputbutton-field-message) {
     color: var(--inputbutton-external-error-color, #c5120a);
     margin: var(--inputbutton-external-error-margin, 6px 0px 0px 0px);
   }

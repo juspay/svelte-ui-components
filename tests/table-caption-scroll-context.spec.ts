@@ -117,6 +117,7 @@ test('the two original recipes name actual wrappers and retain native table desc
   page
 }) => {
   await gotoHydrated(page, '/components/table');
+  await page.getByText('Show built-in cells', { exact: true }).click();
   for (const [id, caption, header, vertical] of [
     ['table-builtin-cells', 'Subscription plan details', 'Plan', false],
     ['table-sticky-header', 'Employee scores by department', 'Name', true]
@@ -284,4 +285,20 @@ test('focusHorizontalOverflow adds one Tab stop only while a captioned table ove
   });
   await expect.poll(() => inner.evaluate((n) => n.scrollWidth - n.clientWidth)).toBeLessThan(3);
   await expect(inner).not.toHaveAttribute('tabindex');
+});
+
+test('a captioned table with one pixel of overflow still exposes a keyboard stop', async ({
+  page
+}) => {
+  const host = await mountTable(page, 'Subscription plan details');
+  const inner = host.locator('.table-scroll');
+  await expect
+    .poll(() => inner.evaluate((node) => node.scrollWidth - node.clientWidth))
+    .toBeGreaterThan(20);
+  await host.evaluate((element) => Reflect.set(element, 'focusHorizontalOverflow', true));
+  await inner.evaluate((element) => {
+    element.style.width = `${element.scrollWidth - 1}px`;
+  });
+  await expect.poll(() => inner.evaluate((node) => node.scrollWidth - node.clientWidth)).toBe(1);
+  await expect(inner).toHaveAttribute('tabindex', '0');
 });

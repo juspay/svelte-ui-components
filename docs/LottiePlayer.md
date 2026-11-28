@@ -132,3 +132,9 @@ Override these custom properties to theme the component.
 | `--lottie-player-background`    | `transparent`  | background    | Background color or image behind the animation.         |
 | `--lottie-player-border-radius` | `0px`          | border-radius | Corner rounding of the player container.                |
 | `--lottie-player-overflow`      | `hidden`       | overflow      | Overflow handling — use `hidden` to clip the animation. |
+
+## Lightweight SVG playback
+
+`LottiePlayerLite` is a Svelte export for SVG animations supported by Lottie's light runtime. It shares the playback controls, speed, looping, events, and CSS tokens of `LottiePlayer`. Use the full player for canvas, HTML, or animations that use features outside the light runtime.
+
+For meaningful animations, set `ariaHidden={false}` and give the player a localized `ariaLabel`. The web component accepts the equivalent `aria-hidden="false"` and `aria-label` attributes.

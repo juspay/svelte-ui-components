@@ -1012,7 +1012,7 @@ const ITEMS = [
     pack: 'Table/chart',
     title: 'Controlled sort/search and announced sort direction',
     probe: () => {
-      const aria = /aria-sort/.test(read(p('src/lib/Table/Table.svelte')));
+      const aria = /aria-sort/.test(read(p('src/lib/Table/TableCore.svelte')));
       const controlled = /sortState|sortBy\b/.test(read(p('src/lib/Table/properties.ts')));
       return {
         status: grade([aria, controlled].filter(Boolean).length, 2),
@@ -1035,7 +1035,7 @@ const ITEMS = [
       // TC-3 has four acceptance bullets, and the third explicitly permits
       // retaining the WC-paginator limitation so long as it is DOCUMENTED
       // rather than silently broken, so all four are checkable.
-      const table = read(p('src/lib/Table/Table.svelte'));
+      const table = read(p('src/lib/Table/TableCore.svelte'));
       const doc = read(p('docs/Table.md'));
       const checks = [
         /effectivePage/.test(table),
@@ -1061,7 +1061,7 @@ const ITEMS = [
     pack: 'Table/chart',
     title: 'Custom cells, loading states and mobile records need recipes',
     probe: () => {
-      const table = read(p('src/lib/Table/Table.svelte'));
+      const table = read(p('src/lib/Table/TableCore.svelte'));
       const surface =
         read(p('src/routes/components/table/+page.svelte')) + read(p('docs/Table.md'));
       const cardTests = read(p('src/lib/Table/mobile-card-layout.test.ts'));

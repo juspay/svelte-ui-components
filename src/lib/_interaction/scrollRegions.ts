@@ -27,7 +27,18 @@
  *    the examples that fit.
  */
 
+import { getActiveElement } from './focus';
+
 type Kind = 'code' | 'table' | 'example';
+
+export function watchMarkdownCode(node: HTMLElement): () => void {
+  return scrollRegions(node, {
+    context: 'Markdown',
+    demoRows: false,
+    codeSelector: 'pre',
+    preserveCodeFocus: true
+  }).destroy;
+}
 
 export type ScrollRegionOptions = {
   /** Names a block that has no heading above it ("Card" gives "Card documentation"). */
@@ -36,6 +47,8 @@ export type ScrollRegionOptions = {
   demoRows: boolean;
   /** Override the docs selectors when managing code in a consumer component. */
   codeSelector?: string;
+  /** Restore focus to an unchanged code block when rendered HTML is replaced. */
+  preserveCodeFocus?: boolean;
 };
 
 const DOC_BLOCKS = '.markdown-body pre, .markdown-body .docs-table-scroll';
@@ -266,6 +279,74 @@ export type ScrollRegionsAction = {
   destroy: () => void;
 };
 
+function trackCodeFocus(root: HTMLElement) {
+  let focused: { block: HTMLElement; index: number; text: string | null; offset: number } | null =
+    null;
+  const blocks = () => [...root.querySelectorAll<HTMLElement>('pre')];
+
+  function focusIn(event: FocusEvent): void {
+    const target = event.target;
+    const index = target instanceof HTMLElement ? blocks().indexOf(target) : -1;
+    focused =
+      target instanceof HTMLElement && index >= 0
+        ? { block: target, index, text: target.textContent, offset: target.scrollLeft }
+        : null;
+  }
+
+  function focusOut(): void {
+    const previous = focused;
+    queueMicrotask(() => {
+      if (previous !== null && focused === previous && previous.block.isConnected) {
+        focused = null;
+      }
+    });
+  }
+
+  function rememberScroll(event: Event): void {
+    if (focused !== null && event.target === focused.block) {
+      focused.offset = focused.block.scrollLeft;
+    }
+  }
+
+  root.addEventListener('focusin', focusIn);
+  root.addEventListener('focusout', focusOut);
+  root.addEventListener('scroll', rememberScroll, true);
+
+  return {
+    restore(): void {
+      if (focused === null || focused.block.isConnected) {
+        return;
+      }
+      const { index, text, offset } = focused;
+      focused = null;
+      const active = getActiveElement(root);
+      const tree = root.getRootNode();
+      if (
+        active !== null &&
+        active !== root.ownerDocument.body &&
+        !(tree instanceof ShadowRoot && active === tree.host)
+      ) {
+        return;
+      }
+      const replacement = blocks().at(index);
+      if (
+        typeof replacement === 'object' &&
+        replacement.textContent === text &&
+        replacement.tabIndex >= 0
+      ) {
+        replacement.focus({ preventScroll: true });
+        replacement.scrollLeft = offset;
+      }
+    },
+    destroy(): void {
+      root.removeEventListener('focusin', focusIn);
+      root.removeEventListener('focusout', focusOut);
+      root.removeEventListener('scroll', rememberScroll, true);
+      focused = null;
+    }
+  };
+}
+
 /**
  * Svelte action for the element that holds the page. Re-syncs when a managed
  * block (or what is inside it) resizes, when elements are added or removed, and
@@ -281,6 +362,7 @@ export function scrollRegions(
   let options = initialOptions;
   let frame = 0;
   const observed = new Set<Element>();
+  const codeFocus = options.preserveCodeFocus === true ? trackCodeFocus(root) : null;
 
   const resizeObserver = typeof ResizeObserver === 'function' ? new ResizeObserver(schedule) : null;
 
@@ -312,6 +394,7 @@ export function scrollRegions(
     }
     observeBlocks();
     syncScrollRegions(root, options);
+    codeFocus?.restore();
   }
 
   function schedule(): void {
@@ -341,6 +424,7 @@ export function scrollRegions(
       run();
     },
     destroy(): void {
+      codeFocus?.destroy();
       if (frame !== 0) {
         cancelAnimationFrame(frame);
       }

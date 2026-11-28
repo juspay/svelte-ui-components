@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { nextEnabledIndex } from '../_interaction/nextEnabledIndex';
+  import { viewportPortalTarget, watchViewport } from '../_interaction/viewport';
   import { tick, onDestroy } from 'svelte';
   import { SvelteMap } from 'svelte/reactivity';
   import Img from '../Img/Img.svelte';
@@ -108,41 +110,10 @@
     if (!usePortal || !open || typeof window === 'undefined') {
       return;
     }
-    let frame: number | null = null;
-    const bump = (): void => {
-      if (frame !== null) {
-        return;
-      }
-      frame = requestAnimationFrame(() => {
-        frame = null;
-        portalTick += 1;
-      });
-    };
-    window.addEventListener('scroll', bump, { capture: true, passive: true });
-    window.addEventListener('resize', bump);
-    return () => {
-      window.removeEventListener('scroll', bump, { capture: true });
-      window.removeEventListener('resize', bump);
-      if (frame !== null) {
-        cancelAnimationFrame(frame);
-      }
-    };
+    return watchViewport(() => {
+      portalTick += 1;
+    });
   });
-
-  /**
-   * Where a portalled node is allowed to land. Svelte scopes a custom element's
-   * CSS to its shadow root, so `document.body` is the one place the panel must
-   * never go from inside `<sui-menu>`: it keeps its `svelte-*` scoping class and
-   * loses every rule behind it, plus the host's custom properties. Measured in
-   * Chromium -- position fell back to `static`, background to transparent,
-   * border and shadow to none, so the items rendered as bare text over the page.
-   * Its own root holds that stylesheet and still sits above every overflow/
-   * scroll ancestor between the two.
-   */
-  const portalTarget = (node: Node): Node => {
-    const root = node.getRootNode();
-    return root instanceof ShadowRoot ? root : document.body;
-  };
 
   /**
    * Svelte action: relocates the dropdown out to its root when usePortal is set,
@@ -153,7 +124,7 @@
     if (!usePortal) {
       return;
     }
-    portalTarget(node).appendChild(node);
+    viewportPortalTarget(node).appendChild(node);
     return { destroy: () => node.remove() };
   };
 
@@ -326,15 +297,18 @@
     switch (event.key) {
       case 'ArrowDown': {
         event.preventDefault();
-        const next = focusedIndex + 1;
-        focusedIndex = next >= selectableItems.length ? 0 : next;
+        focusedIndex = nextEnabledIndex(selectableItems.length, focusedIndex, 1, true);
         focusItem(focusedIndex);
         break;
       }
       case 'ArrowUp': {
         event.preventDefault();
-        const prev = focusedIndex - 1;
-        focusedIndex = prev < 0 ? selectableItems.length - 1 : prev;
+        focusedIndex = nextEnabledIndex(
+          selectableItems.length,
+          Math.max(0, focusedIndex),
+          -1,
+          true
+        );
         focusItem(focusedIndex);
         break;
       }

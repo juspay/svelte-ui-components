@@ -27,6 +27,7 @@ const aggregate = resolve(import.meta.dirname, 'src/wc/index.ts');
 
 export default defineConfig(({ mode }) => {
   const modules = mode === 'wc-modules';
+  const form = mode === 'wc-form';
   return {
     plugins: [
       svelte({
@@ -56,7 +57,7 @@ export default defineConfig(({ mode }) => {
       }
     ],
     build: {
-      outDir: modules ? 'dist-wc/modules' : 'dist-wc',
+      outDir: form ? 'dist-wc/demo' : modules ? 'dist-wc/modules' : 'dist-wc',
       emptyOutDir: true,
       lib: {
         entry: modules
@@ -64,7 +65,9 @@ export default defineConfig(({ mode }) => {
               index: aggregate,
               ...Object.fromEntries([...wrappers.keys()].map((tag) => [tag, virtualEntry + tag]))
             }
-          : aggregate,
+          : form
+            ? { form: resolve(import.meta.dirname, 'src/wc/form-demo.ts') }
+            : aggregate,
         formats: ['es'],
         fileName: (_format, name) => `${name}.js`
       },

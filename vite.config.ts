@@ -16,12 +16,12 @@ if (!isBasePath(base)) {
 
 // SvelteKit preview serves its own client output. The deployed static site
 // serves build/ directly, where the full build stages the same bundle.
-function serveWcDemoBundle(file: string): Connect.NextHandleFunction {
+function serveWcDemoBundle(name: 'index' | 'form', file: string): Connect.NextHandleFunction {
   const bundle = new URL(file, import.meta.url);
   return async (request, response, next) => {
     const pathname = request.url?.split('?').at(0);
     if (
-      pathname !== `${base}/wc/index.js` ||
+      pathname !== `${base}/wc/${name}.js` ||
       (request.method !== 'GET' && request.method !== 'HEAD')
     ) {
       next();
@@ -43,10 +43,12 @@ export default defineConfig({
     {
       name: 'sui-wc-demo-bundle',
       configureServer(server) {
-        server.middlewares.use(serveWcDemoBundle('./dist-wc/index.js'));
+        server.middlewares.use(serveWcDemoBundle('index', './dist-wc/index.js'));
+        server.middlewares.use(serveWcDemoBundle('form', './dist-wc/demo/form.js'));
       },
       configurePreviewServer(server) {
-        server.middlewares.use(serveWcDemoBundle('./build/wc/index.js'));
+        server.middlewares.use(serveWcDemoBundle('index', './build/wc/index.js'));
+        server.middlewares.use(serveWcDemoBundle('form', './build/wc/form.js'));
       }
     },
     sveltekit({

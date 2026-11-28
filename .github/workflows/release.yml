@@ -36,19 +36,25 @@ concurrency:
 env:
   NPM_CLI_VERSION: '11.19.0'
 
+# Every job states the permissions it needs; nothing is granted by default.
+permissions: {}
+
 jobs:
   detect-changes:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       root_changed: ${{ steps.changes.outputs.root_changed }}
       mcp_changed: ${{ steps.changes.outputs.mcp_changed }}
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: false
 
       - name: Detect package changes
         id: changes
@@ -124,23 +130,24 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
-      # pnpm before node, deliberately: setup-node's `cache: pnpm` resolves the
-      # store path by running pnpm, so pnpm has to exist first. `run_install: false`
-      # stops action-setup installing before that cache is configured, which would
-      # make the cache do nothing on every run.
+      # No package cache in this workflow: it publishes, and a cache a pull request
+      # could have written must not feed a release build. `run_install: false` keeps
+      # action-setup from installing before the explicit install step.
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
         with:
           version: 10.18.3
           run_install: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
-          cache: 'pnpm'
+          package-manager-cache: false
 
       - name: Install dependencies
         run: pnpm install
@@ -201,19 +208,21 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
         with:
           version: 10.18.3
           run_install: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
-          cache: 'pnpm'
+          package-manager-cache: false
 
       - name: Install dependencies
         run: pnpm install
@@ -229,7 +238,7 @@ jobs:
 
       - name: Upload blob report
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           # v4 artifacts are immutable, so a fixed name makes the upload fail on
           # a re-run -- which is the one time the report is most wanted.
@@ -254,25 +263,27 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
         with:
           version: 10.18.3
           run_install: false
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
-          cache: 'pnpm'
+          package-manager-cache: false
 
       - name: Install dependencies
         run: pnpm install
 
       - name: Download blob reports
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: release-verify-blob-${{ github.run_id }}-${{ github.run_attempt }}-*
           path: all-blob-reports
@@ -298,7 +309,7 @@ jobs:
         run: pnpm exec playwright merge-reports --reporter html ./all-blob-reports
 
       - name: Upload Playwright report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: release-verify-playwright-report-${{ github.run_id }}-${{ github.run_attempt }}
           path: playwright-report/
@@ -340,19 +351,21 @@ jobs:
       id-token: write
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      # This job pushes the release commit and tag, so the checkout keeps its credentials.
+      - name: Checkout code # zizmor: ignore[artipacked]
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
+          package-manager-cache: false
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
         with:
           version: 10.18.3
 
@@ -386,9 +399,9 @@ jobs:
           echo "Current version: $CURRENT_VERSION"
 
           # Bump version based on type
-          if [ "${{ steps.version-type.outputs.version_type }}" = "major" ]; then
+          if [ "${STEPS_VERSION_TYPE_OUTPUTS_VERSION_TYPE}" = "major" ]; then
             NEW_VERSION=$(pnpm version major --no-git-tag-version)
-          elif [ "${{ steps.version-type.outputs.version_type }}" = "minor" ]; then
+          elif [ "${STEPS_VERSION_TYPE_OUTPUTS_VERSION_TYPE}" = "minor" ]; then
             NEW_VERSION=$(pnpm version minor --no-git-tag-version)
           else
             NEW_VERSION=$(pnpm version patch --no-git-tag-version)
@@ -398,14 +411,11 @@ jobs:
           NEW_VERSION=$(echo $NEW_VERSION | sed 's/^v//')
           echo "New version: $NEW_VERSION"
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+        env:
+          STEPS_VERSION_TYPE_OUTPUTS_VERSION_TYPE: ${{ steps.version-type.outputs.version_type }}
 
       - name: Generate changelog
         run: |
-          # Install auto-changelog if not already installed
-          if ! command -v auto-changelog &> /dev/null; then
-            npm install -g auto-changelog
-          fi
-
           # Ensure docs directory exists
           mkdir -p docs
 
@@ -425,7 +435,9 @@ jobs:
           # releaseSummary takes its prose from the newest commit in the
           # release, which is otherwise always the bodiless `chore(release)`
           # commit, so every section rendered empty.
-          auto-changelog --config .auto-changelog \
+          # Pinned and run through npx instead of an unpinned global install, so a
+          # release always generates its changelog with the same reviewed version.
+          npx --yes auto-changelog@2.7.0 --config .auto-changelog \
             --ignore-commit-pattern '(\[skip ci\]|^chore\(release\):)'
 
           # Deliberately NOT formatted. An earlier version of this change ran
@@ -441,11 +453,13 @@ jobs:
           if [ ! -f "docs/CHANGELOG.md" ]; then
             echo "# Changelog" > docs/CHANGELOG.md
             echo "" >> docs/CHANGELOG.md
-            echo "## [${{ steps.version-bump.outputs.new_version }}] - $(date +%Y-%m-%d)" >> docs/CHANGELOG.md
+            echo "## [${STEPS_VERSION_BUMP_OUTPUTS_NEW_VERSION}] - $(date +%Y-%m-%d)" >> docs/CHANGELOG.md
             echo "" >> docs/CHANGELOG.md
             echo "### Changes" >> docs/CHANGELOG.md
             echo "- $(git log -1 --pretty=format:"%s")" >> docs/CHANGELOG.md
           fi
+        env:
+          STEPS_VERSION_BUMP_OUTPUTS_NEW_VERSION: ${{ steps.version-bump.outputs.new_version }}
 
       - name: Build package
         run: |
@@ -462,10 +476,12 @@ jobs:
             if [ -f "docs/CHANGELOG.md" ]; then
               git add docs/CHANGELOG.md
             fi
-            git commit -m "chore(release): ${{ steps.version-bump.outputs.new_version }}"
+            git commit -m "chore(release): ${STEPS_VERSION_BUMP_OUTPUTS_NEW_VERSION}"
           else
             echo "No changes to commit"
           fi
+        env:
+          STEPS_VERSION_BUMP_OUTPUTS_NEW_VERSION: ${{ steps.version-bump.outputs.new_version }}
 
       - name: Verify build artifacts
         run: |
@@ -551,7 +567,9 @@ jobs:
 
           git push origin release
 
-          echo "Successfully pushed changes for version ${{ steps.version-bump.outputs.new_version }}"
+          echo "Successfully pushed changes for version ${STEPS_VERSION_BUMP_OUTPUTS_NEW_VERSION}"
+        env:
+          STEPS_VERSION_BUMP_OUTPUTS_NEW_VERSION: ${{ steps.version-bump.outputs.new_version }}
 
       # Tag before the publish, for the same reason the branch push moved above
       # it: a tag is a git write and can be deleted, an npm publish cannot be
@@ -569,7 +587,7 @@ jobs:
       # version, so it should follow the thing it announces.
       - name: Create and push git tag
         run: |
-          TAG_NAME="${{ steps.version-bump.outputs.new_version }}"
+          TAG_NAME="${STEPS_VERSION_BUMP_OUTPUTS_NEW_VERSION}"
 
           # Delete tag if it exists locally
           if git tag -l | grep -q "^${TAG_NAME}$"; then
@@ -588,6 +606,8 @@ jobs:
           git push origin "$TAG_NAME"
 
           echo "Successfully created and pushed tag $TAG_NAME"
+        env:
+          STEPS_VERSION_BUMP_OUTPUTS_NEW_VERSION: ${{ steps.version-bump.outputs.new_version }}
 
       - name: Upgrade npm for OIDC trusted publishing
         run: npx -y npm@${NPM_CLI_VERSION} install -g npm@${NPM_CLI_VERSION}
@@ -600,7 +620,7 @@ jobs:
 
           # Check if this version already exists on NPM
           PACKAGE_NAME=$(node -p "require('./package.json').name")
-          NEW_VERSION="${{ steps.version-bump.outputs.new_version }}"
+          NEW_VERSION="${STEPS_VERSION_BUMP_OUTPUTS_NEW_VERSION}"
 
           echo "Checking if $PACKAGE_NAME@$NEW_VERSION already exists..."
           if npm view "$PACKAGE_NAME@$NEW_VERSION" version 2>/dev/null; then
@@ -612,9 +632,12 @@ jobs:
           echo "Publishing $PACKAGE_NAME@$NEW_VERSION to NPM..."
           npm publish --access public --provenance
           echo "Successfully published $PACKAGE_NAME@$NEW_VERSION to NPM"
+        env:
+          STEPS_VERSION_BUMP_OUTPUTS_NEW_VERSION: ${{ steps.version-bump.outputs.new_version }}
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+      # Kept rather than rewritten as `gh release create`, which would change how releases are made.
+      - name: Create GitHub Release # zizmor: ignore[superfluous-actions]
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         id: create_release
         with:
           tag_name: ${{ steps.version-bump.outputs.new_version }}
@@ -666,16 +689,18 @@ jobs:
       id-token: write
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      # This job pushes the release commit and tag, so the checkout keeps its credentials.
+      - name: Checkout code # zizmor: ignore[artipacked]
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
+          package-manager-cache: false
 
       - name: Configure Git
         run: |
@@ -707,9 +732,9 @@ jobs:
           CURRENT_VERSION=$(node -p "require('./package.json').version")
           echo "Current MCP version: $CURRENT_VERSION"
 
-          if [ "${{ steps.version-type.outputs.version_type }}" = "major" ]; then
+          if [ "${STEPS_VERSION_TYPE_OUTPUTS_VERSION_TYPE}" = "major" ]; then
             NEW_VERSION=$(npm version major --no-git-tag-version)
-          elif [ "${{ steps.version-type.outputs.version_type }}" = "minor" ]; then
+          elif [ "${STEPS_VERSION_TYPE_OUTPUTS_VERSION_TYPE}" = "minor" ]; then
             NEW_VERSION=$(npm version minor --no-git-tag-version)
           else
             NEW_VERSION=$(npm version patch --no-git-tag-version)
@@ -719,6 +744,8 @@ jobs:
           NEW_VERSION=$(echo $NEW_VERSION | sed 's/^v//')
           echo "New MCP version: $NEW_VERSION"
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+        env:
+          STEPS_VERSION_TYPE_OUTPUTS_VERSION_TYPE: ${{ steps.version-type.outputs.version_type }}
 
       - name: Build MCP package
         working-directory: mcp
@@ -791,7 +818,7 @@ jobs:
           # config on npmjs.com for this repo + this workflow file.
 
           PACKAGE_NAME=$(node -p "require('./package.json').name")
-          NEW_VERSION="${{ steps.version-bump.outputs.new_version }}"
+          NEW_VERSION="${STEPS_VERSION_BUMP_OUTPUTS_NEW_VERSION}"
 
           echo "Checking if $PACKAGE_NAME@$NEW_VERSION already exists..."
           if npm view "$PACKAGE_NAME@$NEW_VERSION" version 2>/dev/null; then
@@ -803,13 +830,15 @@ jobs:
           echo "Publishing $PACKAGE_NAME@$NEW_VERSION to NPM..."
           npm publish --access public --provenance
           echo "Successfully published $PACKAGE_NAME@$NEW_VERSION to NPM"
+        env:
+          STEPS_VERSION_BUMP_OUTPUTS_NEW_VERSION: ${{ steps.version-bump.outputs.new_version }}
 
       # Only now, with the version actually on the registry, is the landmark
       # written. A failure from here leaves a published version without a
       # landmark, which the publish guard above reconciles on the next run.
       - name: Commit and tag MCP release
         run: |
-          NEW_VERSION="${{ steps.version-bump.outputs.new_version }}"
+          NEW_VERSION="${STEPS_VERSION_BUMP_OUTPUTS_NEW_VERSION}"
           TAG_NAME="mcp-${NEW_VERSION}"
 
           # Only commit if the version bump produced a change
@@ -855,3 +884,5 @@ jobs:
           git push origin "$TAG_NAME"
 
           echo "Released @juspay/svelte-ui-components-mcp $NEW_VERSION"
+        env:
+          STEPS_VERSION_BUMP_OUTPUTS_NEW_VERSION: ${{ steps.version-bump.outputs.new_version }}

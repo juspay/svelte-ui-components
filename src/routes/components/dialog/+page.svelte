@@ -78,7 +78,7 @@
     testId="native-consumer-open">Details</Button
   >
   <p id="dialog-help">Inspect details without leaving this page.</p>
-  <div style="--input-placeholder-color: rgb(90, 100, 110)">
+  <div class="placeholder-contract">
     <Input
       native
       unstyled
@@ -92,6 +92,7 @@
   <Select
     native
     items={['Example']}
+    ariaLabel="Example platform"
     classes="select-trigger native-selector-contract"
     testId="native-selector-contract"
   />
@@ -221,8 +222,26 @@
     color: rgb(31, 65, 91);
   }
 
-  :global(input::placeholder) {
-    color: rgb(12, 34, 56);
+  .placeholder-contract {
+    --input-placeholder-color: rgb(90, 100, 110);
+  }
+
+  .placeholder-contract :global(.native-placeholder-contract::placeholder) {
+    color: var(--native-example-placeholder-color, rgb(12, 34, 56));
+    opacity: 1;
+  }
+
+  .placeholder-contract :global(.native-placeholder-contract) {
+    min-height: 24px;
+  }
+
+  :global([data-theme='dark']) .placeholder-contract {
+    --input-placeholder-color: #becbda;
+    --native-example-placeholder-color: #becbda;
+  }
+
+  :global([data-theme='dark']) .native-mask-stage {
+    color: #becbda;
   }
 
   :global(select.native-selector-contract) {
@@ -232,6 +251,7 @@
 
   .contract-stage {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--native-consumer-gap, 16px);
     max-width: var(--native-consumer-width, 36rem);
   }
@@ -244,7 +264,18 @@
 
   .contract-stage form {
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--native-consumer-field-gap, 8px);
+  }
+
+  .contract-stage :global(input),
+  .contract-stage :global(select),
+  :global(.contract-action),
+  :global(.contract-field) {
+    box-sizing: border-box;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    overflow-wrap: anywhere;
   }
 
   :global(.contract-action),

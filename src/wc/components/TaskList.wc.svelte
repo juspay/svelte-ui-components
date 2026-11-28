@@ -34,7 +34,7 @@
   const dispatchers = $derived(dispatchEvents(hostEl, props));
 </script>
 
-<TaskList {...props} {...dispatchers} />
+<TaskList {...props} {...dispatchers} rows={props.rows ?? []} />
 
 <style>
   /* A custom element defaults to `display: inline`, which has no definite

@@ -169,28 +169,54 @@
   // ── Saturation panel drag ───────────────────────────────────────
 
   let satPanelEl: HTMLDivElement | null = $state(null);
-  let draggingSat = $state(false);
+  // A gesture owns one pointer until release, cancellation or capture loss.
+  let activeSatDrag: { element: HTMLElement; pointerId: number } | null = null;
 
-  function handleSatDown(e: PointerEvent) {
+  function stopSatDrag(): void {
+    const drag = activeSatDrag;
+    activeSatDrag = null;
+    if (drag !== null && drag.element.hasPointerCapture(drag.pointerId)) {
+      drag.element.releasePointerCapture(drag.pointerId);
+    }
+  }
+
+  function handleSatDown(event: PointerEvent): void {
+    const element = event.currentTarget;
+    if (
+      disabled ||
+      activeSatDrag !== null ||
+      event.button !== 0 ||
+      !(element instanceof HTMLElement)
+    ) {
+      return;
+    }
+    activeSatDrag = { element, pointerId: event.pointerId };
+    element.setPointerCapture(event.pointerId);
+    updateSatFromPointer(event);
+  }
+
+  function handleSatMove(event: PointerEvent): void {
     if (disabled) {
-      return;
+      stopSatDrag();
+    } else if (activeSatDrag?.pointerId === event.pointerId) {
+      updateSatFromPointer(event);
     }
-    draggingSat = true;
-    if (e.currentTarget instanceof HTMLElement) {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    }
-    updateSatFromPointer(e);
   }
 
-  function handleSatMove(e: PointerEvent) {
-    if (draggingSat === false) {
-      return;
+  function handleSatEnd(event: PointerEvent): void {
+    if (activeSatDrag?.pointerId === event.pointerId) {
+      stopSatDrag();
     }
-    updateSatFromPointer(e);
   }
 
-  function handleSatUp() {
-    draggingSat = false;
+  function ownSatDrag(_node: HTMLElement) {
+    window.addEventListener('blur', stopSatDrag);
+    return {
+      destroy() {
+        window.removeEventListener('blur', stopSatDrag);
+        stopSatDrag();
+      }
+    };
   }
 
   function updateSatFromPointer(e: PointerEvent) {
@@ -361,7 +387,10 @@
         bind:this={satPanelEl}
         onpointerdown={handleSatDown}
         onpointermove={handleSatMove}
-        onpointerup={handleSatUp}
+        onpointerup={handleSatEnd}
+        onpointercancel={handleSatEnd}
+        onlostpointercapture={handleSatEnd}
+        use:ownSatDrag
         onkeydown={handleSatKeydown}
         role="slider"
         aria-label="Saturation and brightness"

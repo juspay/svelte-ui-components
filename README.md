@@ -158,15 +158,15 @@ fix to something that did not work.
 
 Pure-SVG charts with no charting-library dependency; each takes plain data arrays.
 
-| Component | Description | Docs |
-| --- | --- | --- |
-| **AreaChart**         | Responsive area chart for volume under a trend: multiple series, regular or 100% stacking, gradient fill, data labels and a hover overlay. | [docs](docs/AreaChart.md) |
-| **BarChart**          | Responsive bar chart for comparing categories: vertical or horizontal, single or multi-series (grouped or stacked), value labels, per-point colours and hover tooltips. | [docs](docs/BarChart.md) |
-| **DualAxisBarChart**  | Two independent Y-axes over one categorical X-axis; each series declares its own axis and render type. | [docs](docs/DualAxisBarChart.md) |
-| **FunnelChart**       | Horizontal funnel: one bar per stage, proportional to its value, with connectors between stages. | [docs](docs/FunnelChart.md) |
-| **LineChart**         | Responsive line chart for trends: multiple series, five curve interpolations, gradient fill and an optional area mode. | [docs](docs/LineChart.md) |
-| **PieChart**          | Responsive pie or donut chart with slice hover highlighting, a delta badge, custom labels, a legend and donut centre content. | [docs](docs/PieChart.md) |
-| **SankeyChart**       | Sankey diagram for flows between nodes, positioned into columns automatically. | [docs](docs/SankeyChart.md) |
+| Component            | Description                                                                                                                                                             | Docs                             |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| **AreaChart**        | Responsive area chart for volume under a trend: multiple series, regular or 100% stacking, gradient fill, data labels and a hover overlay.                              | [docs](docs/AreaChart.md)        |
+| **BarChart**         | Responsive bar chart for comparing categories: vertical or horizontal, single or multi-series (grouped or stacked), value labels, per-point colours and hover tooltips. | [docs](docs/BarChart.md)         |
+| **DualAxisBarChart** | Two independent Y-axes over one categorical X-axis; each series declares its own axis and render type.                                                                  | [docs](docs/DualAxisBarChart.md) |
+| **FunnelChart**      | Horizontal funnel: one bar per stage, proportional to its value, with connectors between stages.                                                                        | [docs](docs/FunnelChart.md)      |
+| **LineChart**        | Responsive line chart for trends: multiple series, five curve interpolations, gradient fill and an optional area mode.                                                  | [docs](docs/LineChart.md)        |
+| **PieChart**         | Responsive pie or donut chart with slice hover highlighting, a delta badge, custom labels, a legend and donut centre content.                                           | [docs](docs/PieChart.md)         |
+| **SankeyChart**      | Sankey diagram for flows between nodes, positioned into columns automatically.                                                                                          | [docs](docs/SankeyChart.md)      |
 
 ### Feedback & Loading
 
@@ -261,6 +261,20 @@ import '@juspay/svelte-ui-components/wc';
 
 Theming works identically to the Svelte components — the same `--{component}-{element}-{property}`
 CSS custom properties apply across the shadow DOM boundary.
+
+### Import only the custom elements you use
+
+Package consumers can load individual registrations, for example:
+
+```js
+import '@juspay/svelte-ui-components/wc/button';
+import { createRawSnippet } from '@juspay/svelte-ui-components/wc/select';
+```
+
+Entry names are the element tags without `sui-`. These imports and the package-wide
+`@juspay/svelte-ui-components/wc` entry share one runtime and registration graph.
+For a standalone browser script, continue using the existing `dist-wc/index.js`
+bundle instead of the package modules.
 
 ### Event handlers: use `addEventListener`, not `element.onclick`
 

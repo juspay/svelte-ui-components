@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { scrollRegions } from '../_interaction/scrollRegions';
   import { renderMarkdown } from './markdown';
   import type { MarkdownTextProperties } from './properties';
 
@@ -16,10 +17,16 @@
   let html = $derived(
     renderMarkdown(markdown, { breaks, tableLabel, tableWrapperClass, sanitize, unwrapFence })
   );
+
+  function watchCodeBlocks(node: HTMLElement): () => void {
+    return scrollRegions(node, { context: 'Markdown', demoRows: false, codeSelector: 'pre' })
+      .destroy;
+  }
 </script>
 
 <div
   class="markdown-text {classes ?? ''}"
+  {@attach /<pre(?:\s|>)/i.test(html) ? watchCodeBlocks : null}
   data-pw={typeof testId === 'string' ? testId : null}
   testID={typeof testId === 'string' ? testId : null}
 >
@@ -94,7 +101,15 @@
     margin: 0.5em 0;
   }
 
+  .markdown-text :global(pre:focus-visible) {
+    outline: var(--markdown-text-code-focus-outline, 2px solid currentColor);
+    outline-offset: 2px;
+  }
+
   .markdown-text :global(pre code) {
+    display: block;
+    width: max-content;
+    min-width: 100%;
     background: transparent;
     padding: 0;
   }

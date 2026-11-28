@@ -340,6 +340,8 @@
      glyph; leave disabled colours and focus indicators to the consumer theme. */
   .pill-dismiss :global(.button-container),
   .pill-dismiss :global(.button-el) {
+    min-inline-size: 24px;
+    min-block-size: 24px;
     --button-color: transparent;
     --button-background: none;
     --button-active-background: transparent;

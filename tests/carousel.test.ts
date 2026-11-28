@@ -242,6 +242,49 @@ test('the published custom element aligns the active slide after its host resize
   await expectSlideAligned(carousel, 2, 2);
 });
 
+test('Book and Carousel keep eight indicator targets usable in a 160px host', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto(`${fixtureBaseURL}/carousel-layout/`);
+  const book = page.getByTestId('compact-book');
+  const carousel = page.getByTestId('compact-carousel');
+  const indicatorRows = [
+    book.locator('.page-indicator'),
+    page.getByTestId('compact-carousel-indicators')
+  ];
+  for (const row of indicatorRows) {
+    const indicators = row.getByRole('button');
+    await expect(indicators).toHaveCount(8);
+    const sizes = await indicators.evaluateAll((elements) =>
+      elements.map((element) => {
+        const { width, height, top } = element.getBoundingClientRect();
+        return { width, height, top };
+      })
+    );
+    expect(sizes.every(({ width, height }) => width >= 24 && height >= 24)).toBe(true);
+    expect(new Set(sizes.map(({ top }) => top)).size).toBe(2);
+    expect(await row.evaluate((element) => element.scrollWidth)).toBe(160);
+  }
+  await book.getByRole('button', { name: 'Go to page 8' }).click();
+  await expect(book.getByRole('button', { name: 'Go to page 8' })).toHaveClass(/dot-active/);
+  await carousel.getByRole('button', { name: 'Go to slide 8' }).click();
+  await expect(carousel.locator('[aria-live]')).toHaveText('Slide 8 of 8');
+});
+
+test('keyboard focus on a link inside SVG stops Carousel rotation', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.clock.install({ time: new Date('2026-01-01T12:00:00Z') });
+  await page.clock.pauseAt(new Date('2026-01-01T12:01:00Z'));
+  await page.goto(`${fixtureBaseURL}/carousel-layout/`);
+  const carousel = page.getByTestId('compact-carousel');
+  await carousel.getByRole('button', { name: 'Start rotation' }).press('Space');
+  await expect(carousel.getByRole('button', { name: 'Pause rotation' })).toBeVisible();
+  await page.keyboard.press('Tab');
+  await expect(carousel.getByRole('link', { name: 'Slide details' })).toBeFocused();
+  await expect(carousel.getByRole('button', { name: 'Start rotation' })).toBeVisible();
+  await page.clock.runFor(2_001);
+  await expect(carousel.locator('[aria-live]')).toHaveText('Slide 1 of 8');
+});
+
 test('the narrow demo shows the full selected slide without a horizontal pan', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 800 });
   await gotoHydrated(page, '/components/carousel');

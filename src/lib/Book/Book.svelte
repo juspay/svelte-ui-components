@@ -273,26 +273,37 @@
 
   .page-indicator {
     display: flex;
+    flex-wrap: wrap;
     justify-content: center;
     align-items: center;
-    gap: var(--book-dot-gap, 8px);
+    gap: max(0px, calc(var(--book-dot-gap, 8px) + var(--book-dot-size, 8px) - 24px));
     padding: var(--book-indicator-padding, 12px 0);
   }
 
   .dot {
+    display: grid;
+    place-items: center;
+    min-inline-size: 24px;
+    width: max(24px, var(--book-dot-size, 8px));
+    height: max(24px, var(--book-dot-size, 8px));
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  .dot::before {
+    content: '';
     width: var(--book-dot-size, 8px);
     height: var(--book-dot-size, 8px);
     border-radius: var(--book-dot-border-radius, 50%);
     background-color: var(--book-dot-color, #cccccc);
-    border: none;
-    padding: 0;
-    cursor: pointer;
     transition: background-color
       var(--book-dot-transition-duration, var(--duration-base, var(--motion-duration, 0.2s)))
       var(--book-dot-transition-easing, var(--motion-easing, ease));
   }
 
-  .dot-active {
+  .dot-active::before {
     background-color: var(--book-dot-active-color, #333333);
   }
 

@@ -1,5 +1,6 @@
 <script module>
   const wait = ['wait', 600];
+  const dotTargetChange = 'Slide indicators have a larger 24px interactive target.';
   export const cases = [
     { name: 'default-width-idle' },
     {
@@ -62,7 +63,13 @@
     { name: 'css-variables-frame', actions: [['click', '[data-pw="dot-2"]'], wait] },
     { name: 'css-variables-instant-transition', actions: [['click', '[data-pw="dot-3"]']] },
     { name: 'tall-height-with-dots' }
-  ];
+  ].map((item) =>
+    item.name === 'three-slides-no-dots' ||
+    item.name === 'empty-views' ||
+    item.name === 'empty-views-dots'
+      ? item
+      : { ...item, knownDifference: item.knownDifference ?? dotTargetChange }
+  );
 </script>
 
 <script>

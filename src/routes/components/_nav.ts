@@ -72,6 +72,7 @@ export const componentNav: NavGroup[] = [
     category: 'Buttons & Actions',
     items: [
       { name: 'Button', slug: 'button' },
+      { name: 'ArmedButton', slug: 'armed-button' },
       { name: 'SplitButton', slug: 'split-button' },
       { name: 'Pill', slug: 'pill' },
       { name: 'KeyboardInput', slug: 'keyboard-input' }
@@ -82,6 +83,8 @@ export const componentNav: NavGroup[] = [
     items: [
       { name: 'Table', slug: 'table' },
       { name: 'Accordion', slug: 'accordion' },
+      { name: 'DiffViewer', slug: 'diff-viewer' },
+      { name: 'WindowedList', slug: 'windowed-list' },
       { name: 'ListItem', slug: 'list-item' },
       { name: 'KeyValue', slug: 'key-value' },
       { name: 'GridItem', slug: 'grid-item' },

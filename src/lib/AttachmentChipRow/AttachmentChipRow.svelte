@@ -264,9 +264,9 @@
     position: absolute;
     top: var(--attachment-chip-row-remove-offset, 0);
     right: var(--attachment-chip-row-remove-offset, 0);
-    --button-width: var(--attachment-chip-row-remove-size, 1.25rem);
-    --button-height: var(--attachment-chip-row-remove-size, 1.25rem);
-    --button-min-width: 0;
+    --button-width: max(24px, var(--attachment-chip-row-remove-size, 1.25rem));
+    --button-height: max(24px, var(--attachment-chip-row-remove-size, 1.25rem));
+    --button-min-width: 24px;
     --button-padding: 0;
     --button-border-radius: var(--attachment-chip-row-remove-border-radius, 999px);
 
@@ -349,8 +349,8 @@
 
   @media (width <= 767px) {
     .remove-wrap {
-      --button-width: var(--attachment-chip-row-remove-size, 1.125rem);
-      --button-height: var(--attachment-chip-row-remove-size, 1.125rem);
+      --button-width: max(24px, var(--attachment-chip-row-remove-size, 1.125rem));
+      --button-height: max(24px, var(--attachment-chip-row-remove-size, 1.125rem));
     }
   }
 </style>

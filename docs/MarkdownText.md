@@ -44,7 +44,7 @@ The `marked` package is a peer dependency, needed only when you actually use `Ma
 | classes           | `string`                  | No       | `-`     | Class string on the root element.                                                                                                                                                                                                                                                        |
 | tableLabel        | `string`                  | No       | `-`     | Names the scrollable table region: adds `role="region"` and `aria-label` to the wrapper. Without it the wrapper is still focusable and scrollable but announces no landmark.                                                                                                             |
 | tableWrapperClass | `string`                  | No       | `-`     | An extra class on the scrollable table wrapper, added alongside the built-in `markdown-table-wrapper` rather than replacing it. See Wide tables below.                                                                                                                                   |
-| unwrapFence       | `boolean`                 | No       | `false` | Remove a fence that wraps the **entire** value and is labelled ` ```markdown ` or ` ```md `, then render what was inside as markdown. Models routinely wrap a whole answer that way, which otherwise renders as a code block of source. Off by default. See below. |
+| unwrapFence       | `boolean`                 | No       | `false` | Remove a fence that wraps the **entire** value and is labelled ` ```markdown ` or ` ```md `, then render what was inside as markdown. Models routinely wrap a whole answer that way, which otherwise renders as a code block of source. Off by default. See below.                       |
 | sanitize          | `MarkdownSanitizeOptions` | No       | `-`     | Narrows the link/image protocol allow-list, the set of tags allowed to render as themselves, whether task-list checkboxes render, and whether raw HTML is escaped, dropped, or rendered through a sanitizer the caller supplies (`htmlSanitizer`). See the Security model section below. |
 
 ## Security model
@@ -393,3 +393,7 @@ export type RenderMarkdownOptions = {
   unwrapFence?: boolean;
 };
 ```
+
+### Keyboard access to code
+
+Code blocks that overflow horizontally are labelled regions. Tab moves focus to the region and the arrow keys scroll it. The extra Tab stop is removed when the code fits. Use `--markdown-text-code-focus-outline` to style the focus indicator.

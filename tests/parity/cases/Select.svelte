@@ -2,6 +2,19 @@
   const trig = '[data-pw="sel"] .select-trigger';
   const opt = (id) => `[data-pw="sel-${id}"]`;
   const openIt = [['click', trig]];
+  // Use the open area near the arrow. The center of a multi-select can now
+  // contain a chip's own 24px remove target, which is a separate action.
+  const openAwayFromChips = [['click', trig, { position: { x: 278, y: 24 } }]];
+  const largerTargets = new Set([
+    'multiple-closed',
+    'multiple-open',
+    'multiple-select-two',
+    'multiple-deselect',
+    'multiple-select-all-click',
+    'multiple-select-all-partial',
+    'multiple-option-indicator-snippet',
+    'clearable-with-value'
+  ]);
   export const cases = [
     { name: 'default-closed' },
     { name: 'placeholder' },
@@ -40,9 +53,9 @@
     { name: 'items-long-labels', actions: openIt },
     { name: 'items-many-scroll', actions: openIt },
     { name: 'multiple-closed' },
-    { name: 'multiple-open', actions: openIt },
+    { name: 'multiple-open', actions: openAwayFromChips },
     { name: 'multiple-select-two', actions: [...openIt, ['click', opt('a')], ['click', opt('c')]] },
-    { name: 'multiple-deselect', actions: [...openIt, ['click', opt('a')]] },
+    { name: 'multiple-deselect', actions: [...openAwayFromChips, ['click', opt('a')]] },
     { name: 'multiple-select-all', actions: openIt },
     {
       name: 'multiple-select-all-click',
@@ -123,7 +136,11 @@
     { name: 'native-required' },
     { name: 'css-overrides', actions: openIt },
     { name: 'css-overrides-closed' }
-  ];
+  ].map((item) =>
+    largerTargets.has(item.name)
+      ? { ...item, knownVisualDifference: 'Clear and chip-removal controls have a 24px target.' }
+      : item
+  );
 </script>
 
 <script>

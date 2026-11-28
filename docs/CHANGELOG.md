@@ -2,7 +2,41 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.58.1)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.59.0)
+
+Consumers written against 1.x (one `properties` object per component, the
+`default*Properties` exports, `on:event` listeners reading `event.detail`, named
+slots) can upgrade Svelte and change one import path, or alias the package:
+
+import { Button } from '@juspay/svelte-ui-components/v1';
+
+src/lib/v1 is the 1.34.1 source compiled by Svelte 5 in legacy mode. Svelte 5
+runs legacy components differently in a few observable ways, and
+src/lib/v1/compat.ts restores Svelte 4's behaviour for each one the parity
+check found: events dispatched during initialisation, the bind-on-create call,
+the order a phone Input announces its state, a bound object reassigned from a
+child's `$:` block, `{null}` and `{undefined}` as text, empty and unchanged
+`src`, a parent update that removes a branch, an Accordion whose content arrives
+after mount, and an Accordion whose measurement never settles (the page hangs).
+
+tests/v1-parity renders 706 cases on two stacks, the published 1.34.1 on
+Svelte 4 and this entry on Svelte 5, and compares every pixel of each
+screenshot and every recorded event, with no tolerance. 699 are identical and 7
+are known differences with their cause in docs/V1_COMPAT.md. The packaged dist
+gives the same result. Screenshots rasterise on one thread without GPU or
+partial raster, so both stacks repeat exactly; a control case that must differ
+guards the comparator.
+
+The check runs in CI as `v1-parity` and gates `checks` next to `parity`. The
+style gates and the legacy palette generator skip src/lib/v1, whose CSS is kept
+as 1.34.1 shipped it; changing it would change what it renders.
+
+-
+feat(v1): ship the 1.34.1 API on Svelte 5 as `./v1`, checked pixel for pixel ([33f57d1](https://github.com/juspay/svelte-ui-components/commit/33f57d1e6ae9375bd2a02b140e3775b4db38cce2))
+-
+ci: harden the workflows so the zizmor check passes ([c8224de](https://github.com/juspay/svelte-ui-components/commit/c8224de1e4d0761f1fcb9824015e89d0ec776b98))
+
+## [4.59.0](https://github.com/juspay/svelte-ui-components/compare/4.59.0..4.58.1) - 28 November 2026
 
 -
 feat: reduce consumer bundles and share component behavior ([f574e62](https://github.com/juspay/svelte-ui-components/commit/f574e6291215a5a87224c2bcada01e30b012c835))

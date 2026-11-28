@@ -397,3 +397,7 @@ export type RenderMarkdownOptions = {
 ### Keyboard access to code
 
 Code blocks that overflow horizontally are labelled regions. Tab moves focus to the region and the arrow keys scroll it. The extra Tab stop is removed when the code fits. Use `--markdown-text-code-focus-outline` to style the focus indicator.
+
+### Escaped Markdown renderer
+
+Import `renderEscapedMarkdown` for synchronous rendering with escaped raw HTML. It supports the shared Markdown features, table labels, and link and image restrictions. Use `renderMarkdown` when you need the raw HTML stripping or caller sanitizer options.

@@ -52,7 +52,8 @@
     { name: 'items-with-icons', actions: openIt },
     { name: 'items-long-labels', actions: openIt },
     { name: 'items-many-scroll', actions: openIt },
-    { name: 'multiple-closed' },
+    // Park the reused browser's pointer outside the trigger for the idle snapshot.
+    { name: 'multiple-closed', actions: [['hover', '#stage', { position: { x: 1, y: 1 } }]] },
     { name: 'multiple-open', actions: openAwayFromChips },
     { name: 'multiple-select-two', actions: [...openIt, ['click', opt('a')], ['click', opt('c')]] },
     { name: 'multiple-deselect', actions: [...openAwayFromChips, ['click', opt('a')]] },

@@ -9,6 +9,7 @@ test.describe('Table follow-up API', () => {
   }) => {
     await prepareNativeClipboard(context);
     await gotoHydrated(page, '/components/table');
+    await page.getByText('Show built-in cells', { exact: true }).click();
 
     const defaults = page.getByTestId('table-builtin-cells');
     await expect(defaults.getByTestId('builtin-docs-link-0')).toBeVisible();

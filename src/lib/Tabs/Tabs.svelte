@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { nextEnabledIndex as findEnabledIndex } from '../_interaction/nextEnabledIndex';
   import { prefersReducedMotion } from '../utils';
   import { getActiveElement } from '../_interaction/focus';
   import type { TabItem, TabsProperties } from './properties';
@@ -395,24 +396,7 @@
 
   /** Next enabled item in `step`'s direction, or -1 when there is none to move to. */
   function nextEnabledIndex(from: number, step: number): number {
-    const count = items.length;
-    if (count === 0) {
-      return -1;
-    }
-    let index = from;
-    for (let moved = 0; moved < count; moved += 1) {
-      index += step;
-      if (index < 0 || index >= count) {
-        if (!loop) {
-          return -1;
-        }
-        index = ((index % count) + count) % count;
-      }
-      if (!isItemDisabled(index)) {
-        return index;
-      }
-    }
-    return -1;
+    return findEnabledIndex(items.length, from, step, loop, isItemDisabled);
   }
 
   function edgeIndex(edge: 'start' | 'end'): number {

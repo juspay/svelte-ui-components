@@ -300,28 +300,31 @@ describe('LottiePlayer.wc.svelte (oncomplete non-colliding, onerror grandfathere
     expect(original).toHaveBeenCalledTimes(1);
   });
 
-  it("still dispatches the grandfathered 'error' (collides, exception-listed) and calls a set onerror", async () => {
-    const fake = fakeLoadAnimation();
-    currentFake = fake.item;
+  it.each(['data_failed', 'error'])(
+    "dispatches the grandfathered 'error' and calls a set onerror for %s",
+    async (event) => {
+      const fake = fakeLoadAnimation();
+      currentFake = fake.item;
 
-    const el = mount('sui-lottie-player');
-    const original = vi.fn();
-    // @ts-expect-error -- declared custom-element prop, not typed on HTMLElement
-    el.onerror = original;
-    await tick();
-    await tick();
-    await tick();
+      const el = mount('sui-lottie-player');
+      const original = vi.fn();
+      // @ts-expect-error -- declared custom-element prop, not typed on HTMLElement
+      el.onerror = original;
+      await tick();
+      await tick();
+      await tick();
 
-    let fired = 0;
-    el.addEventListener('error', () => {
-      fired += 1;
-    });
+      let fired = 0;
+      el.addEventListener('error', () => {
+        fired += 1;
+      });
 
-    fake.fire('data_failed');
+      fake.fire(event);
 
-    expect(fired).toBe(1);
-    expect(original).toHaveBeenCalledTimes(1);
-  });
+      expect(fired).toBe(1);
+      expect(original).toHaveBeenCalledTimes(1);
+    }
+  );
 });
 
 describe('StatCard.wc.svelte (oncheckboxchange, 1 argument, non-colliding)', () => {

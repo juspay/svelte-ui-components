@@ -7,10 +7,12 @@
   import retrySvg from '#lib/assets/retry.svg?raw';
   import thumbUpSvg from '#lib/assets/thumb-up.svg?raw';
   import thumbDownSvg from '#lib/assets/thumb-down.svg?raw';
-  import { onDestroy, onMount } from 'svelte';
+  import { onDestroy } from 'svelte';
+  import { loadEscapedMarkdownRenderer } from '../MarkdownText/load';
+  import { watchMarkdownCode } from '../_interaction/scrollRegions';
   import { partyOf } from '../Chat/roles';
   import type { ChatMessageProperties } from './properties';
-  import type { RenderMarkdownOptions } from '../MarkdownText/properties';
+  import type { EscapedMarkdownOptions } from '../MarkdownText/properties';
 
   let {
     role,
@@ -88,22 +90,27 @@
 
   let hasMarkdown = $derived(typeof markdown === 'string' && markdown.length > 0);
 
-  /* The pipeline loads dynamically at mount (the LottiePlayer pattern) so
-     `marked` — a peer dependency — is only pulled in at runtime, never during
-     SSR, and rendering `markdown` degrades to the `html`/`content` fallback
-     until the module resolves or when the peer is absent. */
+  // Load the parser when Markdown is supplied, including after initial mount.
   let renderMarkdownFn = $state<
-    ((source: string, options?: RenderMarkdownOptions) => string) | null
+    ((source: string, options?: EscapedMarkdownOptions) => string) | null
   >(null);
 
-  onMount(() => {
-    void import('../MarkdownText/markdown')
+  // eslint-disable-next-line no-restricted-syntax
+  $effect(() => {
+    if (!hasMarkdown || renderMarkdownFn !== null) {
+      return;
+    }
+    let cancelled = false;
+    void loadEscapedMarkdownRenderer()
       .then((module) => {
-        renderMarkdownFn = module.renderMarkdown;
+        if (!cancelled) {
+          renderMarkdownFn = module.renderEscapedMarkdown;
+        }
       })
-      .catch(() => {
-        renderMarkdownFn = null;
-      });
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   });
 
   // Both rendering branches share the same options-aware renderer. Capture the label
@@ -113,7 +120,7 @@
     if (renderer === null) {
       return null;
     }
-    const options: RenderMarkdownOptions =
+    const options: EscapedMarkdownOptions =
       typeof markdownTableLabel === 'string' ? { tableLabel: markdownTableLabel } : {};
     return (source: string) => renderer(source, options);
   });
@@ -121,6 +128,7 @@
     hasMarkdown && messageMarkdownRenderer !== null ? messageMarkdownRenderer(markdown ?? '') : html
   );
   let hasHtml = $derived(typeof effectiveHtml === 'string' && effectiveHtml.length > 0);
+  const hasCode = $derived(/<pre(?:\s|>)/i.test(effectiveHtml ?? ''));
 
   let hasBody = $derived(typeof body === 'function');
 
@@ -243,6 +251,7 @@
           <div
             class="body"
             id={bodyId}
+            {@attach hasMarkdown ? watchMarkdownCode : null}
             aria-live={streaming ? 'off' : null}
             aria-busy={streaming ? 'true' : null}
           >
@@ -254,8 +263,10 @@
             />
           </div>
         {:else if hasHtml}
-          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-          <div class="body" id={bodyId}>{@html effectiveHtml}</div>
+          <div class="body" id={bodyId} {@attach hasCode ? watchMarkdownCode : null}>
+            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+            {@html effectiveHtml}
+          </div>
         {:else if content.length > 0}
           <div class="body text" id={bodyId}>{content}</div>
         {/if}
@@ -567,6 +578,11 @@
   .body :global(pre code) {
     background: transparent;
     padding: 0;
+  }
+
+  .body :global(pre:focus-visible) {
+    outline: var(--chat-message-code-focus-outline, 2px solid currentColor);
+    outline-offset: 2px;
   }
 
   /* --chat-message-list-padding is also what ChatMessageList reads for its own padding, so an

@@ -185,3 +185,8 @@ export type RenderMarkdownOptions = {
   /** Narrow the protocol allow-list. See `MarkdownSanitizeOptions`. */
   sanitize?: MarkdownSanitizeOptions;
 };
+
+/** Options for the renderer that always escapes raw HTML. */
+export type EscapedMarkdownOptions = Omit<RenderMarkdownOptions, 'sanitize'> & {
+  sanitize?: Omit<MarkdownSanitizeOptions, 'rawHtml' | 'htmlSanitizer'>;
+};

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { gzipSync } from 'node:zlib';
 
 /**
  * A watchable companion to wc-form-association.spec.ts.
@@ -68,6 +69,26 @@ test.describe('a form of custom elements, end to end', () => {
   });
 });
 
+test('standalone form loads one small script and only its five registrations', async ({ page }) => {
+  const scripts: string[] = [];
+  page.on('request', (request) => {
+    const url = new URL(request.url());
+    if (url.pathname.includes('/wc/') && url.pathname.endsWith('.js')) {
+      scripts.push(url.pathname.split('/').at(-1) ?? '');
+    }
+  });
+  const bundle = page.waitForResponse('**/wc/form.js');
+  await page.goto('/wc-form-demo.html');
+  await expect(page.getByRole('button', { name: 'Submit' })).toBeEnabled();
+  expect(scripts).toEqual(['form.js']);
+  const response = await bundle;
+  expect(response.ok()).toBe(true);
+  expect(gzipSync(await response.body()).length).toBeLessThan(50 * 1024);
+  expect(await page.evaluate(() => typeof customElements.get('sui-table') === 'undefined')).toBe(
+    true
+  );
+});
+
 test('rejected submissions report invalid before and after a successful submit', async ({
   page
 }) => {
@@ -95,7 +116,7 @@ test('rejected submissions report invalid before and after a successful submit',
 });
 
 test('waits for the served bundle and stays unavailable if it fails', async ({ page }) => {
-  await page.route('**/wc/index.js', (route) => route.abort());
+  await page.route('**/wc/form.js', (route) => route.abort());
   await page.goto('/wc-form-demo.html');
 
   await expect(page.getByRole('status').filter({ hasText: 'could not load' })).toBeVisible();
@@ -119,7 +140,7 @@ test.describe('standalone form on touch screens', () => {
     const bundleReady = new Promise<void>((resolve) => {
       allowBundle = resolve;
     });
-    await page.route('**/wc/index.js', async (route) => {
+    await page.route('**/wc/form.js', async (route) => {
       await bundleReady;
       await route.continue();
     });

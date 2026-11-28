@@ -1,17 +1,14 @@
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { expect, test } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { gotoWcTestHost } from './support/wc-test-host';
 
 const output = resolve('dist-wc/modules');
 
-test('selective and aggregate package entries share registrations and the snippet factory', async ({
-  page
-}) => {
+async function serveWcModules(page: Page): Promise<Map<string, number>> {
   const assets = new Map<string, number>();
-  const errors: string[] = [];
-  page.on('pageerror', (error) => errors.push(error.message));
   await page.route('**/__wc-module/**', async (route) => {
     const file = resolve(
       output,
@@ -25,6 +22,15 @@ test('selective and aggregate package entries share registrations and the snippe
     assets.set(file, gzipSync(body).length);
     await route.fulfill({ contentType: 'text/javascript', body });
   });
+  return assets;
+}
+
+test('selective and aggregate package entries share registrations and the snippet factory', async ({
+  page
+}) => {
+  const assets = await serveWcModules(page);
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
 
   await gotoWcTestHost(page);
   const base = '/__wc-module/';
@@ -32,6 +38,9 @@ test('selective and aggregate package entries share registrations and the snippe
     (file) => file.endsWith('.js') && file !== 'index.js'
   );
   expect(packageEntries).toHaveLength(104);
+  for (const entry of packageEntries) {
+    expect(existsSync(join(output, entry.replace(/\.js$/, '.d.ts')))).toBe(true);
+  }
 
   const selective = await page.evaluate(
     async ({ base, packageEntries }) => {
@@ -76,6 +85,46 @@ test('selective and aggregate package entries share registrations and the snippe
   );
   expect(combined).toEqual({ allRegistered: true, sameElement: true, sameSnippetFactory: true });
   expect(errors).toEqual([]);
+});
+
+test('plain messages skip the Markdown parser and a later fenced block can scroll', async ({
+  page
+}) => {
+  const assets = await serveWcModules(page);
+  await gotoWcTestHost(page);
+  await page.addScriptTag({ url: '/__wc-module/chat-message.js', type: 'module' });
+  await page.evaluate(async () => {
+    await customElements.whenDefined('sui-chat-message');
+    const message = document.createElement('sui-chat-message');
+    message.setAttribute('role', 'assistant');
+    message.setAttribute('content', 'A plain message');
+    message.style.width = '160px';
+    document.body.append(message);
+  });
+  const message = page.locator('sui-chat-message');
+  await expect(message).toContainText('A plain message');
+  await page.waitForLoadState('networkidle');
+  const loadedMarkdown = () => [...assets.keys()].some((file) => /\/(markdown|render)-/.test(file));
+  expect(loadedMarkdown()).toBe(false);
+
+  await message.evaluate((element) => {
+    Reflect.set(element, 'markdown', '```\nconst veryLongIdentifier = '.padEnd(144, 'x') + '\n```');
+  });
+  const code = message.locator('pre');
+  await expect(code).toHaveAttribute('tabindex', '0');
+  await expect(code).toHaveAccessibleName(/code/i);
+  expect(loadedMarkdown()).toBe(true);
+  await code.focus();
+  await page.keyboard.press('ArrowRight', { delay: 50 });
+  await expect.poll(() => code.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
+
+  await message.evaluate((element) => {
+    const markdown = String(Reflect.get(element, 'markdown'));
+    Reflect.set(element, 'markdown', markdown + '\n\nThe stream continues.');
+  });
+  await expect(message).toContainText('The stream continues.');
+  await expect(code).toBeFocused();
+  await expect.poll(() => code.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
 });
 
 test('four custom elements accept their required data after connection', async ({ page }) => {

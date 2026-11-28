@@ -1,4 +1,5 @@
 <script lang="ts">
+  import FieldMessage from '../_field/FieldMessage.svelte';
   import { describeField } from '../_field/description';
   import { watchFormReset } from '../_field/form-reset';
   import { provideFileInputOwner } from './context';
@@ -300,34 +301,30 @@
 {/if}
 
 {#if field.showsError}
-  <div
+  <FieldMessage
     id={field.errorId}
-    role="alert"
-    class="field-error"
-    data-pw={typeof testId === 'string' ? `${testId}-error-message` : null}
-    testID={typeof testId === 'string' ? `${testId}-error-message` : null}
-  >
-    {errorMessage}
-  </div>
+    text={errorMessage}
+    testId={typeof testId === 'string' ? `${testId}-error-message` : null}
+    alert
+    classes="field-error sui-fileinput-field-message"
+  />
 {/if}
 {#if field.showsInfo}
-  <div
+  <FieldMessage
     id={field.infoId}
-    class="field-info"
-    data-pw={typeof testId === 'string' ? `${testId}-info-message` : null}
-    testID={typeof testId === 'string' ? `${testId}-info-message` : null}
-  >
-    {infoMessage}
-  </div>
+    text={infoMessage}
+    testId={typeof testId === 'string' ? `${testId}-info-message` : null}
+    classes="field-info sui-fileinput-field-message"
+  />
 {/if}
 
 <style>
-  .field-error {
+  :global(.field-error.sui-fileinput-field-message) {
     color: var(--file-input-error-color, #b3261e);
     font-size: var(--file-input-error-font-size, 12px);
     margin-top: var(--file-input-error-margin-top, 4px);
   }
-  .field-info {
+  :global(.field-info.sui-fileinput-field-message) {
     color: var(--file-input-info-color, #5f6368);
     font-size: var(--file-input-info-font-size, 12px);
     margin-top: var(--file-input-info-margin-top, 4px);

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import FieldMessage from '../_field/FieldMessage.svelte';
   import { prefersReducedMotion } from '../utils';
   import { getActiveElement } from '../_interaction/focus';
   import { describeField } from '../_field/description';
@@ -551,25 +552,21 @@
     {/if}
 
     {#if field.showsError}
-      <div
+      <FieldMessage
         id={field.errorId}
-        role="alert"
-        class="error-message"
-        data-pw={typeof testId === 'string' && testId.length > 0 ? `${testId}-error-message` : null}
-        testID={typeof testId === 'string' && testId.length > 0 ? `${testId}-error-message` : null}
-      >
-        {onErrorMessage}
-      </div>
+        text={onErrorMessage}
+        testId={typeof testId === 'string' && testId.length > 0 ? `${testId}-error-message` : null}
+        alert
+        classes="error-message sui-input-field-message"
+      />
     {/if}
     {#if field.showsInfo}
-      <div
+      <FieldMessage
         id={field.infoId}
-        class="info-message"
-        data-pw={typeof testId === 'string' && testId.length > 0 ? `${testId}-info-message` : null}
-        testID={typeof testId === 'string' && testId.length > 0 ? `${testId}-info-message` : null}
-      >
-        {infoMessage}
-      </div>
+        text={infoMessage}
+        testId={typeof testId === 'string' && testId.length > 0 ? `${testId}-info-message` : null}
+        classes="info-message sui-input-field-message"
+      />
     {/if}
     {#if useTextArea && showCount && !actionInput}
       <div class="input-char-count" class:at-limit={charCount >= effectiveMaxLength}>
@@ -750,7 +747,7 @@
     padding-right: calc(var(--input-icon-size, 20px) + var(--input-icon-gap, 12px) * 2);
   }
 
-  .error-message {
+  :global(.error-message.sui-input-field-message) {
     font-weight: var(--input-error-msg-text-weight, 400);
     font-size: var(--input-error-msg-text-size, 12px);
     /* #c5120a clears WCAG AA (6.06:1 on white) at this 12px size; the prior #fa1405
@@ -760,7 +757,7 @@
     padding: var(--input-error-msg-padding);
   }
 
-  .info-message {
+  :global(.info-message.sui-input-field-message) {
     font-weight: var(--input-info-msg-text-weight, 400);
     font-size: var(--input-info-msg-text-size, 12px);
     /* Neutral on purpose -- this used to default to the same red as .error-message,

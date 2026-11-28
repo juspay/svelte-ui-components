@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { nextEnabledIndex } from '../_interaction/nextEnabledIndex';
   import { registerDismissible } from '../_interaction/dismissal';
   import { getActiveElement } from '../_interaction/focus';
   import { tokenizedFly } from '../Animations/tokenizedFly';
@@ -172,15 +173,18 @@
     switch (event.key) {
       case 'ArrowDown': {
         event.preventDefault();
-        const next = focusedIndex + 1;
-        focusedIndex = next >= selectableItems.length ? 0 : next;
+        focusedIndex = nextEnabledIndex(selectableItems.length, focusedIndex, 1, true);
         focusItem(focusedIndex);
         break;
       }
       case 'ArrowUp': {
         event.preventDefault();
-        const prev = focusedIndex - 1;
-        focusedIndex = prev < 0 ? selectableItems.length - 1 : prev;
+        focusedIndex = nextEnabledIndex(
+          selectableItems.length,
+          Math.max(0, focusedIndex),
+          -1,
+          true
+        );
         focusItem(focusedIndex);
         break;
       }

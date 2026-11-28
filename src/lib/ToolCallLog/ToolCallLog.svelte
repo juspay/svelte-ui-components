@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { viewportPortalTarget, watchViewport } from '../_interaction/viewport';
   import type { Action } from 'svelte/action';
   import { onMount } from 'svelte';
   import Loader from '../Loader/Loader.svelte';
@@ -98,21 +99,6 @@
   });
 
   /**
-   * Where a portalled node is allowed to land. Svelte scopes a custom element's
-   * CSS to its shadow root, so `document.body` is the one place the popover must
-   * never go from inside `<sui-tool-call-log>`: it keeps its `svelte-*` scoping
-   * class and loses every rule behind it, plus the host's custom properties.
-   * Measured in Chromium -- position fell back to `static`, background to
-   * transparent, border and shadow to none, so the detail text landed as a bare
-   * paragraph at the end of the page. Its own root holds that stylesheet and
-   * still sits above every overflow/scroll ancestor between the two.
-   */
-  const portalTarget = (node: Node): Node => {
-    const root = node.getRootNode();
-    return root instanceof ShadowRoot ? root : document.body;
-  };
-
-  /**
    * Svelte action for the popover element: relocates it out to its root
    * (mirroring Menu's `usePortal`) so an `overflow: hidden` or scrolling
    * ancestor — a chat bubble, a card — can never clip it, and keeps
@@ -127,27 +113,14 @@
    */
   const popoverPortal: Action<HTMLElement> = (node) => {
     if (usePortal) {
-      portalTarget(node).appendChild(node);
+      viewportPortalTarget(node).appendChild(node);
     }
-    let frame: number | null = null;
-    const bump = (): void => {
-      if (frame !== null) {
-        return;
-      }
-      frame = requestAnimationFrame(() => {
-        frame = null;
-        popoverTick += 1;
-      });
-    };
-    window.addEventListener('scroll', bump, { capture: true, passive: true });
-    window.addEventListener('resize', bump);
+    const stopWatching = watchViewport(() => {
+      popoverTick += 1;
+    });
     return {
       destroy(): void {
-        window.removeEventListener('scroll', bump, { capture: true });
-        window.removeEventListener('resize', bump);
-        if (frame !== null) {
-          cancelAnimationFrame(frame);
-        }
+        stopWatching();
         // Only a node this action moved is this action's to take back out; an
         // un-portalled one is still Svelte's, and it removes it on its own.
         if (usePortal) {

@@ -1,5 +1,6 @@
 <script lang="ts">
   import Table from '#lib/Table/Table.svelte';
+  import PlainTable from '#lib/Table/PlainTable.svelte';
   import Pill from '#lib/Pill/Pill.svelte';
   import Button from '#lib/Button/Button.svelte';
   import Menu from '#lib/Menu/Menu.svelte';
@@ -10,6 +11,8 @@
   let currentPage = $state(1);
   const totalPages = 3;
   let lastCellTestId = $state<string | null>(null);
+  let builtinsOpened = $state(false);
+  let interactiveOpened = $state(false);
 
   function handleRowClick(rowIndex: number, rowData: unknown[]) {
     clickedRow = `Row ${rowIndex}: ${rowData[0]}`;
@@ -686,7 +689,7 @@
 <!-- Basic Table -->
 <h3>Basic</h3>
 <div class="demo-row" style="max-width: 600px;">
-  <Table
+  <PlainTable
     tableTitle="Users"
     tableHeaders={['Name', 'Email', 'Role']}
     tableData={[
@@ -728,47 +731,71 @@
 
 <!-- Built-in cell renderers: tag, tag-array, two-line-text, avatar-stack, compare, toggle, link -->
 <h3>Built-in Cell Renderers</h3>
-<div class="demo-row" style="max-width: 1000px;">
-  <Table
-    columns={builtinColumns}
-    rows={builtinRows}
-    caption="Subscription plan details"
-    testId="table-builtin-cells"
-  />
-  {#if toggledRow}
-    <p
-      data-pw="builtin-toggle-result"
-      style="margin-top: 8px; color: var(--doc-text-muted, #64748b); font-size: 14px;"
-    >
-      Toggled: {toggledRow}
-    </p>
+<details
+  class="cell-examples"
+  ontoggle={(event) => {
+    if (event.currentTarget.open) {
+      builtinsOpened = true;
+    }
+  }}
+>
+  <summary>Show built-in cells</summary>
+  {#if builtinsOpened}
+    <div class="demo-row" style="max-width: 1000px;">
+      <Table
+        columns={builtinColumns}
+        rows={builtinRows}
+        caption="Subscription plan details"
+        testId="table-builtin-cells"
+      />
+      {#if toggledRow}
+        <p
+          data-pw="builtin-toggle-result"
+          style="margin-top: 8px; color: var(--doc-text-muted, #64748b); font-size: 14px;"
+        >
+          Toggled: {toggledRow}
+        </p>
+      {/if}
+    </div>
   {/if}
-</div>
+</details>
 
 <!-- Interactive cell renderers: select, input, button, action-group, popup-menu + row-click guard -->
 <h3>Interactive Cell Renderers</h3>
-<div class="demo-row" style="max-width: 1100px;">
-  <Table
-    columns={interactiveColumns}
-    rows={interactiveRows}
-    testId="table-interactive-cells"
-    onrowclick={(rowIndex) => {
-      rowClickLog = `row ${rowIndex}`;
-    }}
-  />
-  <p
-    data-pw="interactive-log"
-    style="margin-top: 8px; color: var(--doc-text-muted, #64748b); font-size: 14px;"
-  >
-    Last action: {interactiveLog}
-  </p>
-  <p
-    data-pw="row-click-log"
-    style="margin-top: 4px; color: var(--doc-text-muted, #64748b); font-size: 14px;"
-  >
-    Last row click: {rowClickLog}
-  </p>
-</div>
+<details
+  class="cell-examples"
+  ontoggle={(event) => {
+    if (event.currentTarget.open) {
+      interactiveOpened = true;
+    }
+  }}
+>
+  <summary>Show interactive cells</summary>
+  {#if interactiveOpened}
+    <div class="demo-row" style="max-width: 1100px;">
+      <Table
+        columns={interactiveColumns}
+        rows={interactiveRows}
+        testId="table-interactive-cells"
+        onrowclick={(rowIndex) => {
+          rowClickLog = `row ${rowIndex}`;
+        }}
+      />
+      <p
+        data-pw="interactive-log"
+        style="margin-top: 8px; color: var(--doc-text-muted, #64748b); font-size: 14px;"
+      >
+        Last action: {interactiveLog}
+      </p>
+      <p
+        data-pw="row-click-log"
+        style="margin-top: 4px; color: var(--doc-text-muted, #64748b); font-size: 14px;"
+      >
+        Last row click: {rowClickLog}
+      </p>
+    </div>
+  {/if}
+</details>
 
 <!-- Header metadata: tooltip, align, maxWidth ellipsis, filter dropdown, getSortValue -->
 <h3>Header Metadata + getSortValue</h3>
@@ -1665,6 +1692,12 @@
 <Table columns={featureColumns} rows={featureRows} mobileCardLayout testId="table-mobile-cards" />
 
 <style>
+  .cell-examples > summary {
+    cursor: pointer;
+    min-height: 24px;
+    margin-block-end: 8px;
+  }
+
   /* Fixed-height, overflow-clipping frame to demonstrate the portaled dropdown
      rendering in full instead of being cut off. */
   .table-portal-clipper {

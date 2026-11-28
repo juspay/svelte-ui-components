@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { parse } from 'svelte/compiler';
 import {
   CALLBACK_PROP_PATTERN,
@@ -138,6 +138,81 @@ export function readComponentProps(source: string): ComponentProps {
     }
   }
   return { names: [], hasRest: false };
+}
+
+/** Follow a facade that directly spreads its complete $props bag onto one local component. */
+export function readComponentImplementation(file: string): {
+  source: string;
+  supplied: ReadonlySet<string>;
+} {
+  const supplied = new Set<string>();
+  const visited = new Set<string>();
+  let current = file;
+  for (;;) {
+    if (visited.has(current)) {
+      throw new Error(`Circular component prop forwarding at ${current}`);
+    }
+    visited.add(current);
+    const source = readFileSync(current, 'utf8');
+    const root = asRecord(parse(source, { modern: true }));
+    const body = asList(asRecord(asRecord(root.instance).content).body).map(asRecord);
+    const bags = body
+      .filter((node) => node.type === 'VariableDeclaration')
+      .flatMap((node) => asList(node.declarations).map(asRecord))
+      .filter((node) => {
+        const init = asRecord(node.init);
+        return init.type === 'CallExpression' && asRecord(init.callee).name === '$props';
+      })
+      .map((node) => asRecord(node.id).name);
+    const nodes = asList(asRecord(root.fragment).nodes)
+      .map(asRecord)
+      .filter(
+        (node) =>
+          node.type !== 'Comment' &&
+          (node.type !== 'Text' || (typeof node.raw === 'string' && node.raw.trim().length > 0))
+      );
+    const component = nodes.at(0);
+    if (nodes.length !== 1 || component?.type !== 'Component') {
+      return { source, supplied };
+    }
+    const attributes = asList(component.attributes).map(asRecord);
+    const spread = attributes.filter((attribute) => attribute.type === 'SpreadAttribute');
+    const forwarded = spread.at(0);
+    const binding = asRecord(forwarded?.expression).name;
+    if (
+      spread.length !== 1 ||
+      !forwarded ||
+      typeof binding !== 'string' ||
+      !bags.includes(binding)
+    ) {
+      return { source, supplied };
+    }
+    const imported = body.find(
+      (node) =>
+        node.type === 'ImportDeclaration' &&
+        asList(node.specifiers).some((specifier) => {
+          const imported = asRecord(specifier);
+          return (
+            imported.type === 'ImportDefaultSpecifier' &&
+            asRecord(imported.local).name === component.name
+          );
+        })
+    );
+    const specifier = asRecord(imported?.source).value;
+    if (
+      typeof specifier !== 'string' ||
+      !specifier.startsWith('.') ||
+      !specifier.endsWith('.svelte')
+    ) {
+      return { source, supplied };
+    }
+    for (const attribute of attributes.slice(attributes.indexOf(forwarded) + 1)) {
+      if (attribute.type === 'Attribute' && typeof attribute.name === 'string') {
+        supplied.add(attribute.name);
+      }
+    }
+    current = resolve(dirname(current), specifier);
+  }
 }
 
 /**
@@ -402,12 +477,14 @@ export function readWrapperParity(): readonly WrapperParity[] {
       continue;
     }
 
-    const component = readComponentProps(readFileSync(componentPath, 'utf8'));
+    const implementation = readComponentImplementation(componentPath);
+    const component = readComponentProps(implementation.source);
+    const componentProps = component.names.filter((name) => !implementation.supplied.has(name));
     const declared = new Set(props);
     const forwarded = new Set(readForwardedProps(source, declared));
     const absent = component.hasRest
       ? []
-      : component.names.filter((name) => !declared.has(name) && !forwarded.has(name));
+      : componentProps.filter((name) => !declared.has(name) && !forwarded.has(name));
 
     // The opposite direction. Everything above asks "is every component prop
     // declared on the element"; this asks "does every declared prop reach the
@@ -417,7 +494,7 @@ export function readWrapperParity(): readonly WrapperParity[] {
     // `<sui-stepper>` shipped exactly that -- `onstepclick`, the deprecated alias
     // 4.0.0 deleted from StepperProperties, left behind on the element.
     const renamed = new Set(readRenameSources(source, declared));
-    const componentNames = new Set(component.names);
+    const componentNames = new Set(componentProps);
 
     results.push({
       wrapper,

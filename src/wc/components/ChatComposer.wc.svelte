@@ -85,6 +85,7 @@
 />
 
 <script lang="ts">
+  import { optionalBooleanAttribute } from '../aria-boolean';
   import { createRawSnippet, onMount } from 'svelte';
   import ChatComposer from '#lib/ChatComposer/ChatComposer.svelte';
   import type { ChatComposerDictationState } from '#lib/ChatComposer/dictationState.js';
@@ -102,22 +103,6 @@
   // per-control attributes are absent, so they'd force every control back
   // on). Declared `{ type: 'String' }` instead and restored to `boolean |
   // null` here, mirroring Input.wc.svelte's `asSpellcheck`.
-  const asBooleanOrNull = (value: unknown): boolean | null => {
-    if (value === null || value === undefined) {
-      return null;
-    }
-    if (typeof value === 'boolean') {
-      return value;
-    }
-    const text = String(value).trim().toLowerCase();
-    if (text === 'false') {
-      return false;
-    }
-    if (text === '' || text === 'true') {
-      return true;
-    }
-    return null;
-  };
 
   // Same flattening problem as the three `Boolean`-typed disables above, one
   // level wider: an attribute value is always a string, so `recording="busy"`
@@ -231,10 +216,10 @@
     {...props}
     {...dispatchers}
     {...trailingProps}
-    textDisabled={asBooleanOrNull(textDisabled)}
-    voiceDisabled={asBooleanOrNull(voiceDisabled)}
-    sendDisabled={asBooleanOrNull(sendDisabled)}
-    sendable={asBooleanOrNull(sendable)}
+    textDisabled={optionalBooleanAttribute(textDisabled)}
+    voiceDisabled={optionalBooleanAttribute(voiceDisabled)}
+    sendDisabled={optionalBooleanAttribute(sendDisabled)}
+    sendable={optionalBooleanAttribute(sendable)}
     recording={asRecording(recording)}
   >
     {#snippet attachmentsPreview()}
@@ -316,10 +301,10 @@
     {...props}
     {...dispatchers}
     {...trailingProps}
-    textDisabled={asBooleanOrNull(textDisabled)}
-    voiceDisabled={asBooleanOrNull(voiceDisabled)}
-    sendDisabled={asBooleanOrNull(sendDisabled)}
-    sendable={asBooleanOrNull(sendable)}
+    textDisabled={optionalBooleanAttribute(textDisabled)}
+    voiceDisabled={optionalBooleanAttribute(voiceDisabled)}
+    sendDisabled={optionalBooleanAttribute(sendDisabled)}
+    sendable={optionalBooleanAttribute(sendable)}
     recording={asRecording(recording)}
   >
     {#snippet sendIcon()}

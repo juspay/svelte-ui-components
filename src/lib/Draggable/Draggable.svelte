@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { capturePointer, releasePointer } from '../_interaction/pointerCapture';
   import { closestInEventPath } from '../_interaction/dismissal';
   import type { DraggableProperties, DragPosition } from './properties';
 
@@ -71,9 +72,7 @@
       return;
     }
     event.preventDefault();
-    try {
-      event.currentTarget.setPointerCapture(event.pointerId);
-    } catch {
+    if (!capturePointer(event.currentTarget, event.pointerId)) {
       return;
     }
     active = {
@@ -105,9 +104,7 @@
       return;
     }
     active = null;
-    if (session.owner.hasPointerCapture(session.pointerId)) {
-      session.owner.releasePointerCapture(session.pointerId);
-    }
+    releasePointer(session.owner, session.pointerId);
     onmoveend?.({ x, y });
   }
 

@@ -1,8 +1,10 @@
 import { fireEvent, render, waitFor, within } from '@testing-library/svelte';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { createRawSnippet } from 'svelte';
 import Table from './Table.svelte';
+import PlainTable from './PlainTable.svelte';
 import AccessibleEditors from './AccessibleEditors.test.svelte';
-import type { TableColumn, TableRow } from './properties';
+import type { TableColumn, TableEmptyContext, TableProperties, TableRow } from './properties';
 
 // jsdom supplies real DOM/IDREF resolution but no layout observer. Browser tests
 // separately prove native Tab, activation, editing and painted glyph contrast.
@@ -15,6 +17,43 @@ beforeAll(() => {
       disconnect() {}
     }
   );
+});
+
+it('keeps both occurrences of a positional row and passes its original reference after sorting', async () => {
+  const repeated = ['Ada'];
+  const onrowclick = vi.fn();
+  const view = render(PlainTable, {
+    tableHeaders: ['Name'],
+    tableData: [repeated, ['Zoe'], repeated],
+    onrowclick
+  });
+  await fireEvent.click(view.getByRole('button', { name: 'Sort by Name' }));
+  const copies = view.getAllByRole('cell', { name: 'Ada' });
+  expect(copies).toHaveLength(2);
+  for (const copy of copies) {
+    await fireEvent.click(copy);
+  }
+  expect(onrowclick.mock.calls.map((call) => call.at(2))).toEqual([0, 2]);
+  expect(onrowclick.mock.calls.every((call) => call.at(1) === repeated)).toBe(true);
+});
+
+it('reports no records when search is removed while the saved term still exists', async () => {
+  const empty = createRawSnippet<[TableEmptyContext]>((context) => ({
+    render: () => `<span>${context().reason}</span>`
+  }));
+  const view = render(PlainTable, {
+    tableHeaders: ['Name'],
+    tableData: [['Ada']],
+    searchConfig: { placeholder: 'Search records' },
+    empty
+  });
+  await fireEvent.input(view.getByPlaceholderText('Search records'), {
+    target: { value: 'Ada' }
+  });
+  expect(view.getByRole('cell', { name: 'Ada' })).not.toBeNull();
+  const absent: Partial<TableProperties> = {};
+  await view.rerender({ searchConfig: absent.searchConfig, tableData: [] });
+  await waitFor(() => expect(view.getByText('no-rows')).not.toBeNull());
 });
 
 const references = (header: HTMLElement): Element[] => {

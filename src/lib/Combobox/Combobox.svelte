@@ -1,4 +1,5 @@
 <script lang="ts">
+  import FieldMessage from '../_field/FieldMessage.svelte';
   import { registerDismissible } from '../_interaction/dismissal';
   import { describeField } from '../_field/description';
   import { tick } from 'svelte';
@@ -558,40 +559,22 @@
 </div>
 
 {#if field.showsError}
-  <div
+  <FieldMessage
     id={field.errorId}
-    role="alert"
-    class="field-error"
-    data-pw={typeof testId === 'string' ? `${testId}-error-message` : null}
-    testID={typeof testId === 'string' ? `${testId}-error-message` : null}
-  >
-    {errorMessage}
-  </div>
+    text={errorMessage}
+    testId={typeof testId === 'string' ? `${testId}-error-message` : null}
+    alert
+  />
 {/if}
 {#if field.showsInfo}
-  <div
+  <FieldMessage
     id={field.infoId}
-    class="field-info"
-    data-pw={typeof testId === 'string' ? `${testId}-info-message` : null}
-    testID={typeof testId === 'string' ? `${testId}-info-message` : null}
-  >
-    {infoMessage}
-  </div>
+    text={infoMessage}
+    testId={typeof testId === 'string' ? `${testId}-info-message` : null}
+  />
 {/if}
 
 <style>
-  .field-error {
-    color: var(--field-error-color, #c5120a);
-    font-size: var(--field-error-font-size, 12px);
-    margin: var(--field-error-margin, 4px 0 0 0);
-  }
-
-  .field-info {
-    color: var(--field-info-color, #6b7280);
-    font-size: var(--field-info-font-size, 12px);
-    margin: var(--field-info-margin, 4px 0 0 0);
-  }
-
   .combobox {
     position: relative;
     width: var(--combobox-width, 100%);

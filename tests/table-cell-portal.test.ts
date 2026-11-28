@@ -38,6 +38,7 @@ test.describe('Table — usePortal escapes clipping containers for in-cell dropd
 
   test('without usePortal the in-cell select dropdown stays in the table', async ({ page }) => {
     await gotoHydrated(page, '/components/table');
+    await page.getByText('Show interactive cells', { exact: true }).click();
 
     // The interactive demo table (no usePortal) keeps its dropdown in-flow.
     await page

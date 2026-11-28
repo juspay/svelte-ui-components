@@ -1,10 +1,34 @@
 import { expect, test } from '@playwright/test';
 import { gotoHydrated } from './support/hydrated';
+
+test('rich catalogue examples render when opened and preserve their state when collapsed', async ({
+  page
+}) => {
+  await gotoHydrated(page, '/components/table');
+  const details = page.getByText('Show built-in cells', { exact: true });
+  const table = page.getByTestId('table-builtin-cells');
+  await expect(table).toHaveCount(0);
+  await details.click();
+  const toggleCell = table.getByTestId('builtin-toggle-0');
+  const toggle = toggleCell.getByRole('switch');
+  await expect(toggle).toBeAttached();
+  const initiallyChecked = await toggle.isChecked();
+  await toggleCell.click();
+  await details.click();
+  await expect(table).toBeHidden();
+  await details.click();
+  if (initiallyChecked) {
+    await expect(toggle).not.toBeChecked();
+  } else {
+    await expect(toggle).toBeChecked();
+  }
+});
 import { prepareNativeClipboard, readNativeClipboard } from './support/native-browser';
 
 test.describe('Table — built-in cell renderers', () => {
   test('tag and tag-array cells render Pills with consumer classes', async ({ page }) => {
     await gotoHydrated(page, '/components/table');
+    await page.getByText('Show built-in cells', { exact: true }).click();
     const table = page.getByTestId('table-builtin-cells');
     await expect(table).toBeVisible();
     await expect(table.getByTestId('builtin-state-0')).toContainText('Active');
@@ -18,6 +42,7 @@ test.describe('Table — built-in cell renderers', () => {
 
   test('two-line-text cells render primary and secondary lines', async ({ page }) => {
     await gotoHydrated(page, '/components/table');
+    await page.getByText('Show built-in cells', { exact: true }).click();
     const table = page.getByTestId('table-builtin-cells');
     const bodyRows = table.getByRole('rowgroup').last().getByRole('row');
     const firstPlanCell = bodyRows.first().getByRole('cell').first();
@@ -27,6 +52,7 @@ test.describe('Table — built-in cell renderers', () => {
 
   test('avatar-stack caps at 4 chips and shows the +N overflow', async ({ page }) => {
     await gotoHydrated(page, '/components/table');
+    await page.getByText('Show built-in cells', { exact: true }).click();
     const table = page.getByTestId('table-builtin-cells');
     const secondRow = table.getByRole('rowgroup').last().getByRole('row').nth(1);
     await expect(secondRow).toContainText('+2');
@@ -36,6 +62,7 @@ test.describe('Table — built-in cell renderers', () => {
     page
   }) => {
     await gotoHydrated(page, '/components/table');
+    await page.getByText('Show built-in cells', { exact: true }).click();
     const table = page.getByTestId('table-builtin-cells');
     const bodyRows = table.getByRole('rowgroup').last().getByRole('row');
     const firstRevenue = bodyRows.nth(0).getByRole('cell').nth(4);
@@ -52,6 +79,7 @@ test.describe('Table — built-in cell renderers', () => {
     page
   }) => {
     await gotoHydrated(page, '/components/table');
+    await page.getByText('Show built-in cells', { exact: true }).click();
     const table = page.getByTestId('table-builtin-cells');
     const firstSwitch = table.getByTestId('builtin-toggle-0').getByRole('switch');
     await expect(firstSwitch).toHaveAccessibleName('Toggle Growth Monthly');
@@ -73,6 +101,7 @@ test.describe('Table — built-in cell renderers', () => {
     page
   }) => {
     await gotoHydrated(page, '/components/table');
+    await page.getByText('Show built-in cells', { exact: true }).click();
     const table = page.getByTestId('table-builtin-cells');
     const firstLink = table.getByTestId('builtin-docs-link-0');
     await expect(firstLink).toHaveAttribute('href', 'https://example.com/plans/42');
@@ -97,6 +126,7 @@ test.describe('Table — built-in cell renderers', () => {
   }) => {
     await prepareNativeClipboard(context);
     await gotoHydrated(page, '/components/table');
+    await page.getByText('Show built-in cells', { exact: true }).click();
     const table = page.getByTestId('table-builtin-cells');
     await table.getByTestId('builtin-docs-copy-0').click();
     await expect(table.getByTestId('builtin-docs-link-copied')).toContainText('Copied');

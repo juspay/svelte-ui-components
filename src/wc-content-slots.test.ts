@@ -4,6 +4,7 @@ import { compile } from 'svelte/compiler';
 import { describe, expect, it } from 'vitest';
 import { WC2_UNREACHABLE } from '../scripts/wc2-unreachable.mjs';
 import { REPO_SCAN_TIMEOUT_MS } from '../scripts/migrate/repo-scan-timeout';
+import { readComponentImplementation } from '../scripts/wc-parity/prop-parity.js';
 
 /**
  * The content-slot rule's closing claim, held in place: the argument-less content props
@@ -84,7 +85,9 @@ const declaredSlots = (component: string): ReadonlySet<string> =>
  * would need a type assertion, which this repo's lint config bans outright.
  */
 const readInsideEach = (component: string, prop: string): boolean => {
-  const text = source(component);
+  const text = readComponentImplementation(
+    join(ROOT, 'src/lib', component, component + '.svelte')
+  ).source;
   const tokens = [...text.matchAll(/\{#each\b|\{\/each\}|\b\w+\b/g)];
   let depth = 0;
   for (const token of tokens) {

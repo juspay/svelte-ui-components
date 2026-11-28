@@ -1,4 +1,6 @@
 <script lang="ts">
+  import FieldMessage from '../_field/FieldMessage.svelte';
+  import { viewportPortalTarget, watchViewport } from '../_interaction/viewport';
   import { eventHitsInside, registerDismissible } from '../_interaction/dismissal';
   import { getActiveElement } from '../_interaction/focus';
   import { describeField } from '../_field/description';
@@ -278,47 +280,10 @@
     if (!usePortal || !open || typeof window === 'undefined') {
       return;
     }
-    let frame: number | null = null;
-    const bump = (): void => {
-      if (frame !== null) {
-        return;
-      }
-      frame = requestAnimationFrame(() => {
-        frame = null;
-        portalTick += 1;
-      });
-    };
-    window.addEventListener('scroll', bump, { capture: true, passive: true });
-    window.addEventListener('resize', bump);
-    return () => {
-      window.removeEventListener('scroll', bump, { capture: true });
-      window.removeEventListener('resize', bump);
-      if (frame !== null) {
-        cancelAnimationFrame(frame);
-      }
-    };
+    return watchViewport(() => {
+      portalTick += 1;
+    });
   });
-
-  /**
-   * Where a portalled node is allowed to land. Svelte scopes a custom element's
-   * CSS to its shadow root, so `document.body` is the one place the panel must
-   * never go from inside `<sui-select>`: it keeps its `svelte-*` scoping class
-   * and loses every rule behind it, plus the host's custom properties. Measured
-   * in Chromium -- position fell back to `static`, background to transparent,
-   * border and shadow to none, so the options rendered as bare text over the
-   * page. Its own root holds that stylesheet and still sits above every
-   * overflow/scroll ancestor between the two.
-   */
-  const portalTarget = (node: Node): Node => {
-    // A native modal makes everything outside its subtree inert, regardless of
-    // z-index. Keep its popup in the same top layer, including mode changes.
-    const dialog = node instanceof Element ? node.closest('dialog') : null;
-    if (dialog) {
-      return dialog;
-    }
-    const root = node.getRootNode();
-    return root instanceof ShadowRoot ? root : document.body;
-  };
 
   /**
    * Svelte action: relocates the dropdown out to its root when usePortal is set,
@@ -381,7 +346,7 @@
       ancestor = ancestor.parentElement ?? (root instanceof ShadowRoot ? root.host : null);
     }
     window.addEventListener('resize', refreshTheme);
-    portalTarget(node).appendChild(node);
+    viewportPortalTarget(node, true).appendChild(node);
     return {
       destroy: () => {
         observer.disconnect();
@@ -1072,15 +1037,13 @@
     </div>
 
     {#if field.showsError}
-      <div
+      <FieldMessage
         id={field.errorId}
-        role="alert"
-        class="select-error-message"
-        data-pw={typeof testId === 'string' ? `${testId}-error-message` : null}
-        testID={typeof testId === 'string' ? `${testId}-error-message` : null}
-      >
-        {errorMessage}
-      </div>
+        text={errorMessage}
+        testId={typeof testId === 'string' ? `${testId}-error-message` : null}
+        alert
+        classes="select-error-message sui-select-field-message"
+      />
     {/if}
 
     {#snippet menuOptions()}
@@ -1410,7 +1373,7 @@
     box-shadow: var(--select-trigger-error-shadow, 0 0 0 2px rgba(220, 38, 38, 0.2));
   }
 
-  .select-error-message {
+  :global(.select-error-message.sui-select-field-message) {
     margin-top: var(--select-error-message-margin-top, 4px);
     font-size: var(--select-error-message-font-size, 12px);
     color: var(--select-error-message-color, #dc2626);

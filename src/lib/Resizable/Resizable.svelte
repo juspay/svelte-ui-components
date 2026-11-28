@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { capturePointer, releasePointer } from '../_interaction/pointerCapture';
   import type { ResizableProperties, ResizeEdge } from './properties';
 
   let {
@@ -99,10 +100,7 @@
       startW,
       startH
     };
-    try {
-      event.currentTarget.setPointerCapture(event.pointerId);
-    } catch {
-      // A pointer that already ended cannot own a resize session.
+    if (!capturePointer(event.currentTarget, event.pointerId)) {
       active = null;
       return;
     }
@@ -136,13 +134,7 @@
     }
     // Clear ownership before release, which can synchronously dispatch capture loss.
     active = null;
-    try {
-      if (session.handle.hasPointerCapture(session.pointerId)) {
-        session.handle.releasePointerCapture(session.pointerId);
-      }
-    } catch {
-      // Capture may already have been removed by the browser or a detached handle.
-    }
+    releasePointer(session.handle, session.pointerId);
     if (notify) {
       onresizeend?.({ width: measuredWidth(), height: measuredHeight() });
     }

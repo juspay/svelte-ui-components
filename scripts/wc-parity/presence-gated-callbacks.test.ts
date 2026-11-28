@@ -1,9 +1,10 @@
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { HOST_EVENT_HANDLER_PROPS } from './host-event-handler-props.js';
 import { DISPATCH_COLLISION_EXCEPTIONS } from './dispatch-collision-exceptions.js';
 import { PRESENCE_GATED_CALLBACKS } from './presence-gated-callbacks.js';
+import { readComponentImplementation, wrappedComponentPath } from './prop-parity.js';
 import { REPO_SCAN_TIMEOUT_MS } from '../migrate/repo-scan-timeout.ts';
 
 /**
@@ -21,45 +22,12 @@ import { REPO_SCAN_TIMEOUT_MS } from '../migrate/repo-scan-timeout.ts';
  * dispatcher.
  */
 
-const LIB = join(process.cwd(), 'src', 'lib');
 const WC = join(process.cwd(), 'src', 'wc', 'components');
 
-const svelteFilesUnder = (dir: string): readonly string[] =>
-  readdirSync(dir).flatMap((entry) => {
-    const full = join(dir, entry);
-    if (statSync(full).isDirectory()) {
-      return svelteFilesUnder(full);
-    }
-    return entry.endsWith('.svelte') ? [full] : [];
-  });
-
-/** Every `typeof onX === 'function'` in src/lib, keyed by component name. */
-function presenceChecksByComponent(): ReadonlyMap<string, ReadonlySet<string>> {
-  const found = new Map<string, Set<string>>();
-  for (const file of svelteFilesUnder(LIB)) {
-    const source = readFileSync(file, 'utf8');
-    const component = file.slice(file.lastIndexOf('/') + 1, -'.svelte'.length);
-    for (const match of source.matchAll(/typeof (on[a-zA-Z]+) === 'function'/g)) {
-      if (!found.has(component)) {
-        found.set(component, new Set());
-      }
-      found.get(component)?.add(match[1]);
-    }
-  }
-  return found;
-}
-
 function derivedRegistry(): ReadonlySet<string> {
-  const checks = presenceChecksByComponent();
   const derived = new Set<string>();
-  for (const [component, props] of checks) {
-    let wrapper: string;
-    try {
-      wrapper = readFileSync(join(WC, `${component}.wc.svelte`), 'utf8');
-    } catch {
-      // No custom element for this component, so nothing is ever dispatched for it.
-      continue;
-    }
+  for (const file of readdirSync(WC).filter((file) => file.endsWith('.wc.svelte'))) {
+    const wrapper = readFileSync(join(WC, file), 'utf8');
     if (!wrapper.includes('dispatchEvents')) {
       continue;
     }
@@ -68,6 +36,16 @@ function derivedRegistry(): ReadonlySet<string> {
       continue;
     }
     const tag = tagMatch[1];
+    const component = wrappedComponentPath(wrapper);
+    if (component === null) {
+      continue;
+    }
+    const implementation = readComponentImplementation(component);
+    const props = new Set(
+      [...implementation.source.matchAll(/typeof (on[a-zA-Z]+) === 'function'/g)]
+        .map((match) => match.at(1) ?? '')
+        .filter((prop) => !implementation.supplied.has(prop))
+    );
     for (const prop of props) {
       // Only a prop the wrapper actually declares reaches dispatchEvents at all.
       if (new RegExp(`^\\s*${prop}\\s*:\\s*\\{`, 'm').test(wrapper) === false) {

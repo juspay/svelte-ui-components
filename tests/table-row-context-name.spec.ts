@@ -33,6 +33,8 @@ test('Svelte clickable Table row is named on keyboard arrival while its child ac
   browserName
 }) => {
   await gotoHydrated(page, '/components/table');
+  await page.getByText('Show interactive cells', { exact: true }).click();
+  await page.getByText('Show built-in cells', { exact: true }).click();
   const table = page.getByTestId('table-interactive-cells');
   const row = table.locator('tbody tr').filter({ hasText: 'Growth Monthly' });
   await expect(row).toHaveAccessibleName('Growth Monthly');

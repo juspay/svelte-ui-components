@@ -23,7 +23,7 @@
  *
  * Example — prove the aria-sort test actually tests aria-sort:
  *
- *   node scripts/negative-control.mjs src/lib/Table/Table.svelte \
+ *   node scripts/negative-control.mjs src/lib/Table/TableCore.svelte \
  *     'aria-sort={isColumnSortable(colIndex)' 'data-was-sort={(' \
  *     -- npx playwright test tests/table-aria-sort.spec.ts
  *

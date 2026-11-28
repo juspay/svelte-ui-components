@@ -20,9 +20,10 @@
   "license": "MIT",
   "homepage": "https://github.com/juspay/svelte-ui-components",
   "scripts": {
-    "dev": "pnpm run build:wc && vite dev --host",
-    "build": "vite build && npm run build:wc && node scripts/stage-wc-demo.mjs && npm run build:codemod && npm run package",
-    "build:wc": "vite build --config vite.config.wc.ts && vite build --config vite.config.wc.ts --mode wc-modules && echo \"export { createRawSnippet } from 'svelte';\" > dist-wc/index.d.ts",
+    "dev": "pnpm run build:wc && pnpm run build:wc-demo && vite dev --host",
+    "build": "vite build && npm run build:wc && npm run build:wc-demo && node scripts/stage-wc-demo.mjs && npm run build:codemod && npm run package",
+    "build:wc": "vite build --config vite.config.wc.ts && vite build --config vite.config.wc.ts --mode wc-modules && node scripts/write-wc-types.mjs",
+    "build:wc-demo": "vite build --config vite.config.wc.ts --mode wc-form",
     "build:codemod": "rm -rf dist-codemod && tsc -p scripts/codemod/tsconfig.build.json && node --experimental-strip-types scripts/codemod/generate-migration-assets.ts",
     "preview": "vite preview",
     "package": "svelte-kit sync && svelte-package && publint && node scripts/check-4x-consumer.mjs",
@@ -69,7 +70,7 @@
       "default": "./dist-wc/modules/index.js"
     },
     "./wc/*": {
-      "types": "./dist-wc/index.d.ts",
+      "types": "./dist-wc/modules/*.d.ts",
       "default": "./dist-wc/modules/*.js"
     },
     "./theme-dark.css": "./dist/styles/theme-dark.css"
@@ -79,6 +80,7 @@
     "!dist/**/*.test.*",
     "!dist/**/*.spec.*",
     "dist-wc",
+    "!dist-wc/demo/**",
     "dist-codemod",
     "scripts/postinstall.mjs"
   ],

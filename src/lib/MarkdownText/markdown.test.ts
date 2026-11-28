@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { renderMarkdown } from './markdown';
+import { renderMarkdown, unwrapMarkdownFence } from './markdown';
+import { renderEscapedMarkdown } from './render';
 // Used to build stand-in sanitizers that parse and re-serialise, which is what a
 // real sanitizer does. Not an assertion about the library's own parser: if the
 // implementation ever swaps parse5 out, these stand-ins still model the
@@ -7,6 +8,36 @@ import { renderMarkdown } from './markdown';
 import { parseFragment, serialize } from 'parse5';
 
 describe('renderMarkdown', () => {
+  it('inserts table labels containing replacement-string syntax literally', () => {
+    const output = renderMarkdown('| A |\n| - |\n| Ada |', { tableLabel: 'Cost $& fees' });
+    expect(output).toContain('aria-label="Cost $&amp; fees"');
+  });
+
+  it('keeps distinct tag policies and preserves nested allowed markup', () => {
+    const input = '**Outer _inner_**';
+    expect(renderMarkdown(input, { sanitize: { allowedTags: ['em,strong'] } })).not.toContain(
+      '<strong>'
+    );
+    expect(renderMarkdown(input, { sanitize: { allowedTags: ['em', 'strong'] } })).toContain(
+      '<strong>Outer <em>inner</em></strong>'
+    );
+    expect(renderMarkdown(input, { sanitize: { allowedTags: ['em'] } })).toContain(
+      'Outer <em>inner</em>'
+    );
+  });
+
+  it('unwraps Markdown only when the closing fence begins on a separate line', () => {
+    const inlineClose = '```md\n**example**```';
+    expect(unwrapMarkdownFence(inlineClose)).toBe(inlineClose);
+    expect(unwrapMarkdownFence('```md\n**example**\n````')).toBe('**example**');
+    expect(unwrapMarkdownFence('```md\n```')).toBe('');
+  });
+  it('shares the default escaped rendering contract with the lightweight profile', () => {
+    const source = '## Message\n\n<div>Plain HTML</div>\n\n| Name |\n| - |\n| Ada |';
+    const options = { tableLabel: 'People', breaks: true };
+    expect(renderEscapedMarkdown(source, options)).toBe(renderMarkdown(source, options));
+    expect(renderEscapedMarkdown(source)).toContain('&lt;div&gt;');
+  });
   it('renders basic markdown', () => {
     const output = renderMarkdown('This is **bold** and `code`.');
     expect(output).toContain('<strong>bold</strong>');

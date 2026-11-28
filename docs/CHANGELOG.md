@@ -2,7 +2,12 @@
 based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.22)
+## [Unreleased](https://github.com/juspay/svelte-ui-components/compare/HEAD..4.57.23)
+
+-
+fix: prevent navigation controls from submitting host forms ([96991f0](https://github.com/juspay/svelte-ui-components/commit/96991f09018c5faa432703acb09bf41f5d3b5259))
+
+## [4.57.23](https://github.com/juspay/svelte-ui-components/compare/4.57.23..4.57.22) - 28 November 2026
 
 Lighthouse carried these as a local pnpm patch on 4.57.3. Moving them into
 the library lets it drop the patch.
